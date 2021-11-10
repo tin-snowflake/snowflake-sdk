@@ -1,31 +1,16 @@
-## src/actions
+# DEV STARTING
 
-Setup here actions that will interact with Solana programs using sendTransaction function
+# build 
+npm install
+yarn start
 
-## src/contexts
+# create symlink to idl, from the snow directory, use the command below
+# note that ln command needs the source file to be in absolute path so you have to start the path with ~ or /
+ln -sf ~/workspace/snow/snowflake-rust/target/idl/snowflake.json src/idl/snowflake.json
 
-React context objects that are used propagate state of accounts across the application
 
-## src/hooks
 
-Generic react hooks to interact with token program:
-* useUserBalance - query for balance of any user token by mint, returns:
-    - balance
-    - balanceLamports
-    - balanceInUSD
-* useUserTotalBalance - aggregates user balance across all token accounts and returns value in USD
-    - balanceInUSD
-* useAccountByMint
-* useTokenName
-* useUserAccounts
-
-## src/views
-
-* home - main page for your app
-* faucet - airdrops SOL on Testnet and Devnet
-
-# Build and Deploy - make sure aws cli and the access key are setup before you run the task
-
+# AWS DEPLOYMENT
 # Build: the build command below will build react app into ./build directory
 npm run build
 
