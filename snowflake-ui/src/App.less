@@ -1,0 +1,491 @@
+//@import '~antd/dist/antd.less';
+@import "~antd/dist/antd.dark.less";
+/*@popover-background: #1a2029;
+@font-size-base : 15px;
+@primary-color:#0e1f7a;
+@primary-color:#131a35;
+@background-color-base: #337ab7;
+@btn-border-radius-base:4px;
+@border-radius-base:5px;*/
+
+@primary-color:#b5dbf3;
+
+@border-radius-base:4px;
+@component-background : #131a35;
+@body-background : #131a35;
+@layout-header-background : transparent;
+@text-color: #ffffff;
+
+@link-color: white;
+@skeleton-color : rgba(128, 128, 128, 0.48);
+body {
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button, input, select {
+  font-family: "Commissioner";
+}
+
+@font-face {
+  font-family: "FF Oxide Solid";
+  src: url("//db.onlinewebfonts.com/t/bc30adee89b44a44a5cfdff676aef0fe.eot");
+  src: url("//db.onlinewebfonts.com/t/bc30adee89b44a44a5cfdff676aef0fe.eot?#iefix") format("embedded-opentype"),
+  url("//db.onlinewebfonts.com/t/bc30adee89b44a44a5cfdff676aef0fe.woff2") format("woff2"),
+  url("//db.onlinewebfonts.com/t/bc30adee89b44a44a5cfdff676aef0fe.woff") format("woff"),
+  url("//db.onlinewebfonts.com/t/bc30adee89b44a44a5cfdff676aef0fe.ttf") format("truetype"),
+  url("//db.onlinewebfonts.com/t/bc30adee89b44a44a5cfdff676aef0fe.svg#FF Oxide Solid") format("svg");
+}
+
+.ant-layout {
+  margin:40px;
+}
+.ant-layout-header {
+  border-bottom: 2px solid #1c274f;
+}
+
+
+.app-title {
+  font-family: "Commissioner";
+  font-style: normal;
+  font-weight: 300;
+  letter-spacing: 0px;
+  float: left;
+  display: flex;
+  align-items: center;
+  h2 {
+    font-size: 26px;
+    margin: 0px;
+    color: @text-color-inverse;
+  }
+}
+
+
+.ant-btn-primary {
+  border-color: rgba(141, 152, 212, 0.44);
+  background: linear-gradient(94.51deg, #133ee3,#7532e1 93.11%);
+  &:focus, &:hover {
+    border-color: #5ac4be;
+    background: linear-gradient(94.51deg, #133ee3,#7532e1 93.11%);
+  }
+}
+
+.ant-layout-header {
+  align-items: center;
+  padding: 0 20px;
+  color: white;
+  height: 80px;
+  display: flex;
+  //background-color: @primary-color;
+  button, button:hover, button:active, button:focus {
+    background-color: transparent;
+    background: none;
+    color: @text-color-inverse;
+    border-color: @text-color-inverse;
+  }
+
+}
+.App {
+  height: auto;
+}
+.App-Bar {
+  -webkit-box-pack: justify;
+  justify-content: space-between;
+  -webkit-box-align: center;
+  align-items: center;
+  flex-direction: row;
+  width: 100%;
+  top: 0px;
+  position: relative;
+  padding: 1rem;
+  z-index: 2;
+
+  .ant-menu-horizontal {
+    border-bottom-color: transparent;
+    background-color: transparent;
+    line-height: inherit;
+    font-size: 16px;
+    margin: 0 10px;
+
+    .ant-menu-item {
+      margin: 0 10px;
+      color: lightgrey;
+      height: 35px;
+      line-height: 35px;
+      border-width: 0px !important;
+    }
+
+    .ant-menu-item:hover {
+      color: white;
+      border-width: 0px !important;
+    }
+
+    .ant-menu-item-selected {
+      font-weight: bold;
+    }
+  }
+}
+
+.App-Bar-left {
+  box-sizing: border-box;
+  margin: 0px;
+  min-width: 0px;
+  display: flex;
+  padding: 0px;
+  -webkit-box-align: center;
+  align-items: center;
+  width: fit-content;
+}
+
+.App-Bar-right {
+  float:right;
+}
+
+.wallet-wrapper {
+  padding-left: 0.7rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.wallet-key {
+  padding: 0.1rem 0.5rem 0.1rem 0.7rem;
+  margin-left: 0.3rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.ant-tabs-nav-scroll {
+  display: flex;
+  justify-content: center;
+}
+
+em {
+  font-weight: bold;
+  font-style: normal;
+  text-decoration: none;
+}
+
+.wallet-key {
+  padding: 0.1rem 0.5rem 0.1rem 0.7rem;
+  margin-left: 0.3rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.ant-notification {
+  a {
+    color: blue;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+}
+
+.ant-layout-content {
+  display: flex;
+  //overflow: auto;
+}
+
+.flexColumn {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.card-fill {
+  height: 100%;
+}
+
+.card-row {
+  box-sizing: border-box;
+  margin: 5px 0px;
+  min-width: 0px;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  padding: 0px;
+  -webkit-box-align: center;
+  align-items: center;
+  -webkit-box-pack: justify;
+  justify-content: space-between;
+
+  .card-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    box-sizing: border-box;
+    text-align: left;
+    margin: 0px;
+    min-width: 0px;
+    font-size: 14px;
+  }
+
+  .left {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+
+  .small {
+    font-size: 11px;
+  }
+}
+
+.token-input {
+  display: flex;
+  align-items: center;
+  border: 1px solid grey;
+  padding: 0px 10px;
+  margin: 5px 0px;
+}
+
+.token-balance {
+  margin-left: auto;
+  margin-right: 5px;
+  color: @text-color-secondary;
+}
+
+[class="ant-layout-header"] {
+  height: 16px !important;
+}
+
+@media only screen and (max-width: 600px) {
+  .exchange-card {
+    width: 360px;
+  }
+}
+
+.flow-list-item {
+  background-color: @component-background;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 14px;
+  display: flex;
+  border-radius: 4px;
+  box-shadow : 0 3px 8px 0 rgb(0 0 0 / 3%);
+  .item-icon {
+    width: 120px;
+    font-size: 50px;
+    color : lightgrey;
+    padding-top: 14px;
+    font-weight: lighter;
+    opacity: 0.6;
+  }
+
+  .item-meta {
+    width: 100%;
+    text-align: left;
+  }
+
+  &:hover {
+    background-color: #fcfcfc;
+    box-shadow: 0 0 4px #d6d6d6;
+    cursor: pointer;
+  }
+
+  a {
+    color: white;
+    &:focus, &:hover{
+      color: #b5dbf3;
+    }
+}
+}
+
+
+
+
+.ant-card-default {
+  text-align: left;
+  border:1px solid #ddd;
+  > .ant-card-head {
+    .ant-card-head-title {
+      font-size: 26px;
+    }
+  }
+}
+
+
+.editFlow .ant-card-small {
+  margin-bottom: 20px;
+}
+
+.blankLabel {
+  .ant-form-item-label > label::after {
+    content:none;
+  }
+}
+
+.ant-form-item-label  {
+  &>label {
+    font-weight: bolder;
+    color:white;
+  }
+
+}
+
+
+.card  {
+  padding: 1px;
+  //padding-left: 2px;
+  background: linear-gradient(
+          245.22deg,#da2eef 7.97%,#2b6aff 49.17%,#39d0d8 92.1%);
+  border-radius: @border-radius-base;
+  .card-body {
+    //display: grid;
+    grid-auto-rows: auto;
+    //grid-row-gap: 12px;
+    row-gap: 12px;
+    padding: 32px 24px;
+    background-color: #131a35;
+    opacity: .9;
+    border-radius: @border-radius-base;
+    text-align: left;
+  }
+  margin-bottom: 20px;
+}
+
+.ant-page-header {
+  padding:0px;
+  margin:0px;
+  margin-bottom: 30px;
+
+  .ant-page-header-heading {
+    align-items: center;
+    .ant-page-header-heading-title {
+      font-weight: 600;
+      font-size: 24px;
+      line-height: 32px;
+      color:white;
+    }
+  }
+}
+
+.small-card-heading-text {
+  font-size: 18px;
+  font-weight: bold;
+  color: white;
+}
+
+.ant-tabs {
+  .ant-tabs-nav {
+    margin-bottom: 0px;
+    .ant-tabs-tab {
+      .small-card-heading-text;
+      padding: 20px;
+      border-top-left-radius: @border-radius-base;
+      border-top-right-radius: @border-radius-base;
+    }
+
+    .ant-tabs-tab-active {
+      background-color: @small-card-background;
+      .ant-tabs-tab-btn {
+        color:white;
+      }
+    }
+  }
+  .ant-tabs-ink-bar {
+    display: none;
+  }
+}
+
+@small-card-background : #000829;
+
+.ant-card-small {
+  border: none;
+  padding: 10px;
+  padding-bottom: 0px;
+  margin-bottom: 40px;
+  border-radius: @border-radius-base;
+  .ant-card-head {
+    border:none;
+    .ant-card-head-title {
+      .small-card-heading-text;
+    }
+  }
+
+  background-color: @small-card-background;
+
+  .ant-table {
+    background-color: @small-card-background;
+    .ant-table-thead {
+      .ant-table-cell {
+        background: transparent;
+        font-weight: bold;
+        color:white;
+      }
+    }
+    .ant-table-tbody {
+      //color:lightgrey;
+      font-size: 12px;
+      tr{
+        td {
+          &:hover, &:focus {
+            background: @small-card-background;
+          }
+          background: @small-card-background;
+        }
+      }
+    }
+
+  }
+}
+
+.ant-space-item {
+  display: flex;
+}
+
+.iconAndText {
+  display: flex;
+  align-items: center;
+  &>svg {
+    margin-right: 6px;
+  }
+}
+
+label {
+  font-weight: bold;
+  color:white;
+}
+
+a:hover, a:focus {
+  color: white;
+}
+
+.flowDetailPage {
+  .ant-form-item {
+    margin-bottom: 2px;
+  }
+}
+
+.customWalletConnectButton {
+  img {
+   // display: none;
+  }
+}
+
+.tokenInput {
+  width: 180px;
+  .ant-select-focused {
+    caret-color: transparent;
+  }
+  .ant-select-open {
+    img {
+      opacity: 0.5;
+    }
+
+  }
+}
+
+.itemSelecIcon {
+  width: 18px;
+}
+
+iframe
+{
+  display: none;
+}
