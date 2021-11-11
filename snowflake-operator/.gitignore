@@ -1,0 +1,12 @@
+# symlink
+/idl/snowflake.json
+
+# dependencies
+/node_modules
+
+# production
+/build
+
+# misc
+.DS_Store
+*.iml
