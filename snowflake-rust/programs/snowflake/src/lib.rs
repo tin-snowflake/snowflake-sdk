@@ -3,14 +3,26 @@ mod error;
 use anchor_lang::prelude::*;
 use anchor_lang::{Key, solana_program};
 use anchor_lang::solana_program::program::invoke;
+use spl_token::solana_program::program::invoke_signed;
 use anchor_lang::solana_program::instruction::Instruction;
 use solana_program::pubkey;
 use std::num::ParseIntError;
 use std::fmt::Write;
 use error::ErrorCode;
 
-
 declare_id!("86G3gad5tVjJxdQmmdQ6E3rLQNnDNh4KYcqiiSd7Az63");
+
+const REPEAT_UNIT_MINUTE: u8 = 1;
+const REPEAT_UNIT_HOUR: u8 = 2;
+const REPEAT_UNIT_DAY: u8 = 3;
+const REPEAT_UNIT_WEEK: u8 = 4;
+
+//Flow with next execution date older than (now - RETRY_WINDOW) won't be executed.
+const FLOW_RETRY_WINDOW: i64 = 300;
+
+const TRIGGER_METHOD_MANUAL: u8 = 1;
+const TRIGGER_METHOD_SCHEDULE: u8 = 2;
+
 
 #[program]
 pub mod snowflake {
@@ -85,62 +97,38 @@ pub mod snowflake {
         Ok(())
     }
 
-    pub fn execute_flow(ctx : Context<ExecuteFlow>) -> ProgramResult {
-        let flow = &ctx.accounts.flow;
-        msg!("flow is {:?}", flow.actions);
-        let (pda, bump) = Pubkey::find_program_address(&[&flow.flow_owner.to_bytes()], ctx.program_id);
-        msg!("pda : {:?} and flow_owner {:?} ", pda, flow.flow_owner);
-        for action in flow.actions.iter() {
-            let mut metas = action.target_account_metas();
+    pub fn delete_flow(ctx : Context<DeleteFlow>) -> ProgramResult {
+        let flow = &mut ctx.accounts.flow;
+        let caller = &ctx.accounts.caller;
 
-            for meta in &mut metas {
-                if meta.pubkey.eq(&pda) {
-                    meta.is_signer = true;
-                }
-            }
-
-            let ix = Instruction {
-                program_id: action.program,
-                accounts: metas,
-                data: action.instruction.clone()
-            };
-
-            invoke_signed(&ix, ctx.remaining_accounts,
-                          &[&[&flow.flow_owner.to_bytes(), &[bump]]]);
-                          //&[&[&pda.to_bytes(), &[bump]]]);
+        //Check to ensure caller is also account owner
+        if flow.flow_owner != *caller.key {
+            return Ok(());
         }
 
+
+        // empty_flow_data(flow);
+        // flow.close(*caller);
+        // msg!("Flow key: {:?}", flow);
+        // msg!("Flow to owner key {:?}", flow.flow_owner);
         Ok(())
     }
 
-    pub fn execute_scheduled_flow(ctx : Context<ExecuteScheduledFlow>) -> ProgramResult {
-        let flow = &mut ctx.accounts.flow;
-        msg!("Execute scheduled flow {:?}", flow.actions);
+    pub fn execute_flow(ctx : Context<UpdateFlow>) -> ProgramResult {
+        do_execute_flow(ctx, TRIGGER_METHOD_MANUAL)
+    }
 
-        let (pda, bump) = Pubkey::find_program_address(&[&flow.flow_owner.to_bytes()], ctx.program_id);
-        msg!("pda : {:?} and flow_owner {:?} ", pda, flow.flow_owner);
-        for action in flow.actions.iter() {
-            let mut metas = action.target_account_metas();
+    pub fn execute_scheduled_flow(ctx : Context<UpdateFlow>) -> ProgramResult {
+        let flow = &ctx.accounts.flow;
 
-            for meta in &mut metas {
-                if meta.pubkey.eq(&pda) {
-                    meta.is_signer = true;
-                }
-            }
-
-            let ix = Instruction {
-                program_id: action.program,
-                accounts: metas,
-                data: action.instruction.clone()
-            };
-
-            invoke_signed(&ix, ctx.remaining_accounts,
-                          &[&[&flow.flow_owner.to_bytes(), &[bump]]]);
-                          //&[&[&pda.to_bytes(), &[bump]]]);
+        if flow.next_execution_time == 0 {
+            // Not run 2 lines below in devnet and testnet as cluster time are not correct
+            // || flow.next_execution_time > now
+            // || now - flow.next_execution_time > FLOW_RETRY_WINDOW {
+            return Ok(());
         }
-        
-        flow.trigger = String::from("");
-        Ok(())
+
+        do_execute_flow(ctx, TRIGGER_METHOD_SCHEDULE)
     }
 
     pub fn pay_employee(ctx : Context<PayEmployee>) -> ProgramResult  {
@@ -164,7 +152,7 @@ pub mod snowflake {
         invoke_signed(
             &ix,
             &[
-             //   ctx.accounts.token_program.to_account_info(),
+                //   ctx.accounts.token_program.to_account_info(),
                 ctx.accounts.from.to_account_info(),
                 ctx.accounts.to.to_account_info(),
                 ctx.accounts.pda_authority.to_account_info()
@@ -178,9 +166,22 @@ pub mod snowflake {
 
 fn apply_flow_data(flow: &mut Flow, client_flow: Flow) {
     flow.name = client_flow.name;
-    flow.trigger = client_flow.trigger;
     flow.actions = client_flow.actions;
+    flow.next_execution_time = client_flow.next_execution_time;
+    flow.repeat_interval_unit = client_flow.repeat_interval_unit;
+    flow.repeat_interval_value = client_flow.repeat_interval_value;
 }
+
+fn empty_flow_data(flow: &mut Flow) {
+    flow.name = String::from("");
+    flow.actions = Vec::new();
+    flow.next_execution_time = 0;
+    flow.repeat_interval_unit = 0;
+    flow.repeat_interval_value = 0;
+    flow.last_execution_time = 0;
+    flow.last_trigger_method = 0;
+}
+
 
 #[derive(Accounts)]
 pub struct PayEmployee<'info> {
@@ -244,7 +245,7 @@ pub struct CreateJob<'info> {
 
 #[derive(Accounts)]
 pub struct CreateFlow<'info> {
-    #[account(init, payer = flow_owner, space = 1080)]
+    #[account(init, payer = flow_owner, space = 5000)]
     flow : Account<'info, Flow>,
     #[account(signer)]
     pub flow_owner : AccountInfo<'info>,
@@ -258,19 +259,24 @@ pub struct UpdateFlow<'info> {
 }
 
 #[derive(Accounts)]
-pub struct ExecuteScheduledFlow<'info> {
+pub struct DeleteFlow<'info> {
     #[account(mut)]
-    pub flow : Account<'info, Flow>,
+    flow : Account<'info, Flow>,
+    #[account(signer)]
+    pub caller : AccountInfo<'info>,
 }
-
 
 #[account]
 #[derive(Debug)]
 pub struct Flow {
     pub flow_owner : Pubkey,
+    pub repeat_interval_unit: u8,
+    pub repeat_interval_value: u16,
+    pub next_execution_time: i64,
+    pub last_execution_time: i64,
+    pub last_trigger_method: u8,
     pub name : String,
     pub actions :  Vec<Action>,
-    pub trigger: String
 }
 
 #[account]
@@ -306,7 +312,7 @@ fn do_execute_job(ctx : &Context<ExecuteJob>) {
 
 
 fn validate_target_accounts(accounts_passed_in_from_client : &[AccountInfo], job_target_accounts : &Vec<pubkey::Pubkey>)
-    -> Result<(), ProgramError> {
+                            -> Result<(), ProgramError> {
     // validate size
     if accounts_passed_in_from_client.len() != job_target_accounts.len() {
         return Err(ErrorCode::InvalidJobTargetAccounts.into())
@@ -395,6 +401,55 @@ fn to_account_metas(account_infos : &[AccountInfo]) -> Vec<AccountMeta> {
             true => AccountMeta::new(*acc.key, acc.is_signer),
         })
         .collect()
+}
+
+fn do_execute_flow(ctx: Context<UpdateFlow>, trigger_method: u8) -> ProgramResult {
+    let flow = &mut ctx.accounts.flow;
+    let (pda, bump) = Pubkey::find_program_address(&[&flow.flow_owner.to_bytes()], ctx.program_id);
+
+    for action in flow.actions.iter() {
+        let mut metas = action.target_account_metas();
+
+        for meta in &mut metas {
+            if meta.pubkey.eq(&pda) {
+                meta.is_signer = true;
+            }
+        }
+
+        let ix = Instruction {
+            program_id: action.program,
+            accounts: metas,
+            data: action.instruction.clone()
+        };
+
+        invoke_signed(&ix, ctx.remaining_accounts, &[&[&flow.flow_owner.to_bytes(), &[bump]]])?;
+    }
+
+    let clock = Clock::get()?;
+    let now = clock.unix_timestamp;
+
+    flow.last_execution_time = now;
+    flow.last_trigger_method = trigger_method;
+
+    if trigger_method == TRIGGER_METHOD_SCHEDULE {
+        flow.next_execution_time = calculate_next_execution_time(flow);
+    }
+
+    Ok(())
+}
+
+fn calculate_next_execution_time(flow: &Flow) -> i64 {
+    let seconds: i64;
+
+    match flow.repeat_interval_unit {
+        REPEAT_UNIT_MINUTE => seconds = 60,
+        REPEAT_UNIT_HOUR => seconds = 60 * 60,
+        REPEAT_UNIT_DAY => seconds = 24 * 60 * 60,
+        REPEAT_UNIT_WEEK => seconds = 7 * 24 * 60 * 60,
+        _ => return 0
+    }
+
+    flow.next_execution_time + seconds * (flow.repeat_interval_value as i64)
 }
 
 #[cfg(test)]
