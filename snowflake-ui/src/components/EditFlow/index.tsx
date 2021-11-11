@@ -324,9 +324,9 @@ export const EditFlow = ({}) => {
                     </Button>
                   </Link>
 
-                  <Button type="default" size="large" onClick={prepareFlow}>
+                  {/*<Button type="default" size="large" onClick={prepareFlow}>
                     Prepare Flow
-                  </Button>
+                  </Button>*/}
                 </Space>
               </span>
             )}
@@ -335,14 +335,14 @@ export const EditFlow = ({}) => {
           <br />
           <br />
 
-          <Divider plain orientation="left">
+          {/*<Divider plain orientation="left">
             UI FLOW
           </Divider>
           <pre>{JSON.stringify(uiFlow, null, 2)}</pre>
           <Divider plain orientation="left">
             FLOW TO SEND
           </Divider>
-          <pre>{JSON.stringify(dto.flow, null, 2)}</pre>
+          <pre>{JSON.stringify(dto.flow, null, 2)}</pre>*/}
         </div>
       </div>
     </span>
