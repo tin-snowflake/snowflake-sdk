@@ -9,6 +9,7 @@ import { ActionContext } from '../models/flowAction';
 import { ConnectionConfig } from '../contexts/connection';
 import { WalletContextState } from '@solana/wallet-adapter-react';
 import * as actionUtil from './flowActionUtil';
+import BN from 'bn.js';
 
 function flowOwnedAccountsFilter(publicKey: PublicKey) {
   let filter = {
@@ -21,7 +22,7 @@ function flowOwnedAccountsFilter(publicKey: PublicKey) {
 }
 
 let dataSizeFilter = {
-  dataSize: 1080,
+  dataSize: 5000,
 };
 
 export async function fetchFlowsByOwner(program: Program, publicKey: PublicKey) {
@@ -39,8 +40,8 @@ export const templateAction = { name: 'basic_action', actionCode: actionUtil.ACT
 export async function convertFlow(flow, connection: ConnectionConfig, wallet: WalletContextState, ignoreActions?): Promise<UIFlow> {
   let uiFlow = _.cloneDeep(flow);
   // convert unix timestamp to moment js time
-  if (uiFlow.trigger) {
-    uiFlow.trigger = moment.unix(uiFlow.trigger / 1000);
+  if (uiFlow.nextExecutionTime) {
+    uiFlow.nextExecutionTime = moment.unix(uiFlow.nextExecutionTime);
   }
   if (ignoreActions) {
     uiFlow.actions = [templateAction];
@@ -59,7 +60,7 @@ export async function convertUIFlow(uiFlow, connection: ConnectionConfig, wallet
   let flow = _.cloneDeep(uiFlow);
 
   // convert schedule time to unix timestamp
-  flow.trigger = (flow.trigger.unix() * 1000).toString();
+  flow.nextExecutionTime = new BN(flow.nextExecutionTime.unix());
 
   for (const [i, action] of flow.actions.entries()) {
     const actionType = flowActionUtil.actionTypeFromCode(action.actionCode);

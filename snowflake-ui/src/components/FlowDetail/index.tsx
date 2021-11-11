@@ -224,7 +224,7 @@ export const FlowDetail = ({}) => {
               size="small">
               <Form.Item label="Schedule">
                 <div className="iconAndText">
-                  <MdSchedule /> {uiFlow.trigger ? uiFlow.trigger.format('LLL') : ''}
+                  <MdSchedule /> {uiFlow.nextExecutionTime ? uiFlow.nextExecutionTime.format('LLL') : ''}
                 </div>
               </Form.Item>
             </Card>

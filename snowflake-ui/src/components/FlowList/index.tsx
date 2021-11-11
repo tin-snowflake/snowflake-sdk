@@ -38,7 +38,7 @@ export const FlowList = (props: {}) => {
       {flows.map(flow => (
         <span>
           {/*{JSON.stringify(flow, null, 2)}*/}
-          <FlowListItem key={flow.publicKey} name={flow.account.name} flowKey={flow.publicKey} schedule={flow.account.trigger} actions="custom" />
+          <FlowListItem key={flow.publicKey} name={flow.account.name} flowKey={flow.publicKey} schedule={flow.account.nextExecutionTime} actions="custom" />
         </span>
       ))}
 
