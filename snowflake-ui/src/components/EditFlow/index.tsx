@@ -229,14 +229,12 @@ export const EditFlow = ({}) => {
                     format="MMMM D, YYYY  h:mm a"
                     showTime={true}
                     name="trigger"
-                    value={uiFlow.trigger}
+                    value={uiFlow.nextExecutionTime}
                     onChange={(date, dateString) => {
-                      uiFlow.trigger = date;
+                      uiFlow.nextExecutionTime = date;
                       updateState();
                     }}
                   />
-
-                  {/*<Input name="trigger" value={uiFlow.trigger} onChange={handleChange(uiFlow)} />*/}
                 </Form.Item>
               </Skeleton>
             </Card>
@@ -327,8 +325,8 @@ export const EditFlow = ({}) => {
                   </Link>
 
                   {/*<Button type="default" size="large" onClick={prepareFlow}>
-                Prepare Flow
-              </Button>*/}
+                    Prepare Flow
+                  </Button>*/}
                 </Space>
               </span>
             )}
@@ -337,7 +335,7 @@ export const EditFlow = ({}) => {
           <br />
           <br />
 
-          {/* <Divider plain orientation="left">
+          {/*<Divider plain orientation="left">
             UI FLOW
           </Divider>
           <pre>{JSON.stringify(uiFlow, null, 2)}</pre>
