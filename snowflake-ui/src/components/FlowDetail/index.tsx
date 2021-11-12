@@ -12,6 +12,7 @@ import { notify } from '../../utils/notifications';
 import { useConnection, useConnectionConfig } from '../../contexts/connection';
 import { SensitiveButton } from '../SensitiveButton';
 import { SmartTxnClient } from '../../utils/smartTxnClient';
+import { ScheduleRepeatOption } from '../../models/flow';
 
 export const FlowDetail = ({}) => {
   const program = useAnchorProgram();
@@ -194,7 +195,7 @@ export const FlowDetail = ({}) => {
             style={{ maxWidth: '800px' }}
             name="basic"
             labelAlign="left"
-            labelCol={{ span: 3 }}
+            labelCol={{ span: 4 }}
             wrapperCol={{ span: 12 }}
             initialValues={{ remember: true }}
             onFinish={onFinish}
@@ -222,11 +223,12 @@ export const FlowDetail = ({}) => {
                 </div>
               }
               size="small">
-              <Form.Item label="Schedule">
+              <Form.Item label="Schedule At">
                 <div className="iconAndText">
-                  <MdSchedule /> {uiFlow.nextExecutionTime ? uiFlow.nextExecutionTime.format('LLL') : ''}
+                  <MdSchedule /> {uiFlow.nextExecutionTime ? uiFlow.nextExecutionTime.format('LLL') : 'none'}
                 </div>
               </Form.Item>
+              <Form.Item label="Repeat">{uiFlow.repeatOption == ScheduleRepeatOption.Yes ? 'Yes' : 'No'}</Form.Item>
             </Card>
 
             <span>
