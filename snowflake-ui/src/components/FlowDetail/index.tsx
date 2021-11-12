@@ -3,7 +3,7 @@ import { useAnchor, useAnchorProgram } from '../../contexts/anchorContext';
 import { AccountMeta, PublicKey } from '@solana/web3.js';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { Button, Card, Form, PageHeader, Skeleton, Table, Tabs } from 'antd';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useHistory, useParams } from 'react-router-dom';
 import _ from 'lodash';
 import * as flowUtil from '../../utils/flowUtil';
 import * as snowUtil from '../../utils/snowUtils';
@@ -18,6 +18,7 @@ export const FlowDetail = ({}) => {
   const program = useAnchorProgram();
   let anchor = useAnchor();
   const walletCtx = useWallet();
+  const history = useHistory();
   const { flowKey } = useParams<{ flowKey: string }>();
 
   async function init() {
@@ -170,6 +171,20 @@ export const FlowDetail = ({}) => {
     await updateExecutionHistory();
   }
 
+  async function deleteFlow() {
+    let deleteContext: any = {
+      accounts: {
+        flow: new PublicKey(flowKey),
+        caller: walletCtx.publicKey,
+      }
+    };
+
+    const tx = await program.rpc.deleteFlow(deleteContext);
+    console.log('Transaction: ', tx);
+    
+    history.push('/');
+  }
+
   return (
     <span style={{ width: '100%' }} className="flowDetailPage">
       <PageHeader
@@ -184,7 +199,9 @@ export const FlowDetail = ({}) => {
           <Link to={'/editflow/' + flowKey}>
             <Button size="large">Edit</Button>
           </Link>,
-          <Button size="large">Deactivate</Button>,
+          <SensitiveButton size="large" onClick={() => deleteFlow()}>
+            Delete
+          </SensitiveButton>,
           <SensitiveButton size="large" onClick={() => executeFlow()}>
             Run Now
           </SensitiveButton>,
