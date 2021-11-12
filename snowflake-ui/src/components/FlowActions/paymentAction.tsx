@@ -18,7 +18,7 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { sendTransaction, useConnection } from '../../contexts/connection';
 import { notify } from '../../utils/notifications';
 import { TokenInput } from '../TokenInput';
-import { Instruction } from '@project-serum/anchor/dist/cjs/coder/instruction';
+import * as actionUtil from '../../utils/flowActionUtil';
 
 export class PaymentAction implements FlowActionResolver {
   code = 101;
@@ -118,8 +118,8 @@ export class PaymentAction implements FlowActionResolver {
   };
 
   initNewAction(action) {
-    action.recipient = {};
-    action.token = {};
+    if (!action.recipient) action.recipient = {};
+    if (!action.token) action.token = {};
   }
 
   async outputInstructions(ctx: ActionContext): Promise<OutputIXSet[]> {

@@ -21,7 +21,7 @@ export const FlowListItem = ({ name, flowKey, schedule, actions }) => {
             <Space size={70}>
               <div style={{ width: '250px' }}>
                 <label>Trigger</label> &nbsp;&nbsp;
-                <div>{isNaN(+schedule) ? schedule : snowUtil.formatUnixTimeStamp(schedule / 1000)}</div>
+                <div>{isNaN(+schedule) ? schedule : snowUtil.formatUnixTimeStamp(schedule)}</div>
               </div>
 
               <div>

@@ -4,8 +4,15 @@ import _ from 'lodash';
 import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons/lib';
 import React from 'react';
 import { toPublicKey } from '../../utils/snowUtils';
+import * as actionUtil from '../../utils/flowActionUtil';
 
 export class CustomAction implements FlowActionResolver {
+  async newAction(): Promise<UIAction> {
+    const action: UIAction = { name: 'basic_action', actionCode: actionUtil.ACTION_TYPES.customAction.code, accounts: [] };
+    action.accounts = [{ isSigner: false, isWritable: false }];
+    return action;
+  }
+
   code = 100;
 
   async convertAction(ctx: ActionContext): Promise<UIAction> {

@@ -1,5 +1,5 @@
 import { PublicKey } from '@solana/web3.js';
-import * as dayjs from 'dayjs';
+import moment from 'moment';
 
 export function toPublicKey(keyStr) {
   try {
@@ -11,7 +11,7 @@ export function toPublicKey(keyStr) {
 }
 
 export function formatUnixTimeStamp(unixTimestamp) {
-  return dayjs.unix(unixTimestamp).format('MMMM D, YYYY h:mm A');
+  return moment.unix(unixTimestamp).format('MMMM D, YYYY h:mm A');
 }
 
 class QuietError extends Error {

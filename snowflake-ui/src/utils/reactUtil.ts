@@ -17,6 +17,7 @@ export async function smartClick(fn: () => Promise<any>) {
   try {
     await fn();
   } catch (e) {
+    console.log('Error processing action', e);
     if (e['code'] == 4001) return; // user cancel wallet, show nothing.
     if (e instanceof QuietError) return; // program want to keep quiet, show nothing.
     notify({

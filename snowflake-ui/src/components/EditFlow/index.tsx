@@ -3,20 +3,20 @@ import { useAnchor, useAnchorProgram } from '../../contexts/anchorContext';
 import { PublicKey, SystemProgram, TransactionInstruction } from '@solana/web3.js';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { Button, Card, DatePicker, Divider, Form, Input, PageHeader, Select, Skeleton, Space } from 'antd';
-import { Link, useHistory, useParams } from 'react-router-dom';
+import { Link, useHistory, useLocation, useParams } from 'react-router-dom';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons/lib';
 import _ from 'lodash';
 import * as flowUtil from '../../utils/flowUtil';
 import * as actionUtil from '../../utils/flowActionUtil';
 import * as flowActionUtil from '../../utils/flowActionUtil';
 import { MdOutlineArrowCircleUp, MdOutlineInfo, MdOutlineOfflineBolt } from 'react-icons/all';
-import { Instruction } from '@project-serum/anchor';
-import { sendTransaction, useConnection, useConnectionConfig } from '../../contexts/connection';
+import { useConnectionConfig } from '../../contexts/connection';
 import { SensitiveButton } from '../SensitiveButton';
 import { ActionContext } from '../../models/flowAction';
 import { SmartTxnClient } from '../../utils/smartTxnClient';
-import { Suspense } from 'react';
-import { templateAccount, templateAction } from '../../utils/flowUtil';
+import { handleInputChange, handleSelectChange } from '../../utils/reactUtil';
+import { ScheduleRepeatOption } from '../../models/flow';
+import moment from 'moment';
 
 export const EditFlow = ({}) => {
   const program = useAnchorProgram();
@@ -27,7 +27,19 @@ export const EditFlow = ({}) => {
 
   const { flowKey } = useParams<{ flowKey: string }>();
 
+  const [debug, setDebug] = useState(false);
+  function useQuery() {
+    const { search } = useLocation();
+    return React.useMemo(() => new URLSearchParams(search), [search]);
+  }
+  let query = useQuery();
+
+  let defaultScheduleTime = moment().add(1, 'week'); // 1 week from now
+  let initialFlow: any = { name: 'My first automation', repeatOption: ScheduleRepeatOption.No, nextExecutionTime: defaultScheduleTime, actions: [] };
+  let [uiFlow, setUIFlow] = useState(initialFlow);
+
   async function init() {
+    setDebug(query.get('debug') ? true : false);
     if (flowKey) {
       setLoading(true);
       let fetchedFlow = await program.account.flow.fetch(new PublicKey(flowKey));
@@ -35,11 +47,18 @@ export const EditFlow = ({}) => {
       updateState();
       dto.flow = fetchedFlow;
       uiFlow = await flowUtil.convertFlow(fetchedFlow, connectionConfig, walletCtx);
-      updateState();
       setLoading(false);
+    } else {
+      initialFlow.actions = [newDefaultAction()];
     }
+    updateState();
   }
 
+  function newDefaultAction() {
+    const action = { name: 'basic_action', actionCode: actionUtil.ACTION_TYPES.paymentAction.code, accounts: [] };
+    flowActionUtil.ACTION_TYPES.paymentAction.initNewAction(action);
+    return action;
+  }
   function isNewFlow() {
     return !flowKey;
   }
@@ -63,27 +82,6 @@ export const EditFlow = ({}) => {
 
   const onFinishFailed = (errorInfo: any) => {
     console.log('Failed:', errorInfo);
-  };
-
-  let test_buffer = Buffer.from('afaf6d1f0d989bed', 'hex');
-  let test_flow = {
-    name: 'flow 22',
-    trigger: 'trigger 22',
-    actions: [
-      {
-        name: 'basic_action',
-        actionCode: 100,
-        accounts: [
-          {
-            isSigner: false,
-            isWritable: false,
-            pubkey: new PublicKey('A81yKd3HLdy4p9go8x8V6UCuWsdZU7i9TErkJ1C2yoGY'),
-          },
-        ],
-        instruction: test_buffer,
-        program: new PublicKey('CkU18ja7QRKhxnQSmcxm7w3fvfEQPmJbM8QfMVncTWT1'),
-      },
-    ],
   };
 
   async function collectActionInstructions(): Promise<TransactionInstruction[]> {
@@ -141,11 +139,6 @@ export const EditFlow = ({}) => {
     history.push('/flowDetail/' + keyUsed);
   }
 
-  let initialAccount = templateAccount;
-  let initialAction: any = templateAction;
-  let initialFlow: any = { actions: [initialAction] };
-  let [uiFlow, setUIFlow] = useState(initialFlow);
-
   let initialDto: any = {};
   const [dto, setDto] = useState(initialDto);
 
@@ -156,13 +149,8 @@ export const EditFlow = ({}) => {
     updateState();
   };
 
-  const addAccount = accounts => e => {
-    accounts.push(initialAccount);
-    updateState();
-  };
-
   const addAction = actions => e => {
-    actions.push(initialAction);
+    actions.push(newDefaultAction());
     updateState();
   };
 
@@ -223,20 +211,50 @@ export const EditFlow = ({}) => {
                     <Option value="EE">External Event</Option>
                   </Select>
                 </Form.Item>
-                <Form.Item label="Schedule" rules={[{ required: false, message: 'Trigger is required' }]}>
+                <Form.Item label="Schedule At" rules={[{ required: false, message: 'Trigger is required' }]}>
                   <DatePicker
                     style={{ width: '100%' }}
                     format="MMMM D, YYYY  h:mm a"
                     showTime={true}
                     name="trigger"
-                    value={uiFlow.trigger}
+                    value={uiFlow.nextExecutionTime}
                     onChange={(date, dateString) => {
-                      uiFlow.trigger = date;
+                      uiFlow.nextExecutionTime = date;
                       updateState();
                     }}
                   />
-
-                  {/*<Input name="trigger" value={uiFlow.trigger} onChange={handleChange(uiFlow)} />*/}
+                </Form.Item>
+                <Form.Item label="Repeat">
+                  <Select
+                    style={{ width: '80px' }}
+                    value={uiFlow.repeatOption}
+                    onChange={value =>
+                      handleSelectChange(uiFlow, 'repeatOption', value, () => {
+                        if (value == ScheduleRepeatOption.Yes) {
+                          uiFlow.repeatIntervalValue = 1;
+                          uiFlow.repeatIntervalUnit = 4;
+                        } else {
+                          uiFlow.repeatIntervalValue = 0;
+                        }
+                        updateState();
+                      })
+                    }>
+                    <Option value={ScheduleRepeatOption.No}>No</Option>
+                    <Option value={ScheduleRepeatOption.Yes}>Yes</Option>
+                  </Select>
+                  {uiFlow.repeatOption == ScheduleRepeatOption.Yes && (
+                    <div style={{ float: 'right' }}>
+                      Every &nbsp;&nbsp;
+                      <Input style={{ width: '50px' }} name="repeatIntervalValue" value={uiFlow.repeatIntervalValue} onChange={handleInputChange(uiFlow, updateState)} />
+                      &nbsp;&nbsp;
+                      <Select style={{ width: '120px' }} value={'' + uiFlow.repeatIntervalUnit} onChange={value => handleSelectChange(uiFlow, 'repeatIntervalUnit', value, updateState)}>
+                        <Option value="1">Minute</Option>
+                        <Option value="2">Hour</Option>
+                        <Option value="3">Day</Option>
+                        <Option value="4">Week</Option>
+                      </Select>
+                    </div>
+                  )}
                 </Form.Item>
               </Skeleton>
             </Card>
@@ -259,7 +277,7 @@ export const EditFlow = ({}) => {
                     <Form.Item label="Action Type">
                       <Select
                         value={action.actionCode}
-                        onChange={value => {
+                        onChange={async value => {
                           action.actionCode = value;
                           const actionType = flowActionUtil.actionTypeFromCode(action.actionCode);
                           actionType.initNewAction(action);
@@ -326,9 +344,11 @@ export const EditFlow = ({}) => {
                     </Button>
                   </Link>
 
-                  {/*<Button type="default" size="large" onClick={prepareFlow}>
-                Prepare Flow
-              </Button>*/}
+                  {debug && (
+                    <Button type="default" size="large" onClick={prepareFlow}>
+                      Prepare Flow
+                    </Button>
+                  )}
                 </Space>
               </span>
             )}
@@ -336,15 +356,18 @@ export const EditFlow = ({}) => {
 
           <br />
           <br />
-
-          {/* <Divider plain orientation="left">
-            UI FLOW
-          </Divider>
-          <pre>{JSON.stringify(uiFlow, null, 2)}</pre>
-          <Divider plain orientation="left">
-            FLOW TO SEND
-          </Divider>
-          <pre>{JSON.stringify(dto.flow, null, 2)}</pre>*/}
+          {debug && (
+            <span>
+              <Divider plain orientation="left">
+                UI FLOW
+              </Divider>
+              <pre>{JSON.stringify(uiFlow, null, 2)}</pre>
+              <Divider plain orientation="left">
+                FLOW TO SEND
+              </Divider>
+              <pre>{JSON.stringify(dto.flow, null, 2)}</pre>
+            </span>
+          )}
         </div>
       </div>
     </span>

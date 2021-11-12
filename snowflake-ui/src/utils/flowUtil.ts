@@ -1,14 +1,15 @@
 import { PublicKey } from '@solana/web3.js';
 import { FLOW_ACCOUNT_LAYOUT } from '../layouts/snowflakeLayouts';
 import { Program } from '@project-serum/anchor';
-import { Flow, UIFlow } from '../models/flow';
+import { Flow, ScheduleRepeatOption, UIFlow } from '../models/flow';
 import * as flowActionUtil from './flowActionUtil';
+import * as actionUtil from './flowActionUtil';
 import _ from 'lodash';
 import moment from 'moment';
 import { ActionContext } from '../models/flowAction';
 import { ConnectionConfig } from '../contexts/connection';
 import { WalletContextState } from '@solana/wallet-adapter-react';
-import * as actionUtil from './flowActionUtil';
+import BN from 'bn.js';
 
 function flowOwnedAccountsFilter(publicKey: PublicKey) {
   let filter = {
@@ -21,7 +22,7 @@ function flowOwnedAccountsFilter(publicKey: PublicKey) {
 }
 
 let dataSizeFilter = {
-  dataSize: 1080,
+  dataSize: 5000,
 };
 
 export async function fetchFlowsByOwner(program: Program, publicKey: PublicKey) {
@@ -34,14 +35,17 @@ export async function fetchGlobalFlows(program: Program) {
   return program.account.flow.all([dataSizeFilter]);
 }
 
-export const templateAccount = { isSigner: false, isWritable: false };
-export const templateAction = { name: 'basic_action', actionCode: actionUtil.ACTION_TYPES.customAction.code, accounts: [templateAccount] };
+export const templateAction = { name: 'basic_action', actionCode: actionUtil.ACTION_TYPES.customAction.code, accounts: [{ isSigner: false, isWritable: false }] };
+
 export async function convertFlow(flow, connection: ConnectionConfig, wallet: WalletContextState, ignoreActions?): Promise<UIFlow> {
   let uiFlow = _.cloneDeep(flow);
-  // convert unix timestamp to moment js time
-  if (uiFlow.trigger) {
-    uiFlow.trigger = moment.unix(uiFlow.trigger / 1000);
+  // convert unix timestamp to moment js time object
+  if (uiFlow.nextExecutionTime) {
+    uiFlow.nextExecutionTime = moment.unix(uiFlow.nextExecutionTime);
   }
+
+  uiFlow.repeatOption = uiFlow.repeatIntervalValue > 0 ? ScheduleRepeatOption.Yes : ScheduleRepeatOption.No;
+
   if (ignoreActions) {
     uiFlow.actions = [templateAction];
     return uiFlow;
@@ -59,8 +63,7 @@ export async function convertUIFlow(uiFlow, connection: ConnectionConfig, wallet
   let flow = _.cloneDeep(uiFlow);
 
   // convert schedule time to unix timestamp
-  flow.trigger = (flow.trigger.unix() * 1000).toString();
-
+  flow.nextExecutionTime = new BN(flow.nextExecutionTime.unix());
   for (const [i, action] of flow.actions.entries()) {
     const actionType = flowActionUtil.actionTypeFromCode(action.actionCode);
     const actionContext: ActionContext = { action: action, connectionConfig: connection, wallet: wallet };
