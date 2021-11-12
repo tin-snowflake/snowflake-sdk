@@ -1,9 +1,10 @@
 mod error;
 
 use anchor_lang::prelude::*;
-use anchor_lang::{Key, solana_program};
+use anchor_lang::{Key, solana_program, Accounts};
 use anchor_lang::solana_program::program::invoke;
 use spl_token::solana_program::program::invoke_signed;
+
 use anchor_lang::solana_program::instruction::Instruction;
 use solana_program::pubkey;
 use std::num::ParseIntError;
@@ -100,17 +101,14 @@ pub mod snowflake {
     pub fn delete_flow(ctx : Context<DeleteFlow>) -> ProgramResult {
         let flow = &mut ctx.accounts.flow;
         let caller = &ctx.accounts.caller;
-
+        
         //Check to ensure caller is also account owner
         if flow.flow_owner != *caller.key {
-            return Ok(());
+            return Err(ProgramError::IllegalOwner);
         }
 
+        empty_flow_data(flow);
 
-        // empty_flow_data(flow);
-        // flow.close(*caller);
-        // msg!("Flow key: {:?}", flow);
-        // msg!("Flow to owner key {:?}", flow.flow_owner);
         Ok(())
     }
 
@@ -123,7 +121,7 @@ pub mod snowflake {
 
         if flow.next_execution_time == 0 {
             // Not run 2 lines below in devnet and testnet as cluster time are not correct
-            // || flow.next_execution_time > now
+            // || flow.next_execution_time > now 
             // || now - flow.next_execution_time > FLOW_RETRY_WINDOW {
             return Ok(());
         }
@@ -152,7 +150,7 @@ pub mod snowflake {
         invoke_signed(
             &ix,
             &[
-                //   ctx.accounts.token_program.to_account_info(),
+             //   ctx.accounts.token_program.to_account_info(),
                 ctx.accounts.from.to_account_info(),
                 ctx.accounts.to.to_account_info(),
                 ctx.accounts.pda_authority.to_account_info()
@@ -260,9 +258,9 @@ pub struct UpdateFlow<'info> {
 
 #[derive(Accounts)]
 pub struct DeleteFlow<'info> {
-    #[account(mut)]
+    #[account(mut, close=caller)]
     flow : Account<'info, Flow>,
-    #[account(signer)]
+    #[account()]
     pub caller : AccountInfo<'info>,
 }
 
@@ -312,7 +310,7 @@ fn do_execute_job(ctx : &Context<ExecuteJob>) {
 
 
 fn validate_target_accounts(accounts_passed_in_from_client : &[AccountInfo], job_target_accounts : &Vec<pubkey::Pubkey>)
-                            -> Result<(), ProgramError> {
+    -> Result<(), ProgramError> {
     // validate size
     if accounts_passed_in_from_client.len() != job_target_accounts.len() {
         return Err(ErrorCode::InvalidJobTargetAccounts.into())
@@ -433,7 +431,7 @@ fn do_execute_flow(ctx: Context<UpdateFlow>, trigger_method: u8) -> ProgramResul
 
     if trigger_method == TRIGGER_METHOD_SCHEDULE {
         flow.next_execution_time = calculate_next_execution_time(flow);
-    }
+    }    
 
     Ok(())
 }
