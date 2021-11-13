@@ -13,6 +13,8 @@ import { useConnection, useConnectionConfig } from '../../contexts/connection';
 import { SensitiveButton } from '../SensitiveButton';
 import { SmartTxnClient } from '../../utils/smartTxnClient';
 import { ScheduleRepeatOption } from '../../models/flow';
+import { confirmAlert } from 'react-confirm-alert'; // Import
+import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
 
 export const FlowDetail = ({}) => {
   const program = useAnchorProgram();
@@ -185,6 +187,23 @@ export const FlowDetail = ({}) => {
     history.push('/');
   }
 
+  function confirmDelete() {
+    confirmAlert({
+      title: 'Delete Automation',
+      message: 'Are you sure to delete this automation ?',
+      buttons: [
+        {
+          label: 'Yes',
+          onClick: () => deleteFlow()
+        },
+        {
+          label: 'No',
+          onClick: () => {}
+        }
+      ]
+    });
+  };
+
   return (
     <span style={{ width: '100%' }} className="flowDetailPage">
       <PageHeader
@@ -199,9 +218,7 @@ export const FlowDetail = ({}) => {
           <Link to={'/editflow/' + flowKey}>
             <Button size="large">Edit</Button>
           </Link>,
-          <SensitiveButton size="large" onClick={() => deleteFlow()}>
-            Delete
-          </SensitiveButton>,
+          <Button size="large" onClick={() => confirmDelete()} >Delete</Button>,
           <SensitiveButton size="large" onClick={() => executeFlow()}>
             Run Now
           </SensitiveButton>,
