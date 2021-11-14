@@ -31,20 +31,15 @@ export const FlowDetail = ({}) => {
       uiFlow = await flowUtil.convertFlow(fetchedFlow, connectionConfig, walletCtx);
       updateExecutionHistory();
       updateState();
-
-      connectionConfig.connection.onAccountChange(new PublicKey(flowKey), () => {
-        console.log('on account change trigger ...');
-        init();
-      });
     }
   }
 
   useInterval(
     () => {
-      updateState();
+      // updateState();
     },
     // Delay in milliseconds or null to stop it
-    5000
+    10000
   );
 
   function prepareFlowForSave() {
@@ -52,8 +47,17 @@ export const FlowDetail = ({}) => {
     dto.idlFlow = flow;
   }
 
+  const [listenerId, setListenerId] = useState(0);
   useEffect(() => {
+    console.log('*** calling use effect ... ');
     init();
+    const listenerId = connectionConfig.connection.onAccountChange(new PublicKey(flowKey), async () => {
+      console.log('on account change trigger ...');
+      await init();
+    });
+    return function cleanup() {
+      connectionConfig.connection.removeAccountChangeListener(listenerId);
+    };
   }, []);
 
   const onFinish = (values: any) => {
@@ -102,6 +106,8 @@ export const FlowDetail = ({}) => {
 
   function updateState() {
     setUIFlow({ ...uiFlow });
+    console.log('updating state, nextExecution', uiFlow.nextExecutionTime?.toString());
+    console.log('updating state, name', uiFlow.name);
   }
 
   const { TabPane } = Tabs;
@@ -195,7 +201,7 @@ export const FlowDetail = ({}) => {
     UNKNOWN,
   }
 
-  const EXECUTION_THRESHOLD = 20; // seconds
+  const EXECUTION_THRESHOLD = 120; // seconds
   function getStatus(): STATUS {
     if (uiFlow.nextExecutionTime && uiFlow.nextExecutionTime.unix() > 0) {
       if (uiFlow.nextExecutionTime.isAfter(moment())) return STATUS.COUNTDOWN;
@@ -270,7 +276,7 @@ export const FlowDetail = ({}) => {
                 )}
                 {getStatus() == STATUS.EXECUTED && (
                   <span className="infoText">
-                    <CheckCircleOutlined /> Last executed at {uiFlow.lastExecutionTime.format('h:mm A, MMMM D, YYYY ')}.
+                    <CheckCircleOutlined /> Last executed at {uiFlow.lastExecutionTime.format('h:mm A, MMMM D, YYYY')}.
                   </span>
                 )}
               </div>
