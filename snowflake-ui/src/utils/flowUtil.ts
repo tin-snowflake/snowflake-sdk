@@ -41,7 +41,11 @@ export async function convertFlow(flow, connection: ConnectionConfig, wallet: Wa
   let uiFlow = _.cloneDeep(flow);
   // convert unix timestamp to moment js time object
   if (uiFlow.nextExecutionTime) {
-    uiFlow.nextExecutionTime = moment.unix(uiFlow.nextExecutionTime);
+    uiFlow.nextExecutionTime = uiFlow.nextExecutionTime > 0 ? moment.unix(uiFlow.nextExecutionTime) : null;
+  }
+
+  if (uiFlow.lastExecutionTime) {
+    uiFlow.lastExecutionTime = moment.unix(uiFlow.lastExecutionTime);
   }
 
   uiFlow.repeatOption = uiFlow.repeatIntervalValue > 0 ? ScheduleRepeatOption.Yes : ScheduleRepeatOption.No;
@@ -62,8 +66,11 @@ export async function convertFlow(flow, connection: ConnectionConfig, wallet: Wa
 export async function convertUIFlow(uiFlow, connection: ConnectionConfig, wallet: WalletContextState): Promise<Flow> {
   let flow = _.cloneDeep(uiFlow);
 
-  // convert schedule time to unix timestamp
-  flow.nextExecutionTime = new BN(flow.nextExecutionTime.unix());
+  // convert next execution time to unix timestamp
+  flow.nextExecutionTime = flow.nextExecutionTime ? new BN(flow.nextExecutionTime.unix()) : new BN(0);
+
+  // convert last execution time just so anchor is not failing, we're not going to save last execution time
+  flow.lastExecutionTime = flow.lastExecutionTime ? new BN(flow.lastExecutionTime.unix()) : new BN(0);
   for (const [i, action] of flow.actions.entries()) {
     const actionType = flowActionUtil.actionTypeFromCode(action.actionCode);
     const actionContext: ActionContext = { action: action, connectionConfig: connection, wallet: wallet };
