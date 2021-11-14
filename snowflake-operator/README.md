@@ -3,7 +3,7 @@ export ANCHOR_WALLET="/home/minh/.config/solana/id.json"
 export ANCHOR_PROVIDER_URL="http://localhost:8899"
 
 # 2. Create symlink to idl, from the snowflake-operator directory, use the command below
-ln -sf ~/workspace/snow/snowflake-rust/target/idl/snowflake.json /idl/snowflake.json
+ln -sf ~/workspace/snow/snowflake-rust/target/idl/snowflake.json idl/snowflake.json
 
 # 3. Build the program
 zip -r build/function.zip idl keys node_modules index.js

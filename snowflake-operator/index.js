@@ -13,7 +13,7 @@ exports.handler = async function() {
   let flows = await listFlowsToBeExecuted();
 
   for (let flow of flows) {
-    await excecuteFlow(flow);
+    excecuteFlow(flow);
   }
 }
 
