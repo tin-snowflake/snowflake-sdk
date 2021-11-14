@@ -310,6 +310,7 @@ export const FlowDetail = ({}) => {
                 {getStatus() == STATUS.EXECUTED && (
                   <span className="infoText">
                     <CheckCircleOutlined /> Last executed at {uiFlow.lastExecutionTime.format('h:mm A, MMMM D, YYYY')}.
+                    <br /> No further pending execution.
                   </span>
                 )}
               </div>
