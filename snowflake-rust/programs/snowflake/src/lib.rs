@@ -260,7 +260,7 @@ pub struct UpdateFlow<'info> {
 pub struct DeleteFlow<'info> {
     #[account(mut, close=caller)]
     flow : Account<'info, Flow>,
-    #[account()]
+    #[account(signer)]
     pub caller : AccountInfo<'info>,
 }
 
