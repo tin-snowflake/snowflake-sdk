@@ -35,7 +35,7 @@ export const EditFlow = ({}) => {
   let query = useQuery();
 
   let defaultScheduleTime = moment().add(1, 'week'); // 1 week from now
-  let initialFlow: any = { name: 'My first automation', repeatOption: ScheduleRepeatOption.No, nextExecutionTime: defaultScheduleTime, actions: [] };
+  let initialFlow: any = { repeatOption: ScheduleRepeatOption.No, nextExecutionTime: defaultScheduleTime, actions: [] };
   let [uiFlow, setUIFlow] = useState(initialFlow);
 
   async function init() {

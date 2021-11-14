@@ -2,21 +2,24 @@ import React, { useEffect, useState } from 'react';
 import { useAnchor, useAnchorProgram } from '../../contexts/anchorContext';
 import { AccountMeta, PublicKey } from '@solana/web3.js';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { Button, Card, Form, PageHeader, Skeleton, Table, Tabs } from 'antd';
+import { Alert, Button, Card, Form, PageHeader, Skeleton, Spin, Table, Tabs } from 'antd';
 import { Link, useParams } from 'react-router-dom';
 import _ from 'lodash';
 import * as flowUtil from '../../utils/flowUtil';
 import * as snowUtil from '../../utils/snowUtils';
-import { MdCircle, MdOutlineArrowCircleUp, MdOutlineInfo, MdOutlineOfflineBolt, MdOutlineSync, MdOutlineTextSnippet, MdSchedule } from 'react-icons/all';
+import { MdCircle, MdOutlineArrowCircleUp, MdOutlineInfo, MdErrorOutline, MdOutlineOfflineBolt, MdOutlineSync, MdOutlineTextSnippet, MdSchedule } from 'react-icons/all';
 import { notify } from '../../utils/notifications';
 import { useConnection, useConnectionConfig } from '../../contexts/connection';
 import { SensitiveButton } from '../SensitiveButton';
 import { SmartTxnClient } from '../../utils/smartTxnClient';
 import { ScheduleRepeatOption } from '../../models/flow';
+import Countdown from 'antd/es/statistic/Countdown';
+import moment from 'moment';
+import { useInterval } from 'usehooks-ts';
+import { CheckCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons/lib';
 
 export const FlowDetail = ({}) => {
   const program = useAnchorProgram();
-  let anchor = useAnchor();
   const walletCtx = useWallet();
   const { flowKey } = useParams<{ flowKey: string }>();
 
@@ -28,8 +31,21 @@ export const FlowDetail = ({}) => {
       uiFlow = await flowUtil.convertFlow(fetchedFlow, connectionConfig, walletCtx);
       updateExecutionHistory();
       updateState();
+
+      connectionConfig.connection.onAccountChange(new PublicKey(flowKey), () => {
+        console.log('on account change trigger ...');
+        init();
+      });
     }
   }
+
+  useInterval(
+    () => {
+      updateState();
+    },
+    // Delay in milliseconds or null to stop it
+    5000
+  );
 
   function prepareFlowForSave() {
     flow = flowUtil.convertUIFlow(uiFlow, connectionConfig, walletCtx);
@@ -128,6 +144,7 @@ export const FlowDetail = ({}) => {
     setLoadingHistory(false);
     let signatures = await connectionConfig.connection.getConfirmedSignaturesForAddress2(new PublicKey(flowKey));
     let executions = signatures.map(s => ({
+      key: s.signature,
       txn_trigger: 'Manual',
       txn_signature: s.signature,
       txn_time: s.blockTime,
@@ -170,6 +187,27 @@ export const FlowDetail = ({}) => {
     await updateExecutionHistory();
   }
 
+  enum STATUS {
+    COUNTDOWN,
+    EXECUTING,
+    EXECUTED,
+    NO_EXECUTE,
+    UNKNOWN,
+  }
+
+  const EXECUTION_THRESHOLD = 20; // seconds
+  function getStatus(): STATUS {
+    if (uiFlow.nextExecutionTime && uiFlow.nextExecutionTime.unix() > 0) {
+      if (uiFlow.nextExecutionTime.isAfter(moment())) return STATUS.COUNTDOWN;
+      else if (uiFlow.nextExecutionTime.isBefore(moment()) && uiFlow.nextExecutionTime.isAfter(moment().subtract(EXECUTION_THRESHOLD, 'second'))) return STATUS.EXECUTING;
+      else if (uiFlow.nextExecutionTime.isBefore(moment().subtract(EXECUTION_THRESHOLD, 'second'))) return STATUS.NO_EXECUTE;
+    } else {
+      if (uiFlow.lastExecutionTime) {
+        return STATUS.EXECUTED;
+      }
+    }
+    return STATUS.UNKNOWN;
+  }
   return (
     <span style={{ width: '100%' }} className="flowDetailPage">
       <PageHeader
@@ -195,7 +233,7 @@ export const FlowDetail = ({}) => {
             style={{ maxWidth: '800px' }}
             name="basic"
             labelAlign="left"
-            labelCol={{ span: 4 }}
+            labelCol={{ span: 3 }}
             wrapperCol={{ span: 12 }}
             initialValues={{ remember: true }}
             onFinish={onFinish}
@@ -203,6 +241,41 @@ export const FlowDetail = ({}) => {
             onFinishFailed={onFinishFailed}
             autoComplete="off">
             <Card
+              title={
+                <div className="iconAndText">
+                  <MdOutlineInfo /> Status
+                </div>
+              }
+              size="small">
+              <div className="statusText" style={{ textAlign: 'center', marginTop: '-10px', marginBottom: '10px' }}>
+                {getStatus() == STATUS.COUNTDOWN && (
+                  <span>
+                    Time to next execution
+                    <br />
+                    <div className="iconAndText" style={{ justifyContent: 'center' }}>
+                      <MdCircle style={{ color: 'lightgreen' }}></MdCircle>
+                      <Countdown value={uiFlow.nextExecutionTime} format="HH:mm:ss:SSS" onFinish={updateState} />
+                    </div>
+                  </span>
+                )}
+                {getStatus() == STATUS.EXECUTING && (
+                  <span>
+                    <Spin size="large" /> <br /> Execution in progress
+                  </span>
+                )}
+                {getStatus() == STATUS.NO_EXECUTE && (
+                  <span className="errorText">
+                    <ExclamationCircleOutlined /> Unable to execute your automation.
+                  </span>
+                )}
+                {getStatus() == STATUS.EXECUTED && (
+                  <span className="infoText">
+                    <CheckCircleOutlined /> Last executed at {uiFlow.lastExecutionTime.format('h:mm A, MMMM D, YYYY ')}.
+                  </span>
+                )}
+              </div>
+            </Card>
+            {/*<Card
               title={
                 <div className="iconAndText">
                   <MdOutlineInfo /> Info
@@ -215,20 +288,20 @@ export const FlowDetail = ({}) => {
                   <MdCircle style={{ color: 'lightgreen' }}></MdCircle>live
                 </div>
               </Form.Item>
-            </Card>
+            </Card>*/}
             <Card
               title={
                 <div className="iconAndText">
-                  <MdOutlineOfflineBolt /> Trigger
+                  <MdOutlineOfflineBolt /> Schedule
                 </div>
               }
               size="small">
-              <Form.Item label="Schedule At">
+              <Form.Item label="Schedule">
                 <div className="iconAndText">
-                  <MdSchedule /> {uiFlow.nextExecutionTime ? uiFlow.nextExecutionTime.format('LLL') : 'none'}
+                  <MdSchedule /> {uiFlow.nextExecutionTime ? uiFlow.nextExecutionTime.format('LLL') : 'None'}
                 </div>
               </Form.Item>
-              <Form.Item label="Repeat">{uiFlow.repeatOption == ScheduleRepeatOption.Yes ? 'Yes' : 'No'}</Form.Item>
+              {uiFlow.nextExecutionTime && <Form.Item label="Repeat">{uiFlow.repeatOption == ScheduleRepeatOption.Yes ? 'Yes' : 'No'}</Form.Item>}
             </Card>
 
             <span>
