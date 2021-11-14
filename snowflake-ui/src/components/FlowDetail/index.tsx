@@ -3,7 +3,7 @@ import { useAnchor, useAnchorProgram } from '../../contexts/anchorContext';
 import { AccountMeta, PublicKey } from '@solana/web3.js';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { Alert, Button, Card, Form, PageHeader, Skeleton, Spin, Table, Tabs } from 'antd';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useHistory, useParams } from 'react-router-dom';
 import _ from 'lodash';
 import * as flowUtil from '../../utils/flowUtil';
 import * as snowUtil from '../../utils/snowUtils';
@@ -13,6 +13,8 @@ import { useConnection, useConnectionConfig } from '../../contexts/connection';
 import { SensitiveButton } from '../SensitiveButton';
 import { SmartTxnClient } from '../../utils/smartTxnClient';
 import { ScheduleRepeatOption } from '../../models/flow';
+import { confirmAlert } from 'react-confirm-alert'; // Import
+import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
 import Countdown from 'antd/es/statistic/Countdown';
 import moment from 'moment';
 import { useInterval } from 'usehooks-ts';
@@ -21,6 +23,7 @@ import { CheckCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icon
 export const FlowDetail = ({}) => {
   const program = useAnchorProgram();
   const walletCtx = useWallet();
+  const history = useHistory();
   const { flowKey } = useParams<{ flowKey: string }>();
 
   async function init() {
@@ -193,6 +196,37 @@ export const FlowDetail = ({}) => {
     await updateExecutionHistory();
   }
 
+  async function deleteFlow() {
+    let deleteContext: any = {
+      accounts: {
+        flow: new PublicKey(flowKey),
+        caller: walletCtx.publicKey,
+      }
+    };
+
+    const tx = await program.rpc.deleteFlow(deleteContext);
+    console.log('Transaction: ', tx);
+    
+    history.push('/');
+  }
+
+  function confirmDelete() {
+    confirmAlert({
+      title: 'Delete Automation',
+      message: 'Are you sure to delete this automation ?',
+      buttons: [
+        {
+          label: 'Yes',
+          onClick: () => deleteFlow()
+        },
+        {
+          label: 'No',
+          onClick: () => {}
+        }
+      ]
+    });
+  };
+
   enum STATUS {
     COUNTDOWN,
     EXECUTING,
@@ -214,6 +248,7 @@ export const FlowDetail = ({}) => {
     }
     return STATUS.UNKNOWN;
   }
+
   return (
     <span style={{ width: '100%' }} className="flowDetailPage">
       <PageHeader
@@ -228,7 +263,7 @@ export const FlowDetail = ({}) => {
           <Link to={'/editflow/' + flowKey}>
             <Button size="large">Edit</Button>
           </Link>,
-          <Button size="large">Deactivate</Button>,
+          <Button size="large" onClick={() => confirmDelete()} >Delete</Button>,
           <SensitiveButton size="large" onClick={() => executeFlow()}>
             Run Now
           </SensitiveButton>,
