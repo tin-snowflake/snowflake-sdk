@@ -8,10 +8,11 @@ import { AppLayout } from './components/Layout';
 
 import { FaucetView, HomeView } from './views';
 import { getLedgerWallet, getMathWallet, getPhantomWallet, getSolflareWallet, getSolletWallet, getSolongWallet, getTorusWallet } from '@solana/wallet-adapter-wallets';
-import { FlowList } from './components/FlowList';
 import { EditFlow } from './components/EditFlow';
 import { FlowDetail } from './components/FlowDetail';
 import { Test } from './components/Test';
+import { FormValidatorProvider } from './components/FormValidator';
+import { EditFlowWrapper } from './components/EditFlowWrapper';
 
 export function Routes() {
   const wallets = useMemo(
@@ -43,8 +44,8 @@ export function Routes() {
                   <Route exact path="/" component={() => <HomeView />} />
                   <Route exact path="/flowDetail/:flowKey" component={() => <FlowDetail />} />
                   <Route exact path="/flowDetail" component={() => <FlowDetail />} />
-                  <Route exact path="/editflow/:flowKey" component={() => <EditFlow />} />
-                  <Route exact path="/editflow" component={() => <EditFlow />} />
+                  <Route exact path="/editflow/:flowKey" component={() => <EditFlowWrapper />} />
+                  <Route exact path="/editflow" component={() => <EditFlowWrapper />} />
                   <Route exact path="/test" component={() => <Test />} />
                   <Route exact path="/faucet" children={<FaucetView />} />
                 </Switch>

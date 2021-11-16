@@ -5,6 +5,7 @@ import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons/lib';
 import React from 'react';
 import { toPublicKey } from '../../utils/snowUtils';
 import * as actionUtil from '../../utils/flowActionUtil';
+import { FieldIsPubKey, FieldRequire, FormItem } from '../FormItem';
 
 export class CustomAction implements FlowActionResolver {
   async newAction(): Promise<UIAction> {
@@ -64,19 +65,21 @@ export class CustomAction implements FlowActionResolver {
 
     return (
       <span>
-        <Form.Item label="Program" rules={[{ required: false, message: 'Instruction is required' }]}>
+        <FormItem label="Program" validators={[new FieldRequire(), new FieldIsPubKey()]} validate={ctx.action.program}>
           <Input name="program" value={ctx.action.program} onChange={handleChange(ctx.action)} />
-        </Form.Item>
-        <Form.Item label="Instruction" rules={[{ required: false, message: 'Instruction is required' }]}>
+        </FormItem>
+
+        <FormItem label="Instruction" validators={[new FieldRequire()]} validate={ctx.action.instruction}>
           <Input name="instruction" value={ctx.action.instruction} onChange={handleChange(ctx.action)} />
-        </Form.Item>
+        </FormItem>
         {ctx.action.accounts.map(function (account, j) {
           return (
             <span>
-              <Form.Item label={'Account ' + (j + 1)} rules={[{ required: false, message: 'Instruction is required' }]}>
+              <FormItem label={'Account ' + (j + 1)} validators={[new FieldRequire(), new FieldIsPubKey()]} validate={account.pubkey}>
+                {/*<Form.Item label={'Account ' + (j + 1)} rules={[{ required: false, message: 'Instruction is required' }]}>*/}
                 <Input name="pubkey" value={account.pubkey} onChange={handleChange(account)} style={{ marginRight: '-20px' }} />
                 <div style={{ float: 'right', marginRight: '-30px', marginTop: '4px' }}>{<MinusCircleOutlined onClick={removeAccount(ctx.action.accounts, j)} />}</div>
-              </Form.Item>
+              </FormItem>
             </span>
           );
         })}

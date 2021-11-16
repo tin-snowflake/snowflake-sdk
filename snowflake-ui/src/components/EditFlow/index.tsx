@@ -17,6 +17,8 @@ import { SmartTxnClient } from '../../utils/smartTxnClient';
 import { handleInputChange, handleSelectChange } from '../../utils/reactUtil';
 import { ScheduleRepeatOption } from '../../models/flow';
 import moment from 'moment';
+import { FieldRequire, FormItem } from '../FormItem';
+import { useFormValidator, validateForm } from '../FormValidator';
 
 export const EditFlow = ({}) => {
   const program = useAnchorProgram();
@@ -96,6 +98,13 @@ export const EditFlow = ({}) => {
     }
     return ixs;
   }
+  let formValidator = useFormValidator();
+  async function validateAndSave() {
+    let errors = validateForm(formValidator);
+    console.log('form validation errors', errors);
+    if (errors.length > 0) return;
+    await saveFlow();
+  }
 
   async function saveFlow() {
     let isNewFlow = !flowKey;
@@ -167,7 +176,9 @@ export const EditFlow = ({}) => {
   function updateState() {
     setUIFlow({ ...uiFlow });
   }
+
   const { Option } = Select;
+
   return (
     <span style={{ width: '100%' }}>
       <PageHeader ghost={false} title={<div style={{ display: 'flex', alignItems: 'center' }}>{isNewFlow() ? 'New Automation' : <span>Edit Automation</span>}</div>}></PageHeader>
@@ -175,6 +186,7 @@ export const EditFlow = ({}) => {
         <div className="card-body">
           <Form
             style={{ maxWidth: '800px' }}
+            scrollToFirstError={true}
             name="basic"
             labelAlign="left"
             labelCol={{ span: 4 }}
@@ -191,9 +203,9 @@ export const EditFlow = ({}) => {
                 </div>
               }
               size="small">
-              <Form.Item label="Name" rules={[{ required: true, message: 'Name is required' }]}>
+              <FormItem label="Name" validators={[new FieldRequire('Name is required.')]} validate={uiFlow.name}>
                 <Input name="name" value={uiFlow.name} onChange={handleChange(uiFlow)} />
-              </Form.Item>
+              </FormItem>
             </Card>
             <Card
               title={
@@ -334,7 +346,7 @@ export const EditFlow = ({}) => {
                 </Button>
                 <br /> <br /> <br />
                 <Space size="middle">
-                  <SensitiveButton type="primary" htmlType="submit" size="large" onClick={() => saveFlow()}>
+                  <SensitiveButton type="primary" htmlType="submit" size="large" onClick={() => validateAndSave()}>
                     Save
                   </SensitiveButton>
 
@@ -353,9 +365,9 @@ export const EditFlow = ({}) => {
               </span>
             )}
           </Form>
+          <br />
+          <br />
 
-          <br />
-          <br />
           {debug && (
             <span>
               <Divider plain orientation="left">

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useMint, useAccountByMint } from '../../contexts/accounts';
 import { TokenIcon } from '../TokenIcon';
 import { Select } from 'antd';
@@ -19,6 +19,10 @@ export const TokenInput = ({ token, handleChange }) => {
     token.ata = ata.toString();
     handleChange();
   }
+
+  useEffect(() => {
+    if (token.mint) updateToken(token.mint);
+  }, []);
 
   return (
     <div className="tokenInput">

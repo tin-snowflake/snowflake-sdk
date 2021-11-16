@@ -19,6 +19,7 @@ import { sendTransaction, useConnection } from '../../contexts/connection';
 import { notify } from '../../utils/notifications';
 import { TokenInput } from '../TokenInput';
 import * as actionUtil from '../../utils/flowActionUtil';
+import { FieldIsPubKey, FieldRequire, FormItem } from '../FormItem';
 
 export class PaymentAction implements FlowActionResolver {
   code = 101;
@@ -99,16 +100,17 @@ export class PaymentAction implements FlowActionResolver {
     }
     return (
       <span>
-        <Form.Item label="Amount" rules={[{ required: false, message: 'Instruction is required' }]}>
+        <FormItem label="Amount" validators={[new FieldRequire('Amount is required.')]} validate={uiAction.amount}>
           <div style={{ display: 'flex' }}>
             <Input name="amount" value={uiAction.amount} onChange={handleChange(uiAction)} />
             &nbsp;
             <TokenInput token={uiAction.token} handleChange={updateState} />
           </div>
-        </Form.Item>
-        <Form.Item label="Pay To" rules={[{ required: false, message: 'Instruction is required' }]}>
+        </FormItem>
+
+        <FormItem label="Pay To" validators={[new FieldRequire('Recipient is required.'), new FieldIsPubKey()]} validate={uiAction.recipient.wallet}>
           <Input name="wallet" value={uiAction.recipient.wallet} onChange={handleChange(uiAction.recipient)} />
-        </Form.Item>
+        </FormItem>
 
         {/*<Button type="default" size="large" onClick={authorise}>
         Authorise
@@ -119,7 +121,7 @@ export class PaymentAction implements FlowActionResolver {
 
   initNewAction(action) {
     if (!action.recipient) action.recipient = {};
-    if (!action.token) action.token = {};
+    if (!action.token) action.token = { mint: 'So11111111111111111111111111111111111111112' };
   }
 
   async outputInstructions(ctx: ActionContext): Promise<OutputIXSet[]> {
