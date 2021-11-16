@@ -38,9 +38,7 @@ button, input, select {
   url("//db.onlinewebfonts.com/t/bc30adee89b44a44a5cfdff676aef0fe.svg#FF Oxide Solid") format("svg");
 }
 
-.ant-layout {
-  margin:40px;
-}
+
 .ant-layout-header {
   border-bottom: 2px solid #1c274f;
 }
@@ -75,7 +73,7 @@ button, input, select {
   align-items: center;
   padding: 0 20px;
   color: white;
-  height: 80px;
+  height: 90px;
   display: flex;
   //background-color: @primary-color;
   button, button:hover, button:active, button:focus {
@@ -509,4 +507,9 @@ iframe
 }
 .statusText {
   //font-size: medium;
+}
+
+
+.ant-menu-item-selected::after {
+  border-bottom: none !important;
 }
