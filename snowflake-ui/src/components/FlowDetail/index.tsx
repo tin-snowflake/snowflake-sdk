@@ -15,7 +15,8 @@ import { ScheduleRepeatOption } from '../../models/flow';
 import Countdown from 'antd/es/statistic/Countdown';
 import moment from 'moment';
 import { useInterval } from 'usehooks-ts';
-import { CheckCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons/lib';
+import { CheckCircleOutlined, ExclamationCircleOutlined, InfoCircleOutlined } from '@ant-design/icons/lib';
+import { getStatus, STATUS } from '../../utils/flowUtil';
 
 export const FlowDetail = ({}) => {
   const program = useAnchorProgram();
@@ -223,28 +224,6 @@ export const FlowDetail = ({}) => {
     });
   }
 
-  enum STATUS {
-    COUNTDOWN,
-    EXECUTING,
-    EXECUTED,
-    NO_EXECUTE,
-    UNKNOWN,
-  }
-
-  const EXECUTION_THRESHOLD = 120; // seconds
-  function getStatus(): STATUS {
-    if (uiFlow.nextExecutionTime && uiFlow.nextExecutionTime.unix() > 0) {
-      if (uiFlow.nextExecutionTime.isAfter(moment())) return STATUS.COUNTDOWN;
-      else if (uiFlow.nextExecutionTime.isBefore(moment()) && uiFlow.nextExecutionTime.isAfter(moment().subtract(EXECUTION_THRESHOLD, 'second'))) return STATUS.EXECUTING;
-      else if (uiFlow.nextExecutionTime.isBefore(moment().subtract(EXECUTION_THRESHOLD, 'second'))) return STATUS.NO_EXECUTE;
-    } else {
-      if (uiFlow.lastExecutionTime) {
-        return STATUS.EXECUTED;
-      }
-    }
-    return STATUS.UNKNOWN;
-  }
-
   return (
     <span style={{ width: '100%' }} className="flowDetailPage">
       <PageHeader
@@ -287,7 +266,7 @@ export const FlowDetail = ({}) => {
               }
               size="small">
               <div className="statusText" style={{ textAlign: 'center', marginTop: '-10px', marginBottom: '10px' }}>
-                {getStatus() == STATUS.COUNTDOWN && (
+                {getStatus(uiFlow) == STATUS.COUNTDOWN && (
                   <span>
                     Time to next execution
                     <br />
@@ -297,20 +276,25 @@ export const FlowDetail = ({}) => {
                     </div>
                   </span>
                 )}
-                {getStatus() == STATUS.EXECUTING && (
+                {getStatus(uiFlow) == STATUS.EXECUTING && (
                   <span>
                     <Spin size="large" /> <br /> Execution in progress
                   </span>
                 )}
-                {getStatus() == STATUS.NO_EXECUTE && (
+                {getStatus(uiFlow) == STATUS.NO_EXECUTE && (
                   <span className="errorText">
                     <ExclamationCircleOutlined /> Unable to execute your automation.
                   </span>
                 )}
-                {getStatus() == STATUS.EXECUTED && (
+                {getStatus(uiFlow) == STATUS.EXECUTED && (
                   <span className="infoText">
                     <CheckCircleOutlined /> Last executed at {uiFlow.lastExecutionTime.format('h:mm A, MMMM D, YYYY')}.
                     <br /> No further pending execution.
+                  </span>
+                )}
+                {getStatus(uiFlow) == STATUS.UNKNOWN && (
+                  <span className="infoText">
+                    <InfoCircleOutlined /> Automation is currently not scheduled.
                   </span>
                 )}
               </div>

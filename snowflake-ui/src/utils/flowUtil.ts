@@ -81,3 +81,26 @@ export async function convertUIFlow(uiFlow, connection: ConnectionConfig, wallet
   delete flow.flowOwner;
   return flow;
 }
+
+export enum STATUS {
+  COUNTDOWN,
+  EXECUTING,
+  EXECUTED,
+  NO_EXECUTE,
+  UNKNOWN,
+}
+
+const EXECUTION_THRESHOLD = 120; // seconds
+
+export function getStatus(uiFlow: UIFlow & any): STATUS {
+  if (uiFlow.nextExecutionTime && uiFlow.nextExecutionTime.unix() > 0) {
+    if (uiFlow.nextExecutionTime.isAfter(moment())) return STATUS.COUNTDOWN;
+    else if (uiFlow.nextExecutionTime.isBefore(moment()) && uiFlow.nextExecutionTime.isAfter(moment().subtract(EXECUTION_THRESHOLD, 'second'))) return STATUS.EXECUTING;
+    else if (uiFlow.nextExecutionTime.isBefore(moment().subtract(EXECUTION_THRESHOLD, 'second'))) return STATUS.NO_EXECUTE;
+  } else {
+    if (uiFlow.lastExecutionTime && uiFlow.lastExecutionTime > 0) {
+      return STATUS.EXECUTED;
+    }
+  }
+  return STATUS.UNKNOWN;
+}

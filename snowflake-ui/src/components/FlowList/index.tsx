@@ -29,7 +29,6 @@ export const FlowList = (props: {}) => {
       memcmp: { bytes: '', offset: 8 },
     };
     let allFlows = await program.account.flow.all();
-    // let poolInfo = await program().account.flow.fetch('6sk7d3te2eFKzmoZqELCxfP4JqeN9X9owcP2sgTVgcUT');
     console.log('all flows', allFlows);
   }
 
@@ -37,15 +36,9 @@ export const FlowList = (props: {}) => {
     <span style={{ width: '100%' }}>
       {flows.map(flow => (
         <span>
-          {/*{JSON.stringify(flow, null, 2)}*/}
-          <FlowListItem key={flow.publicKey} name={flow.account.name} flowKey={flow.publicKey} schedule={flow.account.nextExecutionTime} actions="custom" />
+          <FlowListItem flowInfo={flow} />
         </span>
       ))}
-
-      <FlowListItem key="101" name="Alex monthly payment" flowKey="" schedule="Onchain Price Triggerred" actions="custom" />
-      <FlowListItem key="102" name="Withdraw RAY liquidity from Orca" flowKey="" schedule="Onchain Event Triggered" actions="Raydium, Orca" />
-      <FlowListItem key="103" name="Dollar Cost Average Buy of SOL" flowKey="" schedule="Daily, 12:00 PM" actions="custom" />
-      <FlowListItem key="104" name="Sell ETH if price reaches 5000" flowKey="" schedule="Monthly, 6th, 12:00 PM" actions="Saber, Serum" />
     </span>
   );
 };
