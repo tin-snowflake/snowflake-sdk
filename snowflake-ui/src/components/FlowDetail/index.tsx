@@ -6,6 +6,7 @@ import { Button, Card, Form, Modal, PageHeader, Skeleton, Spin, Table, Tabs } fr
 import { Link, useHistory, useParams } from 'react-router-dom';
 import _ from 'lodash';
 import * as flowUtil from '../../utils/flowUtil';
+import { getStatus, STATUS } from '../../utils/flowUtil';
 import * as snowUtil from '../../utils/snowUtils';
 import { MdCircle, MdOutlineArrowCircleUp, MdOutlineInfo, MdOutlineOfflineBolt, MdOutlineSync, MdOutlineTextSnippet, MdSchedule } from 'react-icons/all';
 import { useConnectionConfig } from '../../contexts/connection';
@@ -13,10 +14,8 @@ import { SensitiveButton } from '../SensitiveButton';
 import { SmartTxnClient } from '../../utils/smartTxnClient';
 import { ScheduleRepeatOption } from '../../models/flow';
 import Countdown from 'antd/es/statistic/Countdown';
-import moment from 'moment';
 import { useInterval } from 'usehooks-ts';
 import { CheckCircleOutlined, ExclamationCircleOutlined, InfoCircleOutlined } from '@ant-design/icons/lib';
-import { getStatus, STATUS } from '../../utils/flowUtil';
 
 export const FlowDetail = ({}) => {
   const program = useAnchorProgram();
@@ -37,7 +36,7 @@ export const FlowDetail = ({}) => {
 
   useInterval(
     () => {
-      // updateState();
+      // updateState(); // use this to detect automation error
     },
     // Delay in milliseconds or null to stop it
     10000
@@ -48,7 +47,6 @@ export const FlowDetail = ({}) => {
     dto.idlFlow = flow;
   }
 
-  const [listenerId, setListenerId] = useState(0);
   useEffect(() => {
     console.log('*** calling use effect ... ');
     init();
@@ -265,39 +263,41 @@ export const FlowDetail = ({}) => {
                 </div>
               }
               size="small">
-              <div className="statusText" style={{ textAlign: 'center', marginTop: '-10px', marginBottom: '10px' }}>
-                {getStatus(uiFlow) == STATUS.COUNTDOWN && (
-                  <span>
-                    Time to next execution
-                    <br />
-                    <div className="iconAndText" style={{ justifyContent: 'center' }}>
-                      <MdCircle style={{ color: 'lightgreen' }}></MdCircle>
-                      <Countdown value={uiFlow.nextExecutionTime} format="HH:mm:ss:SSS" onFinish={updateState} />
-                    </div>
-                  </span>
-                )}
-                {getStatus(uiFlow) == STATUS.EXECUTING && (
-                  <span>
-                    <Spin size="large" /> <br /> Execution in progress
-                  </span>
-                )}
-                {getStatus(uiFlow) == STATUS.NO_EXECUTE && (
-                  <span className="errorText">
-                    <ExclamationCircleOutlined /> Unable to execute your automation.
-                  </span>
-                )}
-                {getStatus(uiFlow) == STATUS.EXECUTED && (
-                  <span className="infoText">
-                    <CheckCircleOutlined /> Last executed at {uiFlow.lastExecutionTime.format('h:mm A, MMMM D, YYYY')}.
-                    <br /> No further pending execution.
-                  </span>
-                )}
-                {getStatus(uiFlow) == STATUS.UNKNOWN && (
-                  <span className="infoText">
-                    <InfoCircleOutlined /> Automation is currently not scheduled.
-                  </span>
-                )}
-              </div>
+              {uiFlow.name && (
+                <div className="statusText" style={{ textAlign: 'center', marginTop: '-10px', marginBottom: '10px' }}>
+                  {getStatus(uiFlow) == STATUS.COUNTDOWN && (
+                    <span>
+                      Time to next execution
+                      <br />
+                      <div className="iconAndText" style={{ justifyContent: 'center' }}>
+                        <MdCircle style={{ color: 'lightgreen' }}></MdCircle>
+                        <Countdown value={uiFlow.nextExecutionTime} format="HH:mm:ss:SSS" onFinish={updateState} />
+                      </div>
+                    </span>
+                  )}
+                  {getStatus(uiFlow) == STATUS.EXECUTING && (
+                    <span>
+                      <Spin size="large" /> <br /> Execution in progress
+                    </span>
+                  )}
+                  {getStatus(uiFlow) == STATUS.NO_EXECUTE && (
+                    <span className="errorText">
+                      <ExclamationCircleOutlined /> Unable to execute your automation.
+                    </span>
+                  )}
+                  {getStatus(uiFlow) == STATUS.EXECUTED && (
+                    <span className="infoText">
+                      <CheckCircleOutlined /> Last executed at {uiFlow.lastExecutionTime.format('h:mm A, MMMM D, YYYY')}.
+                      <br /> No further executions pending.
+                    </span>
+                  )}
+                  {getStatus(uiFlow) == STATUS.UNKNOWN && (
+                    <span className="infoText">
+                      <InfoCircleOutlined /> Automation is currently not scheduled.
+                    </span>
+                  )}
+                </div>
+              )}
             </Card>
             {/*<Card
               title={
