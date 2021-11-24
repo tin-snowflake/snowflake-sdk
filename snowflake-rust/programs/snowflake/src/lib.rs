@@ -23,7 +23,8 @@ pub mod snowflake {
         let flow = &mut ctx.accounts.flow;
         flow.flow_owner = ctx.accounts.flow_owner.key();
 
-        flow.apply_flow_data(client_flow, true);
+        flow.apply_flow_data(client_flow);
+        flow.state = STATE_PENDING;
         
         Ok(())
     }
@@ -36,7 +37,13 @@ pub mod snowflake {
             return Err(ProgramError::IllegalOwner);
         }
 
-        flow.apply_flow_data(client_flow, false);
+        flow.apply_flow_data(client_flow);
+
+        let now = Clock::get()?.unix_timestamp;
+        if (flow.trigger_type == TRIGGER_TYPE_TIME && flow.next_execution_time > now) 
+            || (flow.trigger_type == TRIGGER_TYPE_PROGRAM && flow.remaining_runs > 0) {
+            flow.state = STATE_PENDING;
+        }
  
         Ok(())
     }
@@ -166,7 +173,7 @@ pub struct Flow {
 }
 
 impl Flow {
-    fn apply_flow_data(&mut self, client_flow: Flow, is_new_flow: bool) {
+    fn apply_flow_data(&mut self, client_flow: Flow) {
         self.trigger_type = client_flow.trigger_type;
         self.recurring = client_flow.recurring;
         self.remaining_runs = client_flow.remaining_runs;
@@ -183,13 +190,6 @@ impl Flow {
                 else {
                     client_flow.next_execution_time
                 };
-        }
-        
-        if is_new_flow 
-            || self.trigger_type == TRIGGER_TYPE_TIME 
-            || (self.trigger_type == TRIGGER_TYPE_PROGRAM && self.remaining_runs > 0) {
-            
-            self.state = STATE_PENDING;
         }
     }
     
