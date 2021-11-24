@@ -252,7 +252,6 @@ export const FlowDetail = ({}) => {
       <div className="card">
         <div className="card-body">
           <Form
-            style={{ maxWidth: '800px' }}
             name="basic"
             labelAlign="left"
             labelCol={{ span: 3 }}
