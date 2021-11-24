@@ -248,9 +248,16 @@ export const EditFlow = ({}) => {
                   </Form.Item>
                 )}
                 {uiFlow.repeatOption == ScheduleRepeatOption.Yes && (
-                  <Form.Item label="Schedule" wrapperCol={{ span: 20 }}>
-                    <Cron value={cron} setValue={setCron} clearButton={false} clockFormat="12-hour-clock" />
-                  </Form.Item>
+                  <span>
+                    <Form.Item label="Repeat" wrapperCol={{ span: 20 }}>
+                      <Cron value={cron} setValue={setCron} clearButton={false} clockFormat="12-hour-clock" />
+                    </Form.Item>
+                    <Form.Item label="For">
+                      <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <Input style={{ width: '80px' }} value="10" name="occurences" /> &nbsp;times
+                      </div>
+                    </Form.Item>
+                  </span>
                 )}
                 {/* <Form.Item label="Repeat">
                   <Select
