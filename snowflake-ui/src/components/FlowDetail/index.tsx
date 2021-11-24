@@ -134,7 +134,7 @@ export const FlowDetail = ({}) => {
       width: 220,
       ellipsis: true,
       render: text => (
-        <a target="_blank" href={'https://explorer.solana.com/tx/' + text + '?cluster=' + connectionConfig.env}>
+        <a target="_blank" href={'https://explorer.solana.com/tx/' + text + '?cluster=' + (connectionConfig.env == 'localnet' ? 'custom&customUrl=http://localhost:8899' : connectionConfig.env)}>
           {text}
         </a>
       ),

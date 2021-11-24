@@ -14,10 +14,10 @@ export const ExplorerLink = (props: { address: string | PublicKey; type: string;
   }
 
   const length = props.length ?? 9;
-
+  const url = env == 'localnet' ? `https://explorer.solana.com/${type}/${address}?cluster=custom&customUrl=http://localhost:8899` : `https://explorer.solana.com/${type}/${address}?cluster=${env}`;
   return (
     <a
-      href={`https://explorer.solana.com/${type}/${address}?cluster=${env}`}
+      href={url}
       // eslint-disable-next-line react/jsx-no-target-blank
       target="_blank"
       title={address}
