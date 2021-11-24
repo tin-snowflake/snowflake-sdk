@@ -105,8 +105,6 @@ export const FlowDetail = ({}) => {
 
   function updateState() {
     setUIFlow({ ...uiFlow });
-    console.log('updating state, nextExecution', uiFlow.nextExecutionTime?.toString());
-    console.log('updating state, name', uiFlow.name);
   }
 
   const { TabPane } = Tabs;
@@ -136,7 +134,7 @@ export const FlowDetail = ({}) => {
       width: 220,
       ellipsis: true,
       render: text => (
-        <a target="_blank" href={'https://explorer.solana.com/tx/' + text + '?cluster=' + connectionConfig.env}>
+        <a target="_blank" href={'https://explorer.solana.com/tx/' + text + '?cluster=' + (connectionConfig.env == 'localnet' ? 'custom&customUrl=http://localhost:8899' : connectionConfig.env)}>
           {text}
         </a>
       ),
@@ -161,11 +159,12 @@ export const FlowDetail = ({}) => {
 
   const [flowExecutionData, setFlowExecutionData] = useState([]);
 
-  async function executeFlow() {
+  async function simulateFlow() {
+    await executeFlow(true);
+  }
+  async function executeFlow(simulate: boolean = false) {
     let flowAddress = new PublicKey(flowKey);
     let flow = await program.account.flow.fetch(flowKey);
-
-    console.log('flow', flow);
 
     let accounts = {
       flow: new PublicKey(flowAddress),
@@ -188,8 +187,12 @@ export const FlowDetail = ({}) => {
       accounts: accounts,
       remainingAccounts: remainAccountMetas,
     });
-    await new SmartTxnClient(connectionConfig, [ix], [], walletCtx).send();
-    await updateExecutionHistory();
+    if (simulate) {
+      await new SmartTxnClient(connectionConfig, [ix], [], walletCtx).simulate();
+    } else {
+      await new SmartTxnClient(connectionConfig, [ix], [], walletCtx).send();
+      await updateExecutionHistory();
+    }
   }
 
   async function deleteFlow() {
@@ -239,6 +242,9 @@ export const FlowDetail = ({}) => {
           <Button size="large" onClick={() => confirmDelete()}>
             Delete
           </Button>,
+          <SensitiveButton size="large" onClick={() => simulateFlow()}>
+            Validate
+          </SensitiveButton>,
           <SensitiveButton size="large" onClick={() => executeFlow()}>
             Run Now
           </SensitiveButton>,
@@ -246,7 +252,6 @@ export const FlowDetail = ({}) => {
       <div className="card">
         <div className="card-body">
           <Form
-            style={{ maxWidth: '800px' }}
             name="basic"
             labelAlign="left"
             labelCol={{ span: 3 }}

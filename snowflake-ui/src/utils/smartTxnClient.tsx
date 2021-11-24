@@ -1,10 +1,11 @@
-import { Account, Connection, Keypair, Transaction, TransactionInstruction } from '@solana/web3.js';
+import { Account, Connection, Keypair, SimulatedTransactionResponse, Transaction, TransactionInstruction } from '@solana/web3.js';
 import { WalletContextState } from '@solana/wallet-adapter-react';
 import { notify } from './notifications';
 import { ExplorerLink } from '../components/ExplorerLink';
 import React from 'react';
 import { ConnectionConfig } from '../contexts/connection';
 import { QuietError } from './errorHandlers';
+import { Button, Popover } from 'antd';
 type TxId = string;
 
 /*
@@ -26,19 +27,52 @@ export class SmartTxnClient {
   }
 
   async send(): Promise<TxId[]> {
-    console.log('--- smart txn - sending ...');
     let txn = await this.makeTxn(this.ixs);
     let txns = await this.split(txn);
-    console.log('--- smart txn - splitting into ', txns);
+
     let signedTxns = await this.wallet.signAllTransactions(txns);
-    console.log('--- smart txn - signed txns ', signedTxns);
+
     let txIds: TxId[] = [];
 
     for (var item of signedTxns) {
       txIds.push(await this.sendOne(item));
     }
-    console.log('--- smart txn - sent successfully, txIds ', txIds);
+
     return txIds;
+  }
+
+  async simulate(): Promise<SimulatedTransactionResponse> {
+    let connection = this.connection;
+    let txn = await this.makeTxn(this.ixs);
+    const status = (await connection.simulateTransaction(txn)).value;
+    const content = (
+      <>
+        {status.logs.map(log => (
+          <div>{log}</div>
+        ))}
+      </>
+    );
+
+    const logViewer = (
+      <Popover content={content} title="Simulation Log">
+        <Button>Show log</Button>
+      </Popover>
+    );
+    if (status?.err) {
+      notify({
+        message: 'Validation failed !',
+        type: 'error',
+        description: logViewer,
+      });
+    } else {
+      console.log('simulate error', status);
+      notify({
+        message: 'Validation succeeded !',
+        type: 'success',
+        description: logViewer,
+      });
+    }
+    return status;
   }
 
   async sendOne(txn: Transaction): Promise<TxId> {
@@ -49,7 +83,6 @@ export class SmartTxnClient {
       skipPreflight: true,
       commitment: 'confirmed',
     };
-
     const txid = await connection.sendRawTransaction(rawTxn, options);
 
     const status = (await connection.confirmTransaction(txid, options && (options.commitment as any))).value;

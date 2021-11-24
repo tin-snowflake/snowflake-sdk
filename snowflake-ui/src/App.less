@@ -1,4 +1,4 @@
-//@import '~antd/dist/antd.less';
+
 @import "~antd/dist/antd.dark.less";
 /*@popover-background: #1a2029;
 @font-size-base : 15px;
@@ -9,9 +9,9 @@
 @border-radius-base:5px;*/
 
 @primary-color:#b5dbf3;
-
 @border-radius-base:4px;
 @component-background : #131a35;
+@popover-background: #10172e;
 @body-background : #131a35;
 @layout-header-background : transparent;
 @text-color: #ffffff;
@@ -173,14 +173,6 @@ em {
   border-radius: 0.5rem;
   display: flex;
   align-items: center;
-}
-
-.ant-notification {
-  a {
-    color: blue;
-    text-decoration: underline;
-    cursor: pointer;
-  }
 }
 
 .ant-layout-content {
@@ -466,7 +458,9 @@ a:hover, a:focus {
     margin-bottom: 2px;
   }
 }
-
+.ant-form {
+  max-width: 860px;
+}
 .customWalletConnectButton {
   img {
    // display: none;
@@ -512,4 +506,8 @@ iframe
 
 .ant-menu-item-selected::after {
   border-bottom: none !important;
+}
+
+.react-js-cron-custom-select {
+  background: transparent !important;
 }
