@@ -7,6 +7,14 @@ use anchor_lang::solana_program::instruction::Instruction;
 //Flow with next execution date older than (now - RETRY_WINDOW) and still pending will be marked as 'error'.
 const FLOW_RETRY_WINDOW: i64 = 300;
 
+const TRIGGER_TYPE_NONE: u8 = 1;
+const TRIGGER_TYPE_TIME: u8 = 2;
+const TRIGGER_TYPE_PROGRAM: u8 = 3;
+
+const STATE_PENDING: u8 = 1;
+const STATE_COMPLETE: u8 = 2;
+const STATE_ERROR: u8 = 3;
+
 declare_id!("86G3gad5tVjJxdQmmdQ6E3rLQNnDNh4KYcqiiSd7Az63");
 
 #[program]
@@ -17,8 +25,13 @@ pub mod snowflake {
     pub fn create_flow(ctx: Context<CreateFlow>, client_flow: Flow) -> ProgramResult {
         let flow = &mut ctx.accounts.flow;
         flow.flow_owner = ctx.accounts.flow_owner.key();
-        apply_flow_data(flow, client_flow);
-        flow.state = State::Pending;
+
+        flow.apply_flow_data(client_flow);
+        flow.state = STATE_PENDING;
+
+        // if flow is timed
+        // calculateNextExecutionTime
+        
         Ok(())
     }
 
@@ -30,10 +43,14 @@ pub mod snowflake {
             return Err(ProgramError::IllegalOwner);
         }
 
-        apply_flow_data(flow, client_flow);
+        flow.apply_flow_data(client_flow);
 
-        if flow.remaining_runs > 0 {
-            flow.state = State::Pending;
+        // if flow is timed
+        // calculateNextExecutionTime
+
+        //Also for One off flow - set state to pending
+        if flow.remaining_runs > 0  {
+            flow.state = STATE_PENDING;
         }
         
         Ok(())
@@ -47,7 +64,8 @@ pub mod snowflake {
             return Err(ProgramError::IllegalOwner);
         }
 
-        empty_flow_data(flow);
+        flow.empty_flow_data();
+
         Ok(())
     }
 
@@ -84,12 +102,12 @@ pub mod snowflake {
         let flow = &mut ctx.accounts.flow;
         let now = Clock::get()?.unix_timestamp;
 
-        if !should_run_scheduled_flow(flow, now) {
-            return Ok(());
+        if !flow.is_due_for_execute(now) {
+            return Err(ProgramError::Custom(1));
         }
 
-        charge_fee(flow);
-        update_flow_after_schedule_run(flow, now);
+        charge_fee();
+        flow.update_after_schedule_run(now);
 
         execute_flow(ctx)
     }
@@ -98,16 +116,13 @@ pub mod snowflake {
         let flow = &mut ctx.accounts.flow;
         let now = Clock::get()?.unix_timestamp;
 
-        if !should_mark_scheduled_flow_as_error(flow, now) {
-            return Ok(());
+        if !flow.is_schedule_expired(now) {
+            return Err(ProgramError::Custom(2));
         }
 
-        charge_txn_fee(flow);
-        flow.state = State::Error;
-        Ok(())
-    }
+        charge_txn_fee();
+        flow.state = STATE_ERROR;
 
-    pub fn update_schedule(ctx: Context<ExecuteFlow>) -> ProgramResult {
         Ok(())
     }
 }
@@ -153,29 +168,67 @@ pub struct ExecuteFlow<'info> {
 #[derive(Debug)]
 pub struct Flow {
     pub flow_owner: Pubkey,
-    pub trigger_type: TriggerType,
-    pub state: State,
+    pub trigger_type: u8,
+    pub state: u8,
     pub remaining_runs: u16,
-    pub cron: String,
     pub next_execution_time: i64,
     pub last_scheduled_execution: i64,
+    pub cron: String,
     pub name: String,
     pub actions: Vec<Action>,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
-pub enum TriggerType {
-    None,
-    Time,
-    Program,
-}
+impl Flow {
+    fn apply_flow_data(&mut self, client_flow: Flow) {
+        self.trigger_type = client_flow.trigger_type;
+        self.remaining_runs = client_flow.remaining_runs;
+        self.cron = client_flow.cron;
+        self.next_execution_time = client_flow.next_execution_time;
+    
+        self.name = client_flow.name;
+        self.actions = client_flow.actions;
+    }
+    
+    fn empty_flow_data(&mut self) {
+        self.name = String::from("");
+        self.actions = Vec::new();
+        self.next_execution_time = 0;
+        self.last_scheduled_execution = 0;
+        self.remaining_runs = 0;
+        self.cron = String::from("");
+    }
+        
+    fn is_due_for_execute(&self, now: i64) -> bool {
+        if self.trigger_type == TRIGGER_TYPE_NONE || self.state != STATE_PENDING {
+            return false;
+        }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
-pub enum State {
-    Pending,
-    Complete,
-    Error,
-    PendingScheduleUpdate,
+        if self.trigger_type == TRIGGER_TYPE_TIME {
+            return self.next_execution_time < now && now - self.next_execution_time < FLOW_RETRY_WINDOW
+        }
+
+        true
+    }
+
+    fn is_schedule_expired(&self, now: i64) -> bool {
+        return self.trigger_type == TRIGGER_TYPE_TIME 
+                && self.state == STATE_PENDING 
+                && now - self.next_execution_time > FLOW_RETRY_WINDOW;
+    }
+
+    fn update_after_schedule_run(&mut self, now: i64) {
+        if self.trigger_type == TRIGGER_TYPE_NONE {
+            return;
+        }
+
+        self.last_scheduled_execution = now;
+        self.remaining_runs = self.remaining_runs - 1;
+        self.state = if self.remaining_runs < 1 {STATE_COMPLETE} else {STATE_PENDING};
+
+        if self.trigger_type == TRIGGER_TYPE_TIME {
+            self.next_execution_time = calculate_next_execution_time(&self.cron, now);
+        }
+    }
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
@@ -215,77 +268,17 @@ impl From<&TargetAccountSpec> for AccountMeta {
     }
 }
 
-
 /************************ HELPER METHODS */
 
-fn apply_flow_data(flow: &mut Flow, client_flow: Flow) {
-    flow.trigger_type = client_flow.trigger_type;
-    flow.remaining_runs = client_flow.remaining_runs;
-    flow.cron = client_flow.cron;
-    flow.next_execution_time = client_flow.next_execution_time;
-
-    flow.name = client_flow.name;
-    flow.actions = client_flow.actions;
+fn calculate_next_execution_time(cron: &str, now: i64) -> i64 {
+    0
 }
 
-fn empty_flow_data(flow: &mut Flow) {
-    flow.name = String::from("");
-    flow.actions = Vec::new();
-    flow.next_execution_time = 0;
-    flow.last_scheduled_execution = 0;
-    flow.remaining_runs = 0;
-    flow.cron = String::from("");
-}
-
-fn should_run_scheduled_flow(flow: &Flow, now: i64) -> bool {
-    match flow.state {
-        State::Pending => {
-            match flow.trigger_type {
-                TriggerType::Time => {
-                    return flow.next_execution_time < now && now - flow.next_execution_time < FLOW_RETRY_WINDOW
-                },
-                TriggerType::Program => return true,
-                _ => return false
-            }
-        },
-        _ => return false
-    }
-}
-
-fn update_flow_after_schedule_run(flow: &mut Flow, now: i64) {
-    flow.last_scheduled_execution = now;
-    flow.remaining_runs = flow.remaining_runs - 1;
-
-    match flow.trigger_type {
-        TriggerType::Time => {
-            flow.state = if flow.remaining_runs < 1 {State::Complete} else {State::PendingScheduleUpdate};
-        }
-        TriggerType::Program => {
-            flow.state = if flow.remaining_runs < 1 {State::Complete} else {State::Pending};
-        }
-        _ => {}
-    }
-}
-
-fn should_mark_scheduled_flow_as_error(flow: &Flow, now: i64) -> bool {
-    match flow.state {
-        State::Pending => {
-            match flow.trigger_type {
-                TriggerType::Time => {
-                    return now - flow.next_execution_time > FLOW_RETRY_WINDOW
-                },
-                _ => return false
-            }
-        },
-        _ => return false
-    }
-}
-
-fn charge_fee(_flow: &Flow) {
+fn charge_fee() {
 
 }
 
-fn charge_txn_fee(_flow: &Flow) {
+fn charge_txn_fee() {
 
 }
 
