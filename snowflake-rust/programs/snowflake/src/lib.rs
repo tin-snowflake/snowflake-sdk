@@ -4,9 +4,6 @@ use anchor_lang::prelude::*;
 use anchor_lang::{Accounts, Key};
 use anchor_lang::solana_program::instruction::Instruction;
 
-//Flow with next execution date older than (now - RETRY_WINDOW) and still pending will be marked as 'error'.
-const FLOW_RETRY_WINDOW: i64 = 300;
-
 const TRIGGER_TYPE_NONE: u8 = 1;
 const TRIGGER_TYPE_TIME: u8 = 2;
 const TRIGGER_TYPE_PROGRAM: u8 = 3;
@@ -28,9 +25,6 @@ pub mod snowflake {
 
         flow.apply_flow_data(client_flow);
         flow.state = STATE_PENDING;
-
-        // if flow is timed
-        // calculateNextExecutionTime
         
         Ok(())
     }
@@ -45,14 +39,12 @@ pub mod snowflake {
 
         flow.apply_flow_data(client_flow);
 
-        // if flow is timed
-        // calculateNextExecutionTime
-
-        //Also for One off flow - set state to pending
-        if flow.remaining_runs > 0  {
+        let now = Clock::get()?.unix_timestamp;
+        if (flow.trigger_type == TRIGGER_TYPE_TIME && flow.next_execution_time > now) 
+            || (flow.trigger_type == TRIGGER_TYPE_PROGRAM && flow.remaining_runs > 0) {
             flow.state = STATE_PENDING;
         }
-        
+ 
         Ok(())
     }
 
@@ -170,8 +162,10 @@ pub struct Flow {
     pub flow_owner: Pubkey,
     pub trigger_type: u8,
     pub state: u8,
+    pub recurring: bool,
     pub remaining_runs: u16,
     pub next_execution_time: i64,
+    pub retry_window: i64,
     pub last_scheduled_execution: i64,
     pub cron: String,
     pub name: String,
@@ -181,12 +175,22 @@ pub struct Flow {
 impl Flow {
     fn apply_flow_data(&mut self, client_flow: Flow) {
         self.trigger_type = client_flow.trigger_type;
+        self.recurring = client_flow.recurring;
         self.remaining_runs = client_flow.remaining_runs;
+        self.retry_window = client_flow.retry_window;
         self.cron = client_flow.cron;
-        self.next_execution_time = client_flow.next_execution_time;
-    
         self.name = client_flow.name;
         self.actions = client_flow.actions;
+
+        if self.trigger_type == TRIGGER_TYPE_TIME {
+            self.next_execution_time = 
+                if self.recurring {
+                    calculate_next_execution_time(&self.cron)
+                } 
+                else {
+                    client_flow.next_execution_time
+                };
+        }
     }
     
     fn empty_flow_data(&mut self) {
@@ -204,7 +208,7 @@ impl Flow {
         }
 
         if self.trigger_type == TRIGGER_TYPE_TIME {
-            return self.next_execution_time < now && now - self.next_execution_time < FLOW_RETRY_WINDOW
+            return self.next_execution_time < now && now - self.next_execution_time < self.retry_window;
         }
 
         true
@@ -213,7 +217,7 @@ impl Flow {
     fn is_schedule_expired(&self, now: i64) -> bool {
         return self.trigger_type == TRIGGER_TYPE_TIME 
                 && self.state == STATE_PENDING 
-                && now - self.next_execution_time > FLOW_RETRY_WINDOW;
+                && now - self.next_execution_time > self.retry_window;
     }
 
     fn update_after_schedule_run(&mut self, now: i64) {
@@ -222,11 +226,18 @@ impl Flow {
         }
 
         self.last_scheduled_execution = now;
-        self.remaining_runs = self.remaining_runs - 1;
-        self.state = if self.remaining_runs < 1 {STATE_COMPLETE} else {STATE_PENDING};
 
         if self.trigger_type == TRIGGER_TYPE_TIME {
-            self.next_execution_time = calculate_next_execution_time(&self.cron, now);
+            if self.recurring {
+                self.next_execution_time = calculate_next_execution_time(&self.cron);
+            } else {
+                self.state = STATE_COMPLETE;
+            }
+        }
+
+        if self.trigger_type == TRIGGER_TYPE_PROGRAM {
+            self.remaining_runs = self.remaining_runs - 1;
+            self.state = if self.remaining_runs < 1 {STATE_COMPLETE} else {STATE_PENDING};
         }
     }
 }
@@ -270,7 +281,8 @@ impl From<&TargetAccountSpec> for AccountMeta {
 
 /************************ HELPER METHODS */
 
-fn calculate_next_execution_time(cron: &str, now: i64) -> i64 {
+fn calculate_next_execution_time(_cron: &str) -> i64 {
+    // let now = Clock::get()?.unix_timestamp;
     0
 }
 
