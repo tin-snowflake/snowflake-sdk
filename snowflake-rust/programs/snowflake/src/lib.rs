@@ -163,7 +163,7 @@ pub struct Flow {
     pub trigger_type: u8,
     pub state: u8,
     pub recurring: bool,
-    pub remaining_runs: u16,
+    pub remaining_runs: i16,
     pub next_execution_time: i64,
     pub retry_window: i64,
     pub last_scheduled_execution: i64,
