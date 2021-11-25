@@ -70,7 +70,7 @@ export async function convertUIFlow(uiFlow, connection: ConnectionConfig, wallet
   flow.nextExecutionTime = flow.nextExecutionTime ? new BN(flow.nextExecutionTime.unix()) : new BN(0);
 
   flow.recurring = flow.recurring == RecurringUIOption.Yes ? true : false;
-
+  flow.retryWindow = new BN(flow.retryWindow);
   // convert last execution time just so anchor is not failing, we're not going to save last execution time
   flow.lastExecutionTime = flow.lastExecutionTime ? new BN(flow.lastExecutionTime.unix()) : new BN(0);
   for (const [i, action] of flow.actions.entries()) {
