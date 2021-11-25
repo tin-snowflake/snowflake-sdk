@@ -1,7 +1,7 @@
 import { PublicKey } from '@solana/web3.js';
 import { FLOW_ACCOUNT_LAYOUT } from '../layouts/snowflakeLayouts';
 import { Program } from '@project-serum/anchor';
-import { Flow, ScheduleRepeatOption, UIFlow } from '../models/flow';
+import { Flow, RecurringUIOption, UIFlow } from '../models/flow';
 import * as flowActionUtil from './flowActionUtil';
 import * as actionUtil from './flowActionUtil';
 import _ from 'lodash';
@@ -48,7 +48,7 @@ export async function convertFlow(flow, connection: ConnectionConfig, wallet: Wa
     uiFlow.lastExecutionTime = moment.unix(uiFlow.lastExecutionTime);
   }
 
-  uiFlow.repeatOption = uiFlow.repeatIntervalValue > 0 ? ScheduleRepeatOption.Yes : ScheduleRepeatOption.No;
+  uiFlow.recurring = uiFlow.recurring ? RecurringUIOption.Yes : RecurringUIOption.No;
 
   if (ignoreActions) {
     uiFlow.actions = [templateAction];
@@ -68,6 +68,8 @@ export async function convertUIFlow(uiFlow, connection: ConnectionConfig, wallet
 
   // convert next execution time to unix timestamp
   flow.nextExecutionTime = flow.nextExecutionTime ? new BN(flow.nextExecutionTime.unix()) : new BN(0);
+
+  flow.recurring = flow.recurring == RecurringUIOption.Yes ? true : false;
 
   // convert last execution time just so anchor is not failing, we're not going to save last execution time
   flow.lastExecutionTime = flow.lastExecutionTime ? new BN(flow.lastExecutionTime.unix()) : new BN(0);

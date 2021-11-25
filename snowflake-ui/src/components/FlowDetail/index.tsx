@@ -12,7 +12,7 @@ import { MdCircle, MdOutlineArrowCircleUp, MdOutlineInfo, MdOutlineOfflineBolt, 
 import { useConnectionConfig } from '../../contexts/connection';
 import { SensitiveButton } from '../SensitiveButton';
 import { SmartTxnClient } from '../../utils/smartTxnClient';
-import { ScheduleRepeatOption } from '../../models/flow';
+import { RecurringUIOption } from '../../models/flow';
 import Countdown from 'antd/es/statistic/Countdown';
 import { useInterval } from 'usehooks-ts';
 import { CheckCircleOutlined, ExclamationCircleOutlined, InfoCircleOutlined } from '@ant-design/icons/lib';
@@ -330,7 +330,7 @@ export const FlowDetail = ({}) => {
                   <MdSchedule /> {uiFlow.nextExecutionTime ? uiFlow.nextExecutionTime.format('LLL') : 'None'}
                 </div>
               </Form.Item>
-              {uiFlow.nextExecutionTime && <Form.Item label="Repeat">{uiFlow.repeatOption == ScheduleRepeatOption.Yes ? 'Yes' : 'No'}</Form.Item>}
+              {uiFlow.nextExecutionTime && <Form.Item label="Repeat">{uiFlow.repeatOption == RecurringUIOption.Yes ? 'Yes' : 'No'}</Form.Item>}
             </Card>
 
             <span>
