@@ -15,10 +15,11 @@ import { SensitiveButton } from '../SensitiveButton';
 import { ActionContext } from '../../models/flowAction';
 import { SmartTxnClient } from '../../utils/smartTxnClient';
 import { handleInputChange, handleSelectChange } from '../../utils/reactUtil';
-import { ScheduleRepeatOption } from '../../models/flow';
+import { RecurringUIOption, TriggerType } from '../../models/flow';
 import moment from 'moment';
 import { FieldRequire, FormItem } from '../FormItem';
 import { useFormValidator, validateForm } from '../FormValidator';
+import Cron from 'react-js-cron';
 
 export const EditFlow = ({}) => {
   const program = useAnchorProgram();
@@ -35,9 +36,10 @@ export const EditFlow = ({}) => {
     return React.useMemo(() => new URLSearchParams(search), [search]);
   }
   let query = useQuery();
-
+  const defaultCron = '0 10 * * *';
+  const [cron, setCron] = useState(defaultCron);
   let defaultScheduleTime = moment().add(1, 'week'); // 1 week from now
-  let initialFlow: any = { repeatOption: ScheduleRepeatOption.No, nextExecutionTime: defaultScheduleTime, actions: [] };
+  let initialFlow: any = { retryWindow: 300, triggerType: TriggerType.Time, cron: defaultCron, recurring: RecurringUIOption.No.toString(), nextExecutionTime: defaultScheduleTime, remainingRuns: -999, actions: [] };
   let [uiFlow, setUIFlow] = useState(initialFlow);
 
   async function init() {
@@ -135,6 +137,7 @@ export const EditFlow = ({}) => {
       let updateContext: any = {
         accounts: {
           flow: new PublicKey(flowKey),
+          caller: walletCtx.publicKey,
         },
         signers: [],
       };
@@ -179,13 +182,24 @@ export const EditFlow = ({}) => {
 
   const { Option } = Select;
 
+  function numberOfRunSelection() {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center' }}>
+        <Select style={{ width: '120px' }} value={uiFlow.remainingRuns} onChange={value => handleSelectChange(uiFlow, 'remainingRuns', value, updateState)}>
+          <Option value={-999}>Forever</Option>
+          {[...Array(100)].map((x, i) => (
+            <Option value={i}>{i} times</Option>
+          ))}
+        </Select>
+      </div>
+    );
+  }
   return (
     <span style={{ width: '100%' }}>
       <PageHeader ghost={false} title={<div style={{ display: 'flex', alignItems: 'center' }}>{isNewFlow() ? 'New Automation' : <span>Edit Automation</span>}</div>}></PageHeader>
       <div className="card">
         <div className="card-body">
           <Form
-            style={{ maxWidth: '800px' }}
             scrollToFirstError={true}
             name="basic"
             labelAlign="left"
@@ -216,58 +230,58 @@ export const EditFlow = ({}) => {
               size="small">
               <Skeleton loading={false} active>
                 <Form.Item label="Trigger Type">
-                  <Select defaultValue="Time">
-                    <Option value="Time">Time</Option>
-                    <Option value="PE">Price Event</Option>
-                    <Option value="OE">Onchain Event</Option>
-                    <Option value="EE">External Event</Option>
+                  <Select defaultValue="Time" value={uiFlow.triggerType} onChange={value => handleSelectChange(uiFlow, 'triggerType', value, updateState)}>
+                    <Option value={TriggerType.None}>None</Option>
+                    <Option value={TriggerType.Time}>Time</Option>
+                    <Option value={TriggerType.Custom}>Custom Trigger</Option>
                   </Select>
                 </Form.Item>
-                <Form.Item label="Schedule At" rules={[{ required: false, message: 'Trigger is required' }]}>
-                  <DatePicker
-                    style={{ width: '100%' }}
-                    format="MMMM D, YYYY  h:mm a"
-                    showTime={true}
-                    name="trigger"
-                    value={uiFlow.nextExecutionTime}
-                    onChange={(date, dateString) => {
-                      uiFlow.nextExecutionTime = date;
-                      updateState();
-                    }}
-                  />
-                </Form.Item>
-                <Form.Item label="Repeat">
-                  <Select
-                    style={{ width: '80px' }}
-                    value={uiFlow.repeatOption}
-                    onChange={value =>
-                      handleSelectChange(uiFlow, 'repeatOption', value, () => {
-                        if (value == ScheduleRepeatOption.Yes) {
-                          uiFlow.repeatIntervalValue = 1;
-                          uiFlow.repeatIntervalUnit = 4;
-                        } else {
-                          uiFlow.repeatIntervalValue = 0;
-                        }
-                        updateState();
-                      })
-                    }>
-                    <Option value={ScheduleRepeatOption.No}>No</Option>
-                    <Option value={ScheduleRepeatOption.Yes}>Yes</Option>
-                  </Select>
-                  {uiFlow.repeatOption == ScheduleRepeatOption.Yes && (
-                    <div style={{ float: 'right' }}>
-                      Every &nbsp;&nbsp;
-                      <Input style={{ width: '50px' }} name="repeatIntervalValue" value={uiFlow.repeatIntervalValue} onChange={handleInputChange(uiFlow, updateState)} />
-                      &nbsp;&nbsp;
-                      <Select style={{ width: '120px' }} value={'' + uiFlow.repeatIntervalUnit} onChange={value => handleSelectChange(uiFlow, 'repeatIntervalUnit', value, updateState)}>
-                        <Option value="1">Minute</Option>
-                        <Option value="2">Hour</Option>
-                        <Option value="3">Day</Option>
-                        <Option value="4">Week</Option>
+                {uiFlow.triggerType == TriggerType.Custom && (
+                  <span>
+                    <Form.Item label="Run for">{numberOfRunSelection()}</Form.Item>
+                  </span>
+                )}
+                {uiFlow.triggerType == TriggerType.Time && (
+                  <span>
+                    <Form.Item label="Recurring">
+                      <Select style={{ width: '80px' }} value={uiFlow.recurring} onChange={value => handleSelectChange(uiFlow, 'recurring', value, updateState)}>
+                        <Option value={RecurringUIOption.No}>No</Option>
+                        <Option value={RecurringUIOption.Yes}>Yes</Option>
                       </Select>
-                    </div>
-                  )}
-                </Form.Item>
+                    </Form.Item>
+                    {uiFlow.recurring == RecurringUIOption.No && (
+                      <Form.Item label="Schedule At" rules={[{ required: false, message: 'Trigger is required' }]}>
+                        <DatePicker
+                          style={{ width: '100%' }}
+                          format="MMMM D, YYYY  h:mm a"
+                          showTime={true}
+                          name="trigger"
+                          value={uiFlow.nextExecutionTime}
+                          onChange={(date, dateString) => {
+                            uiFlow.nextExecutionTime = date;
+                            updateState();
+                          }}
+                        />
+                      </Form.Item>
+                    )}
+                    {uiFlow.recurring == RecurringUIOption.Yes && (
+                      <span>
+                        <Form.Item label="Repeat" wrapperCol={{ span: 20 }}>
+                          <Cron
+                            value={uiFlow.cron}
+                            setValue={v => {
+                              uiFlow.cron = v;
+                              updateState();
+                            }}
+                            clearButton={false}
+                            clockFormat="12-hour-clock"
+                          />
+                        </Form.Item>
+                        <Form.Item label="For">{numberOfRunSelection()}</Form.Item>
+                      </span>
+                    )}
+                  </span>
+                )}
               </Skeleton>
             </Card>
             {uiFlow.actions.map(function (action, i) {
