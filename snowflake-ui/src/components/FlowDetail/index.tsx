@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useAnchorProgram } from '../../contexts/anchorContext';
 import { AccountMeta, PublicKey } from '@solana/web3.js';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { Button, Card, Form, Modal, PageHeader, Skeleton, Spin, Table, Tabs } from 'antd';
-import { Link, useHistory, useParams } from 'react-router-dom';
+import { Button, Card, Col, Divider, Form, Modal, PageHeader, Row, Skeleton, Space, Spin, Table, Tabs } from 'antd';
+import { Link, useHistory, useLocation, useParams } from 'react-router-dom';
 import _ from 'lodash';
 import * as flowUtil from '../../utils/flowUtil';
 import { getStatus, STATUS } from '../../utils/flowUtil';
@@ -12,18 +12,26 @@ import { MdCircle, MdOutlineArrowCircleUp, MdOutlineInfo, MdOutlineOfflineBolt, 
 import { useConnectionConfig } from '../../contexts/connection';
 import { SensitiveButton } from '../SensitiveButton';
 import { SmartTxnClient } from '../../utils/smartTxnClient';
-import { RecurringUIOption } from '../../models/flow';
+import { RecurringUIOption, State, TriggerType, TriggerTypeLabels } from '../../models/flow';
 import Countdown from 'antd/es/statistic/Countdown';
 import { useInterval } from 'usehooks-ts';
 import { CheckCircleOutlined, ExclamationCircleOutlined, InfoCircleOutlined } from '@ant-design/icons/lib';
+import { FlowLiveStatus } from '../FlowLiveStatus';
 
 export const FlowDetail = ({}) => {
   const program = useAnchorProgram();
   const walletCtx = useWallet();
   const history = useHistory();
   const { flowKey } = useParams<{ flowKey: string }>();
+  const [debug, setDebug] = useState(false);
+  function useQuery() {
+    const { search } = useLocation();
+    return React.useMemo(() => new URLSearchParams(search), [search]);
+  }
 
+  let query = useQuery();
   async function init() {
+    setDebug(query.get('debug') ? true : false);
     if (flowKey) {
       let fetchedFlow = await program.account.flow.fetch(new PublicKey(flowKey));
       uiFlow = await flowUtil.convertFlow(fetchedFlow, connectionConfig, walletCtx, true);
@@ -268,41 +276,7 @@ export const FlowDetail = ({}) => {
                 </div>
               }
               size="small">
-              {uiFlow.name && (
-                <div className="statusText" style={{ textAlign: 'center', marginTop: '-10px', marginBottom: '10px' }}>
-                  {getStatus(uiFlow) == STATUS.COUNTDOWN && (
-                    <span>
-                      Time to next execution
-                      <br />
-                      <div className="iconAndText" style={{ justifyContent: 'center' }}>
-                        <MdCircle style={{ color: 'lightgreen' }}></MdCircle>
-                        <Countdown value={uiFlow.nextExecutionTime} format="HH:mm:ss:SSS" onFinish={updateState} />
-                      </div>
-                    </span>
-                  )}
-                  {getStatus(uiFlow) == STATUS.EXECUTING && (
-                    <span>
-                      <Spin size="large" /> <br /> Execution in progress
-                    </span>
-                  )}
-                  {getStatus(uiFlow) == STATUS.NO_EXECUTE && (
-                    <span className="errorText">
-                      <ExclamationCircleOutlined /> Unable to execute your automation.
-                    </span>
-                  )}
-                  {getStatus(uiFlow) == STATUS.EXECUTED && (
-                    <span className="infoText">
-                      <CheckCircleOutlined /> Last executed at {uiFlow.lastExecutionTime.format('h:mm A, MMMM D, YYYY')}.
-                      <br /> No further executions pending.
-                    </span>
-                  )}
-                  {getStatus(uiFlow) == STATUS.UNKNOWN && (
-                    <span className="infoText">
-                      <InfoCircleOutlined /> Automation is currently not scheduled.
-                    </span>
-                  )}
-                </div>
-              )}
+              {uiFlow.name && <FlowLiveStatus uiFlow={uiFlow} updateState={updateState} />}
             </Card>
             {/*<Card
               title={
@@ -321,16 +295,45 @@ export const FlowDetail = ({}) => {
             <Card
               title={
                 <div className="iconAndText">
-                  <MdOutlineOfflineBolt /> Schedule
+                  <MdOutlineOfflineBolt /> Trigger
                 </div>
               }
               size="small">
-              <Form.Item label="Schedule">
-                <div className="iconAndText">
-                  <MdSchedule /> {uiFlow.nextExecutionTime ? uiFlow.nextExecutionTime.format('LLL') : 'None'}
+              <div className="labelLayout">
+                <div>
+                  <label>Trigger Type :</label>
+                  {TriggerTypeLabels[uiFlow.triggerType]}
                 </div>
-              </Form.Item>
-              {uiFlow.nextExecutionTime && <Form.Item label="Repeat">{uiFlow.repeatOption == RecurringUIOption.Yes ? 'Yes' : 'No'}</Form.Item>}
+
+                {uiFlow.triggerType == TriggerType.Time && (
+                  <span>
+                    {uiFlow.recurring == RecurringUIOption.Yes && (
+                      <div>
+                        <label>Schedule :</label>
+                        {/*{prettyCron.toString(uiFlow.cron}}*/}
+                      </div>
+                    )}
+                    {uiFlow.state == State.Pending && (
+                      <div>
+                        <label>Next Execution :</label>
+                        {uiFlow.nextExecutionTime ? uiFlow.nextExecutionTime.format('LLL') : 'None'}
+                      </div>
+                    )}
+                    {uiFlow.recurring == RecurringUIOption.No && (
+                      <div>
+                        <label>Recurring :</label>
+                        {uiFlow.recurring}
+                      </div>
+                    )}
+                  </span>
+                )}
+                {((uiFlow.triggerType == TriggerType.Time && uiFlow.recurring == RecurringUIOption.Yes) || uiFlow.triggerType == TriggerType.ProgramCondition) && (
+                  <div>
+                    <label>Remaining Runs :</label>
+                    {uiFlow.remainingRuns}
+                  </div>
+                )}
+              </div>
             </Card>
 
             <span>
@@ -389,6 +392,16 @@ export const FlowDetail = ({}) => {
         <pre>{JSON.stringify(uiFlow, null, 2)}</pre>*/}
         </div>
       </div>
+      {debug && (
+        <span>
+          <br />
+          <br />
+          <Divider plain orientation="left">
+            UI FLOW
+          </Divider>
+          <pre>{JSON.stringify(uiFlow, null, 2)}</pre>
+        </span>
+      )}
     </span>
   );
 };

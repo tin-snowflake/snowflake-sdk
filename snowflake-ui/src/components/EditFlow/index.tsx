@@ -15,7 +15,7 @@ import { SensitiveButton } from '../SensitiveButton';
 import { ActionContext } from '../../models/flowAction';
 import { SmartTxnClient } from '../../utils/smartTxnClient';
 import { handleInputChange, handleSelectChange } from '../../utils/reactUtil';
-import { RecurringUIOption, TriggerType } from '../../models/flow';
+import { RecurringUIOption, RETRY_WINDOW, TriggerType } from '../../models/flow';
 import moment from 'moment';
 import { FieldRequire, FormItem } from '../FormItem';
 import { useFormValidator, validateForm } from '../FormValidator';
@@ -39,7 +39,15 @@ export const EditFlow = ({}) => {
   const defaultCron = '0 10 * * *';
   const [cron, setCron] = useState(defaultCron);
   let defaultScheduleTime = moment().add(1, 'week'); // 1 week from now
-  let initialFlow: any = { retryWindow: 300, triggerType: TriggerType.Time, cron: defaultCron, recurring: RecurringUIOption.No.toString(), nextExecutionTime: defaultScheduleTime, remainingRuns: -999, actions: [] };
+  let initialFlow: any = {
+    retryWindow: RETRY_WINDOW,
+    triggerType: TriggerType.Time,
+    cron: defaultCron,
+    recurring: RecurringUIOption.No.toString(),
+    nextExecutionTime: defaultScheduleTime,
+    remainingRuns: -999,
+    actions: [],
+  };
   let [uiFlow, setUIFlow] = useState(initialFlow);
 
   async function init() {
@@ -233,10 +241,10 @@ export const EditFlow = ({}) => {
                   <Select defaultValue="Time" value={uiFlow.triggerType} onChange={value => handleSelectChange(uiFlow, 'triggerType', value, updateState)}>
                     <Option value={TriggerType.None}>None</Option>
                     <Option value={TriggerType.Time}>Time</Option>
-                    <Option value={TriggerType.Custom}>Custom Trigger</Option>
+                    <Option value={TriggerType.ProgramCondition}>Program Condition</Option>
                   </Select>
                 </Form.Item>
-                {uiFlow.triggerType == TriggerType.Custom && (
+                {uiFlow.triggerType == TriggerType.ProgramCondition && (
                   <span>
                     <Form.Item label="Run for">{numberOfRunSelection()}</Form.Item>
                   </span>
