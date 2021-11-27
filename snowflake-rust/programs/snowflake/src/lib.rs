@@ -8,9 +8,11 @@ const TRIGGER_TYPE_NONE: u8 = 1;
 const TRIGGER_TYPE_TIME: u8 = 2;
 const TRIGGER_TYPE_PROGRAM: u8 = 3;
 
-const STATE_PENDING: u8 = 1;
-const STATE_COMPLETE: u8 = 2;
-const STATE_ERROR: u8 = 3;
+const RECURRING_FOREVER:i16 = -999;
+const DEFAULT_RETRY_WINDOW: i64 = 300;
+
+const TIMED_FLOW_COMPLETE: i64 = 0;
+const TIMED_FLOW_ERROR: i64 = -1;
 
 declare_id!("86G3gad5tVjJxdQmmdQ6E3rLQNnDNh4KYcqiiSd7Az63");
 
@@ -24,9 +26,12 @@ pub mod snowflake {
         flow.flow_owner = ctx.accounts.flow_owner.key();
 
         flow.apply_flow_data(client_flow);
-        flow.state = STATE_PENDING;
         
-        Ok(())
+        if flow.validate_flow_data() {
+            Ok(())
+        } else {
+            Err(ProgramError::InvalidAccountData)
+        }
     }
 
     pub fn update_flow(ctx: Context<UpdateFlow>, client_flow: Flow) -> ProgramResult {
@@ -39,13 +44,11 @@ pub mod snowflake {
 
         flow.apply_flow_data(client_flow);
 
-        let now = Clock::get()?.unix_timestamp;
-        if (flow.trigger_type == TRIGGER_TYPE_TIME && flow.next_execution_time > now) 
-            || (flow.trigger_type == TRIGGER_TYPE_PROGRAM && flow.remaining_runs > 0) {
-            flow.state = STATE_PENDING;
+        if flow.validate_flow_data() {
+            Ok(())
+        } else {
+            Err(ProgramError::InvalidAccountData)
         }
- 
-        Ok(())
     }
 
     pub fn delete_flow(ctx: Context<DeleteFlow>) -> ProgramResult {
@@ -113,7 +116,7 @@ pub mod snowflake {
         }
 
         charge_txn_fee();
-        flow.state = STATE_ERROR;
+        flow.next_execution_time = TIMED_FLOW_ERROR;
 
         Ok(())
     }
@@ -155,13 +158,11 @@ pub struct ExecuteFlow<'info> {
 
 
 /************************ DATA MODEL */
-
 #[account]
 #[derive(Debug)]
 pub struct Flow {
     pub flow_owner: Pubkey,
     pub trigger_type: u8,
-    pub state: u8,
     pub recurring: bool,
     pub remaining_runs: i16,
     pub next_execution_time: i64,
@@ -183,14 +184,33 @@ impl Flow {
         self.actions = client_flow.actions;
 
         if self.trigger_type == TRIGGER_TYPE_TIME {
-            self.next_execution_time = 
-                if self.recurring {
-                    calculate_next_execution_time(&self.cron)
-                } 
-                else {
-                    client_flow.next_execution_time
-                };
+            if self.retry_window < 1 {
+                self.retry_window = DEFAULT_RETRY_WINDOW;
+            }
+
+            if self.recurring {
+                if self.has_remaining_runs() {
+                    self.next_execution_time = calculate_next_execution_time(&self.cron);
+                }
+            } else {
+                self.next_execution_time = client_flow.next_execution_time;
+                self.remaining_runs = 1;
+            }
         }
+    }
+
+    fn validate_flow_data(&self)  -> bool {
+        if self.trigger_type != TRIGGER_TYPE_NONE 
+            && self.trigger_type != TRIGGER_TYPE_TIME 
+            && self.trigger_type != TRIGGER_TYPE_PROGRAM {
+            return false;
+        }
+
+        if self.remaining_runs < 0 && self.remaining_runs != RECURRING_FOREVER {
+            return false;
+        }
+
+        true
     }
     
     fn empty_flow_data(&mut self) {
@@ -200,44 +220,41 @@ impl Flow {
         self.last_scheduled_execution = 0;
         self.remaining_runs = 0;
         self.cron = String::from("");
+        self.trigger_type = TRIGGER_TYPE_NONE;
+    }
+
+    fn has_remaining_runs(&self) -> bool {
+        self.remaining_runs > 0 || self.remaining_runs != RECURRING_FOREVER
     }
         
     fn is_due_for_execute(&self, now: i64) -> bool {
-        if self.trigger_type == TRIGGER_TYPE_NONE || self.state != STATE_PENDING {
-            return false;
+        if self.trigger_type == TRIGGER_TYPE_PROGRAM {
+            return self.has_remaining_runs();
         }
 
         if self.trigger_type == TRIGGER_TYPE_TIME {
             return self.next_execution_time < now && now - self.next_execution_time < self.retry_window;
         }
 
-        true
+        false
     }
 
     fn is_schedule_expired(&self, now: i64) -> bool {
         return self.trigger_type == TRIGGER_TYPE_TIME 
-                && self.state == STATE_PENDING 
-                && now - self.next_execution_time > self.retry_window;
+            && self.next_execution_time > 0
+            && now - self.next_execution_time > self.retry_window;
     }
 
     fn update_after_schedule_run(&mut self, now: i64) {
-        if self.trigger_type == TRIGGER_TYPE_NONE {
-            return;
-        }
-
         self.last_scheduled_execution = now;
+        if self.remaining_runs != RECURRING_FOREVER {
+            self.remaining_runs = self.remaining_runs - 1;
+        }
 
         if self.trigger_type == TRIGGER_TYPE_TIME {
-            if self.recurring {
-                self.next_execution_time = calculate_next_execution_time(&self.cron);
-            } else {
-                self.state = STATE_COMPLETE;
-            }
-        }
-
-        if self.trigger_type == TRIGGER_TYPE_PROGRAM {
-            self.remaining_runs = self.remaining_runs - 1;
-            self.state = if self.remaining_runs < 1 {STATE_COMPLETE} else {STATE_PENDING};
+            self.next_execution_time = 
+                if self.has_remaining_runs() {calculate_next_execution_time(&self.cron)} 
+                else {TIMED_FLOW_COMPLETE};
         }
     }
 }
