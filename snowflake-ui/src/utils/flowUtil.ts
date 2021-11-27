@@ -87,7 +87,7 @@ export async function convertUIFlow(uiFlow, connection: ConnectionConfig, wallet
 export enum STATUS {
   COUNTDOWN,
   EXECUTING,
-  EXECUTED,
+  COMPLETED,
   ERROR,
   NOT_SCHEDULED,
   MONITORING_EXECUTION,
@@ -96,27 +96,20 @@ export enum STATUS {
 
 export function getStatus(uiFlow: UIFlow | any): STATUS {
   // rule out NONE trigger
-  if (uiFlow.triggerType == TriggerType.None) return STATUS.NOT_SCHEDULED;
-
-  // deal with TIME or CUSTOM trigger
-
-  // first rule out ERROR and COMPLETE state
-  if (uiFlow.state == State.Error) return STATUS.ERROR;
-  if (uiFlow.state == State.Complete) return STATUS.EXECUTED;
-
-  // now deal with PENDING state
-  if (uiFlow.triggerType == TriggerType.Time) {
-    // TIME & PENDING
-    if (uiFlow.recurring == RecurringUIOption.Yes && uiFlow.remainingRuns == 0) return STATUS.EXECUTED;
-    // otherwise checking next excution time for both recurring and once-off
+  if (uiFlow.triggerType == TriggerType.None) {
+    return STATUS.NOT_SCHEDULED;
+  } else if (uiFlow.triggerType == TriggerType.Time) {
     if (!uiFlow.nextExecutionTime) return STATUS.UNKNOWN; // should never get here
+    if (uiFlow.nextExecutionTime.unix() == 0) return STATUS.COMPLETED;
+    if (uiFlow.nextExecutionTime.unix() == -1) return STATUS.ERROR;
+
     if (uiFlow.nextExecutionTime.isAfter(moment())) return STATUS.COUNTDOWN;
     else if (uiFlow.nextExecutionTime.isBefore(moment()) && uiFlow.nextExecutionTime.isAfter(moment().subtract(RETRY_WINDOW, 'second'))) return STATUS.EXECUTING;
-    else if (uiFlow.nextExecutionTime.isBefore(moment().subtract(RETRY_WINDOW, 'second'))) return STATUS.UNKNOWN;
+    else return STATUS.UNKNOWN;
   } else {
-    // CUSTOM & PENDING
-    if (uiFlow.remainingRuns == 0) return STATUS.EXECUTED;
-    return STATUS.MONITORING_EXECUTION;
+    // PROGRAM TRIGGER
+    if (uiFlow.remainingRuns == 0) return STATUS.COMPLETED;
+    else return STATUS.MONITORING_EXECUTION;
   }
 
   return STATUS.UNKNOWN;

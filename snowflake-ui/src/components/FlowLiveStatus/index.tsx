@@ -30,7 +30,7 @@ export function FlowLiveStatus(props) {
           <ExclamationCircleOutlined /> Automation is currently not scheduled.
         </span>
       )}
-      {getStatus(uiFlow) == STATUS.EXECUTED && (
+      {getStatus(uiFlow) == STATUS.COMPLETED && (
         <span className="infoText">
           <CheckCircleOutlined /> Last executed at {uiFlow.lastExecutionTime.format('h:mm A, MMMM D, YYYY')}.
           <br /> No further executions pending.

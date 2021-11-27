@@ -17,7 +17,7 @@ import Countdown from 'antd/es/statistic/Countdown';
 import { useInterval } from 'usehooks-ts';
 import { CheckCircleOutlined, ExclamationCircleOutlined, InfoCircleOutlined } from '@ant-design/icons/lib';
 import { FlowLiveStatus } from '../FlowLiveStatus';
-
+import '../../utils/prettycron.js';
 export const FlowDetail = ({}) => {
   const program = useAnchorProgram();
   const walletCtx = useWallet();
@@ -233,6 +233,11 @@ export const FlowDetail = ({}) => {
     });
   }
 
+  function cronStr(s) {
+    // @ts-ignore
+    return prettyCron.toString(later, s, false);
+  }
+
   return (
     <span style={{ width: '100%' }} className="flowDetailPage">
       <PageHeader
@@ -310,10 +315,10 @@ export const FlowDetail = ({}) => {
                     {uiFlow.recurring == RecurringUIOption.Yes && (
                       <div>
                         <label>Schedule :</label>
-                        {/*{prettyCron.toString(uiFlow.cron}}*/}
+                        {cronStr(uiFlow.cron)}
                       </div>
                     )}
-                    {uiFlow.state == State.Pending && (
+                    {uiFlow.nextExecutionTime && uiFlow.nextExecutionTime.unix() > 0 && (
                       <div>
                         <label>Next Execution :</label>
                         {uiFlow.nextExecutionTime ? uiFlow.nextExecutionTime.format('LLL') : 'None'}
