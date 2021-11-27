@@ -5,7 +5,10 @@ const idl = JSON.parse(require('fs').readFileSync('idl/snowflake.json', 'utf8'))
 const programId = new anchor.web3.PublicKey('86G3gad5tVjJxdQmmdQ6E3rLQNnDNh4KYcqiiSd7Az63');
 
 const program = new anchor.Program(idl, programId);
-const FLOW_RETRY_WINDOW = 300;
+const TRIGGER_TYPE_TIME = 2;
+const TRIGGER_TYPE_PROGRAM = 3;
+
+const RECURRING_FOREVER = -999;
 
 exports.handler = async function() {
   console.log("Running Node Operator");
@@ -25,7 +28,6 @@ async function listFlowsToBeExecuted() {
 
   try {
     const allFlows = await program.account.flow.all([dataSizeFilter]);
-
     allFlows.forEach(function (flow) {
       if (shouldExecuteFlow(flow)) {
         results.push(flow);
@@ -39,9 +41,20 @@ async function listFlowsToBeExecuted() {
 }
 
 function shouldExecuteFlow(flow) {
-  let nextExecutionTime = flow.account.nextExecutionTime.toNumber();
-  let now = Math.floor(Date.now() / 1000);
-  return nextExecutionTime > 0 && nextExecutionTime < now && now - nextExecutionTime < FLOW_RETRY_WINDOW;
+  let flowAccount = flow.account;
+  
+  if (flowAccount.triggerType == TRIGGER_TYPE_PROGRAM) {
+    return flowAccount.remainingRuns > 0 || flowAccount.remainingRuns == RECURRING_FOREVER;
+  }
+
+  if (flowAccount.triggerType == TRIGGER_TYPE_TIME) {
+    let nextExecutionTime = flowAccount.nextExecutionTime.toNumber();
+    let retryWindow = flowAccount.retryWindow.toNumber();
+    let now = Math.floor(Date.now() / 1000);
+    return nextExecutionTime > 0 && nextExecutionTime < now && now - nextExecutionTime < retryWindow;
+  }
+
+  return false;
 }
 
 async function excecuteFlow(flow) {
@@ -79,6 +92,16 @@ async function excecuteFlow(flow) {
     console.log('Error excecuting flow: ', error);
   }
 }
+
+const cron = require('node-cron');
+
+cron.schedule('*/5 * * * * *', () => {
+  console.log('Running Node Operator');
+  let flows = await listFlowsToBeExecuted();
+  for (let flow of flows) {
+    excecuteFlow(flow);
+  }
+});
 
 // async function main() { 
 //   let flows = await listFlowsToBeExecuted();
