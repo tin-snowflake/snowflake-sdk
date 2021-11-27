@@ -1,7 +1,7 @@
 import { PublicKey } from '@solana/web3.js';
 import { FLOW_ACCOUNT_LAYOUT } from '../layouts/snowflakeLayouts';
 import { Program } from '@project-serum/anchor';
-import { Flow, RecurringUIOption, UIFlow } from '../models/flow';
+import { Flow, RecurringUIOption, RETRY_WINDOW, State, TriggerType, UIFlow } from '../models/flow';
 import * as flowActionUtil from './flowActionUtil';
 import * as actionUtil from './flowActionUtil';
 import _ from 'lodash';
@@ -88,21 +88,36 @@ export enum STATUS {
   COUNTDOWN,
   EXECUTING,
   EXECUTED,
-  NO_EXECUTE,
+  ERROR,
+  NOT_SCHEDULED,
+  MONITORING_EXECUTION,
   UNKNOWN,
 }
 
-const EXECUTION_THRESHOLD = 120; // seconds
+export function getStatus(uiFlow: UIFlow | any): STATUS {
+  // rule out NONE trigger
+  if (uiFlow.triggerType == TriggerType.None) return STATUS.NOT_SCHEDULED;
 
-export function getStatus(uiFlow: UIFlow & any): STATUS {
-  if (uiFlow.nextExecutionTime && uiFlow.nextExecutionTime.unix() > 0) {
+  // deal with TIME or CUSTOM trigger
+
+  // first rule out ERROR and COMPLETE state
+  if (uiFlow.state == State.Error) return STATUS.ERROR;
+  if (uiFlow.state == State.Complete) return STATUS.EXECUTED;
+
+  // now deal with PENDING state
+  if (uiFlow.triggerType == TriggerType.Time) {
+    // TIME & PENDING
+    if (uiFlow.recurring == RecurringUIOption.Yes && uiFlow.remainingRuns == 0) return STATUS.EXECUTED;
+    // otherwise checking next excution time for both recurring and once-off
+    if (!uiFlow.nextExecutionTime) return STATUS.UNKNOWN; // should never get here
     if (uiFlow.nextExecutionTime.isAfter(moment())) return STATUS.COUNTDOWN;
-    else if (uiFlow.nextExecutionTime.isBefore(moment()) && uiFlow.nextExecutionTime.isAfter(moment().subtract(EXECUTION_THRESHOLD, 'second'))) return STATUS.EXECUTING;
-    else if (uiFlow.nextExecutionTime.isBefore(moment().subtract(EXECUTION_THRESHOLD, 'second'))) return STATUS.NO_EXECUTE;
+    else if (uiFlow.nextExecutionTime.isBefore(moment()) && uiFlow.nextExecutionTime.isAfter(moment().subtract(RETRY_WINDOW, 'second'))) return STATUS.EXECUTING;
+    else if (uiFlow.nextExecutionTime.isBefore(moment().subtract(RETRY_WINDOW, 'second'))) return STATUS.UNKNOWN;
   } else {
-    if (uiFlow.lastExecutionTime && uiFlow.lastExecutionTime > 0) {
-      return STATUS.EXECUTED;
-    }
+    // CUSTOM & PENDING
+    if (uiFlow.remainingRuns == 0) return STATUS.EXECUTED;
+    return STATUS.MONITORING_EXECUTION;
   }
+
   return STATUS.UNKNOWN;
 }

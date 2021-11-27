@@ -1,14 +1,31 @@
 export interface Flow {}
 
-export interface UIFlow {}
+export interface UIFlow {
+  state: State;
+  triggerType: TriggerType;
+}
 
 export enum RecurringUIOption {
-  No = 'no',
-  Yes = 'yes',
+  No = 'No',
+  Yes = 'Yes',
 }
+
+export const RUN_FOREVER = -999;
+export const RETRY_WINDOW = 300;
 
 export enum TriggerType {
   None = 1,
   Time = 2,
-  Custom = 3,
+  ProgramCondition = 3,
+}
+
+export const TriggerTypeLabels = {
+  [TriggerType.None]: 'None',
+  [TriggerType.Time]: 'Time',
+  [TriggerType.ProgramCondition]: 'Program Condition',
+};
+export enum State {
+  Pending = 1,
+  Complete = 2,
+  Error = 3,
 }
