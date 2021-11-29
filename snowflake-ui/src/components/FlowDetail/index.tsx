@@ -16,7 +16,6 @@ import { useInterval } from 'usehooks-ts';
 import { ExclamationCircleOutlined } from '@ant-design/icons/lib';
 import { FlowLiveStatus } from '../FlowLiveStatus';
 import '../../utils/prettycron.js';
-import { localCronToUTCCron } from '../../utils/cronTzConverter';
 
 export const FlowDetail = ({}) => {
   const program = useAnchorProgram();

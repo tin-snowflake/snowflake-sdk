@@ -170,6 +170,7 @@ pub struct Flow {
     pub next_execution_time: i64,
     pub retry_window: i64,
     pub last_scheduled_execution: i64,
+    pub user_utc_offset: i64,
     pub cron: String,
     pub name: String,
     pub actions: Vec<Action>,
@@ -184,6 +185,7 @@ impl Flow {
         self.cron = client_flow.cron;
         self.name = client_flow.name;
         self.actions = client_flow.actions;
+        self.user_utc_offset = client_flow.user_utc_offset;
 
         if self.trigger_type == TRIGGER_TYPE_TIME {
             if self.retry_window < 1 {
@@ -192,7 +194,7 @@ impl Flow {
 
             if self.recurring {
                 if self.has_remaining_runs() {
-                    self.next_execution_time = calculate_next_execution_time(&self.cron);
+                    self.next_execution_time = calculate_next_execution_time(&self.cron, self.user_utc_offset);
                 }
             } else {
                 self.next_execution_time = client_flow.next_execution_time;
@@ -257,7 +259,7 @@ impl Flow {
 
         if self.trigger_type == TRIGGER_TYPE_TIME {
             self.next_execution_time = 
-                if self.has_remaining_runs() {calculate_next_execution_time(&self.cron)}
+                if self.has_remaining_runs() {calculate_next_execution_time(&self.cron, self.user_utc_offset)}
                 else {TIMED_FLOW_COMPLETE};
         }
     }
@@ -302,10 +304,10 @@ impl From<&TargetAccountSpec> for AccountMeta {
 
 /************************ HELPER METHODS */
 
-fn calculate_next_execution_time(_cron: &str) -> i64 {
+fn calculate_next_execution_time(_cron: &str, utc_offset: i64) -> i64 {
     let now = Clock::get().unwrap().unix_timestamp;
     let cron = Crontab::parse(_cron).unwrap();
-    let next_execution = cron.find_event_after(&Tm::from_time_ts(now)).unwrap().to_time_ts();
+    let next_execution = cron.find_event_after(&Tm::from_time_ts(now)).unwrap().to_time_ts(utc_offset);
     next_execution
 }
 

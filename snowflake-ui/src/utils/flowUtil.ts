@@ -10,7 +10,6 @@ import { ActionContext } from '../models/flowAction';
 import { ConnectionConfig } from '../contexts/connection';
 import { WalletContextState } from '@solana/wallet-adapter-react';
 import BN from 'bn.js';
-import { localCronToUTCCron, utcCronToLocalCron } from './cronTzConverter';
 
 function flowOwnedAccountsFilter(publicKey: PublicKey) {
   let filter = {
@@ -51,11 +50,6 @@ export async function convertFlow(flow, connection: ConnectionConfig, wallet: Wa
 
   uiFlow.recurring = uiFlow.recurring ? RecurringUIOption.Yes : RecurringUIOption.No;
 
-  // convert cron from utc time to local
-  if (flow.cron) {
-    flow.cron = utcCronToLocalCron(flow.cron);
-  }
-
   if (ignoreActions) {
     uiFlow.actions = [templateAction];
     return uiFlow;
@@ -80,10 +74,7 @@ export async function convertUIFlow(uiFlow, connection: ConnectionConfig, wallet
   // convert last execution time just so anchor is not failing, we're not going to save last execution time
   flow.lastScheduledExecution = flow.lastScheduledExecution ? new BN(flow.lastScheduledExecution.unix()) : new BN(0);
 
-  // convert cron from local time to utc
-  if (flow.cron) {
-    flow.cron = localCronToUTCCron(flow.cron);
-  }
+  flow.userUtcOffset = new BN(new Date().getTimezoneOffset() * 60);
 
   for (const [i, action] of flow.actions.entries()) {
     const actionType = flowActionUtil.actionTypeFromCode(action.actionCode);
