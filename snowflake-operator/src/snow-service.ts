@@ -96,4 +96,51 @@ export default class SnowService {
       console.log('Error excecuting flow: ', error);
     }
   }
+
+  async listExpiredFlows(): Promise<Array<ProgramAccount>> {
+    let results: Array<ProgramAccount> = [];
+    let dataSizeFilter = {
+      dataSize: 4992,
+    };
+
+    try {
+      const allFlows = await this.program.account.flow.all([dataSizeFilter]);
+      
+      for (let flow of allFlows) {
+        if (this.isTimedFlowExpired(flow)) {
+          results.push(flow);
+        }
+      }
+    } catch (error) {
+      console.log('Error listing expired flows: ', error);
+    }
+
+    return results;
+  }
+  
+  isTimedFlowExpired(flow: ProgramAccount): boolean {
+    let flowAccount = flow.account;
+
+    if (flowAccount.triggerType == TRIGGER_TYPE_TIME) {
+      let nextExecutionTime = flowAccount.nextExecutionTime.toNumber();
+      let retryWindow = flowAccount.retryWindow.toNumber();
+      let now = Math.floor(Date.now() / 1000);
+      return nextExecutionTime > 0 && now - nextExecutionTime > retryWindow;
+    }
+
+    return false;
+  }
+
+  async markTimedFlowAsError(flow: ProgramAccount) {
+    console.log('Mark flow Error: ', flow);
+    try {
+      const tx = await this.program.rpc.markTimedFlowAsError({
+        accounts:  {flow: flow.publicKey},
+      });
+
+      console.log('Mark Error transaction signature', tx);
+      } catch (error) {
+      console.log('Error marking flow as error: ', error);
+    }
+  }
 }
