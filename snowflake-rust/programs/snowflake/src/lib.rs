@@ -1,8 +1,10 @@
 mod error;
-
+mod cron;
 use anchor_lang::prelude::*;
 use anchor_lang::{Accounts, Key};
 use anchor_lang::solana_program::instruction::Instruction;
+use cron::Crontab;
+use crate::cron::Tm;
 
 const TRIGGER_TYPE_NONE: u8 = 1;
 const TRIGGER_TYPE_TIME: u8 = 2;
@@ -253,7 +255,7 @@ impl Flow {
 
         if self.trigger_type == TRIGGER_TYPE_TIME {
             self.next_execution_time = 
-                if self.has_remaining_runs() {calculate_next_execution_time(&self.cron)} 
+                if self.has_remaining_runs() {calculate_next_execution_time(&self.cron)}
                 else {TIMED_FLOW_COMPLETE};
         }
     }
@@ -299,8 +301,10 @@ impl From<&TargetAccountSpec> for AccountMeta {
 /************************ HELPER METHODS */
 
 fn calculate_next_execution_time(_cron: &str) -> i64 {
-    // let now = Clock::get()?.unix_timestamp;
-    0
+    let now = Clock::get().unwrap().unix_timestamp;
+    let cron = Crontab::parse(_cron).unwrap();
+    let next_execution = cron.find_event_after(&Tm::from_time_ts(now)).unwrap().to_time_ts();
+    next_execution
 }
 
 fn charge_fee() {

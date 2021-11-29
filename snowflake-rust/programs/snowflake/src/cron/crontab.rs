@@ -2,7 +2,6 @@ use super::error::CrontabError;
 use super::parsing::{ScheduleComponents, parse_cron};
 use super::snowtime::Tm;
 use super::times::{adv_month, adv_day, adv_hour, adv_minute};
-
 /// Represents a crontab schedule.
 #[derive(Clone)]
 pub struct Crontab {
@@ -218,9 +217,9 @@ mod tests {
   fn first_of_the_month() {
     // First of the month at 0:00.
 
-    let cron = Crontab::parse("0 0 1 * *").unwrap();
+    let cron = Crontab::parse("0 8 * * *").unwrap();
     let next_execution = cron.find_event_after(&Tm::from_time_ts(1637542734)).unwrap();
-    println!("next execution is {:?}", next_execution.to_time_ts());
+    println!("next execution is {:?}", next_execution);
     // let tm = get_tm(2004, 1, 1, 0, 1, 59);
 /*
     // A minute late... advances the month.

@@ -2,22 +2,22 @@ import React, { useEffect, useState } from 'react';
 import { useAnchorProgram } from '../../contexts/anchorContext';
 import { AccountMeta, PublicKey } from '@solana/web3.js';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { Button, Card, Col, Divider, Form, Modal, PageHeader, Row, Skeleton, Space, Spin, Table, Tabs } from 'antd';
+import { Button, Card, Divider, Form, Modal, PageHeader, Skeleton, Table, Tabs } from 'antd';
 import { Link, useHistory, useLocation, useParams } from 'react-router-dom';
 import _ from 'lodash';
 import * as flowUtil from '../../utils/flowUtil';
-import { getStatus, STATUS } from '../../utils/flowUtil';
 import * as snowUtil from '../../utils/snowUtils';
-import { MdCircle, MdOutlineArrowCircleUp, MdOutlineInfo, MdOutlineOfflineBolt, MdOutlineSync, MdOutlineTextSnippet, MdSchedule } from 'react-icons/all';
+import { MdOutlineArrowCircleUp, MdOutlineInfo, MdOutlineOfflineBolt, MdOutlineSync, MdOutlineTextSnippet } from 'react-icons/all';
 import { useConnectionConfig } from '../../contexts/connection';
 import { SensitiveButton } from '../SensitiveButton';
 import { SmartTxnClient } from '../../utils/smartTxnClient';
-import { RecurringUIOption, State, TriggerType, TriggerTypeLabels } from '../../models/flow';
-import Countdown from 'antd/es/statistic/Countdown';
+import { RecurringUIOption, TriggerType, TriggerTypeLabels } from '../../models/flow';
 import { useInterval } from 'usehooks-ts';
-import { CheckCircleOutlined, ExclamationCircleOutlined, InfoCircleOutlined } from '@ant-design/icons/lib';
+import { ExclamationCircleOutlined } from '@ant-design/icons/lib';
 import { FlowLiveStatus } from '../FlowLiveStatus';
 import '../../utils/prettycron.js';
+import { localCrontabToUtcCrontabs } from '../../utils/cronTzConverter';
+
 export const FlowDetail = ({}) => {
   const program = useAnchorProgram();
   const walletCtx = useWallet();
@@ -50,12 +50,17 @@ export const FlowDetail = ({}) => {
     10000
   );
 
+  function convertCron() {
+    console.log(localCrontabToUtcCrontabs('0 10 * * *', 'America/New_York'));
+  }
   function prepareFlowForSave() {
+    convertCron();
     flow = flowUtil.convertUIFlow(uiFlow, connectionConfig, walletCtx);
     dto.idlFlow = flow;
   }
 
   useEffect(() => {
+    convertCron();
     console.log('*** calling use effect ... ');
     init();
     const listenerId = connectionConfig.connection.onAccountChange(new PublicKey(flowKey), async () => {
