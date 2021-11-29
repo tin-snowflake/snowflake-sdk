@@ -334,7 +334,7 @@ export const FlowDetail = ({}) => {
                 {((uiFlow.triggerType == TriggerType.Time && uiFlow.recurring == RecurringUIOption.Yes) || uiFlow.triggerType == TriggerType.ProgramCondition) && (
                   <div>
                     <label>Remaining Runs :</label>
-                    {uiFlow.remainingRuns}
+                    {uiFlow.remainingRuns == -999 ? 'Forever' : uiFlow.remainingRuns}
                   </div>
                 )}
               </div>
