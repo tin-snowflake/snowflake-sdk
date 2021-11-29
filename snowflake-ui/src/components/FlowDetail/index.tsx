@@ -16,7 +16,7 @@ import { useInterval } from 'usehooks-ts';
 import { ExclamationCircleOutlined } from '@ant-design/icons/lib';
 import { FlowLiveStatus } from '../FlowLiveStatus';
 import '../../utils/prettycron.js';
-import { localCrontabToUtcCrontabs } from '../../utils/cronTzConverter';
+import { localCronToUTCCron } from '../../utils/cronTzConverter';
 
 export const FlowDetail = ({}) => {
   const program = useAnchorProgram();
@@ -50,17 +50,12 @@ export const FlowDetail = ({}) => {
     10000
   );
 
-  function convertCron() {
-    console.log(localCrontabToUtcCrontabs('0 10 * * *', 'America/New_York'));
-  }
   function prepareFlowForSave() {
-    convertCron();
     flow = flowUtil.convertUIFlow(uiFlow, connectionConfig, walletCtx);
     dto.idlFlow = flow;
   }
 
   useEffect(() => {
-    convertCron();
     console.log('*** calling use effect ... ');
     init();
     const listenerId = connectionConfig.connection.onAccountChange(new PublicKey(flowKey), async () => {

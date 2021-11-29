@@ -217,8 +217,8 @@ mod tests {
   fn first_of_the_month() {
     // First of the month at 0:00.
 
-    let cron = Crontab::parse("0 8 * * *").unwrap();
-    let next_execution = cron.find_event_after(&Tm::from_time_ts(1637542734)).unwrap();
+    let cron = Crontab::parse("0 12 * 12 4").unwrap();
+    let next_execution = cron.find_event_after(&Tm::from_time_ts(1638148600)).unwrap();
     println!("next execution is {:?}", next_execution);
     // let tm = get_tm(2004, 1, 1, 0, 1, 59);
 /*
