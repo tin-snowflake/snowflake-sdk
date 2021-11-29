@@ -305,7 +305,7 @@ impl From<&TargetAccountSpec> for AccountMeta {
 /************************ HELPER METHODS */
 
 fn calculate_next_execution_time(_cron: &str, utc_offset: i64) -> i64 {
-    let now = Clock::get().unwrap().unix_timestamp;
+    let now = Clock::get().unwrap().unix_timestamp - utc_offset;
     let cron = Crontab::parse(_cron).unwrap();
     let next_execution = cron.find_event_after(&Tm::from_time_ts(now)).unwrap().to_time_ts(utc_offset);
     next_execution
