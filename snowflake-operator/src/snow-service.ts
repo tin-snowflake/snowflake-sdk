@@ -31,6 +31,8 @@ export default class SnowService {
 
     try {
       const allFlows = await this.program.account.flow.all([dataSizeFilter]);
+      console.log('All flows: ', allFlows);
+      
       for (let flow of allFlows) {
         if (this.shouldExecuteFlow(flow)) {
           results.push(flow);
