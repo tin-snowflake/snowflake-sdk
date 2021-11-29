@@ -1,7 +1,7 @@
 import { PublicKey } from '@solana/web3.js';
 import { FLOW_ACCOUNT_LAYOUT } from '../layouts/snowflakeLayouts';
 import { Program } from '@project-serum/anchor';
-import { Flow, RecurringUIOption, RETRY_WINDOW, State, TriggerType, UIFlow } from '../models/flow';
+import { Flow, RecurringUIOption, RETRY_WINDOW, TriggerType, UIFlow } from '../models/flow';
 import * as flowActionUtil from './flowActionUtil';
 import * as actionUtil from './flowActionUtil';
 import _ from 'lodash';
@@ -10,6 +10,7 @@ import { ActionContext } from '../models/flowAction';
 import { ConnectionConfig } from '../contexts/connection';
 import { WalletContextState } from '@solana/wallet-adapter-react';
 import BN from 'bn.js';
+import { localCronToUTCCron, utcCronToLocalCron } from './cronTzConverter';
 
 function flowOwnedAccountsFilter(publicKey: PublicKey) {
   let filter = {
@@ -50,6 +51,11 @@ export async function convertFlow(flow, connection: ConnectionConfig, wallet: Wa
 
   uiFlow.recurring = uiFlow.recurring ? RecurringUIOption.Yes : RecurringUIOption.No;
 
+  // convert cron from utc time to local
+  if (flow.cron) {
+    flow.cron = utcCronToLocalCron(flow.cron);
+  }
+
   if (ignoreActions) {
     uiFlow.actions = [templateAction];
     return uiFlow;
@@ -73,6 +79,12 @@ export async function convertUIFlow(uiFlow, connection: ConnectionConfig, wallet
   flow.retryWindow = new BN(flow.retryWindow);
   // convert last execution time just so anchor is not failing, we're not going to save last execution time
   flow.lastExecutionTime = flow.lastExecutionTime ? new BN(flow.lastExecutionTime.unix()) : new BN(0);
+
+  // convert cron from local time to utc
+  if (flow.cron) {
+    flow.cron = localCronToUTCCron(flow.cron);
+  }
+
   for (const [i, action] of flow.actions.entries()) {
     const actionType = flowActionUtil.actionTypeFromCode(action.actionCode);
     const actionContext: ActionContext = { action: action, connectionConfig: connection, wallet: wallet };

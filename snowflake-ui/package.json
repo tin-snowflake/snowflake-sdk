@@ -47,6 +47,8 @@
     "bs58": "^4.0.1",
     "buffer-layout": "^1.2.0",
     "craco-less": "^1.17.0",
+    "cron-converter": "^1.0.1",
+    "deep-equal": "^2.0.5",
     "eventemitter3": "^4.0.7",
     "jazzicon": "^1.5.0",
     "later": "^1.2.0",
