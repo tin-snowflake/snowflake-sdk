@@ -61,9 +61,7 @@
     "react-loader-spinner": "^4.0.0",
     "react-router-dom": "^5.2.0",
     "react-scripts": "3.4.3",
-    "timezone-js": "^0.4.13",
-    "typescript": "^4.4.2",
-    "tzdata": "^1.0.29"
+    "typescript": "^4.4.2"
   },
   "devDependencies": {
     "@types/bn.js": "^4.11.6",
