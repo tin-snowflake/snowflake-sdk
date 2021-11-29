@@ -49,6 +49,7 @@
     "craco-less": "^1.17.0",
     "eventemitter3": "^4.0.7",
     "jazzicon": "^1.5.0",
+    "later": "^1.2.0",
     "lodash": "^4.17.21",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
