@@ -1,6 +1,16 @@
 {
+    "scripts": {
+        "start": "ts-node src/local-operator.ts",
+        "build": "rm -rf dist/ && tsc",
+        "package-lambda": "cd dist/ && zip -r function.zip ../idl ../keys ../node_modules index.js snow-service.js",
+        "deploy-lambda": "aws lambda update-function-code --function-name snowflake-operator --zip-file fileb://dist/function.zip"
+    },
     "dependencies": {
         "@project-serum/anchor": "^0.17.0",
         "node-cron": "^3.0.0"
+    },
+    "devDependencies": {
+        "@types/node": "^16.11.10",
+        "@types/node-cron": "^3.0.0"
     }
 }

@@ -129,7 +129,7 @@ pub mod snowflake {
 
 #[derive(Accounts)]
 pub struct CreateFlow<'info> {
-    #[account(init, payer = flow_owner, space = 5000)]
+    #[account(init, payer = flow_owner, space = 4992)]
     flow: Account<'info, Flow>,
     #[account(signer)]
     pub flow_owner: AccountInfo<'info>,
@@ -235,7 +235,9 @@ impl Flow {
         }
 
         if self.trigger_type == TRIGGER_TYPE_TIME {
-            return self.next_execution_time < now && now - self.next_execution_time < self.retry_window;
+            return self.next_execution_time > 0 
+                    && self.next_execution_time < now 
+                    && now - self.next_execution_time < self.retry_window;
         }
 
         false

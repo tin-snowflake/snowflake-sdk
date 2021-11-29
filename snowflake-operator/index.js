@@ -23,7 +23,7 @@ exports.handler = async function() {
 async function listFlowsToBeExecuted() {
   let results = [];
   let dataSizeFilter = {
-    dataSize: 5000,
+    dataSize: 4992,
   };
 
   try {

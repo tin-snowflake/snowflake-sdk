@@ -23,7 +23,7 @@ function flowOwnedAccountsFilter(publicKey: PublicKey) {
 }
 
 let dataSizeFilter = {
-  dataSize: 5000,
+  dataSize: 4992,
 };
 
 export async function fetchFlowsByOwner(program: Program, publicKey: PublicKey) {
@@ -45,8 +45,8 @@ export async function convertFlow(flow, connection: ConnectionConfig, wallet: Wa
     uiFlow.nextExecutionTime = uiFlow.nextExecutionTime > 0 ? moment.unix(uiFlow.nextExecutionTime) : null;
   }
 
-  if (uiFlow.lastExecutionTime) {
-    uiFlow.lastExecutionTime = moment.unix(uiFlow.lastExecutionTime);
+  if (uiFlow.lastScheduledExecution) {
+    uiFlow.lastScheduledExecution = moment.unix(uiFlow.lastScheduledExecution);
   }
 
   uiFlow.recurring = uiFlow.recurring ? RecurringUIOption.Yes : RecurringUIOption.No;
@@ -78,7 +78,7 @@ export async function convertUIFlow(uiFlow, connection: ConnectionConfig, wallet
   flow.recurring = flow.recurring == RecurringUIOption.Yes ? true : false;
   flow.retryWindow = new BN(flow.retryWindow);
   // convert last execution time just so anchor is not failing, we're not going to save last execution time
-  flow.lastExecutionTime = flow.lastExecutionTime ? new BN(flow.lastExecutionTime.unix()) : new BN(0);
+  flow.lastScheduledExecution = flow.lastScheduledExecution ? new BN(flow.lastScheduledExecution.unix()) : new BN(0);
 
   // convert cron from local time to utc
   if (flow.cron) {
