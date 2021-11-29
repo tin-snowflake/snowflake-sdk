@@ -41,11 +41,11 @@ export async function convertFlow(flow, connection: ConnectionConfig, wallet: Wa
   let uiFlow = _.cloneDeep(flow);
   // convert unix timestamp to moment js time object
   if (uiFlow.nextExecutionTime) {
-    uiFlow.nextExecutionTime = uiFlow.nextExecutionTime > 0 ? moment.unix(uiFlow.nextExecutionTime) : null;
+    uiFlow.nextExecutionTime = moment.unix(uiFlow.nextExecutionTime);
   }
 
   if (uiFlow.lastScheduledExecution) {
-    uiFlow.lastScheduledExecution = moment.unix(uiFlow.lastScheduledExecution);
+    uiFlow.lastScheduledExecution = uiFlow.lastScheduledExecution > 0 ? moment.unix(uiFlow.lastScheduledExecution) : null;
   }
 
   uiFlow.recurring = uiFlow.recurring ? RecurringUIOption.Yes : RecurringUIOption.No;
