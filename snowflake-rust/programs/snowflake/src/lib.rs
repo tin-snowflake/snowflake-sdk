@@ -228,7 +228,7 @@ impl Flow {
     }
 
     fn has_remaining_runs(&self) -> bool {
-        self.remaining_runs > 0 || self.remaining_runs != RECURRING_FOREVER
+        self.remaining_runs > 0 || self.remaining_runs == RECURRING_FOREVER
     }
         
     fn is_due_for_execute(&self, now: i64) -> bool {

@@ -45,7 +45,7 @@ export async function convertFlow(flow, connection: ConnectionConfig, wallet: Wa
   }
 
   if (uiFlow.lastScheduledExecution) {
-    uiFlow.lastScheduledExecution = moment.unix(uiFlow.lastScheduledExecution);
+    uiFlow.lastScheduledExecution = uiFlow.lastScheduledExecution > 0 ? moment.unix(uiFlow.lastScheduledExecution) : null;
   }
 
   uiFlow.recurring = uiFlow.recurring ? RecurringUIOption.Yes : RecurringUIOption.No;
