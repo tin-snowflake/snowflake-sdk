@@ -41,7 +41,7 @@ export async function convertFlow(flow, connection: ConnectionConfig, wallet: Wa
   let uiFlow = _.cloneDeep(flow);
   // convert unix timestamp to moment js time object
   if (uiFlow.nextExecutionTime) {
-    uiFlow.nextExecutionTime = uiFlow.nextExecutionTime > 0 ? moment.unix(uiFlow.nextExecutionTime) : null;
+    uiFlow.nextExecutionTime = moment.unix(uiFlow.nextExecutionTime);
   }
 
   if (uiFlow.lastScheduledExecution) {
@@ -94,6 +94,7 @@ export enum STATUS {
   ERROR,
   NOT_SCHEDULED,
   MONITORING_EXECUTION,
+  TOO_OLD,
   UNKNOWN,
 }
 
@@ -108,7 +109,7 @@ export function getStatus(uiFlow: UIFlow | any): STATUS {
 
     if (uiFlow.nextExecutionTime.isAfter(moment())) return STATUS.COUNTDOWN;
     else if (uiFlow.nextExecutionTime.isBefore(moment()) && uiFlow.nextExecutionTime.isAfter(moment().subtract(RETRY_WINDOW, 'second'))) return STATUS.EXECUTING;
-    else return STATUS.UNKNOWN;
+    else return STATUS.TOO_OLD;
   } else {
     // PROGRAM TRIGGER
     if (uiFlow.remainingRuns == 0) return STATUS.COMPLETED;

@@ -41,6 +41,16 @@ export function FlowLiveStatus(props) {
           <InfoCircleOutlined /> Unknown Status.
         </span>
       )}
+      {getStatus(uiFlow) == STATUS.TOO_OLD && (
+        <span className="infoText">
+          <InfoCircleOutlined /> Scheduled time is too old. Automation will be marked as error.
+        </span>
+      )}
+      {getStatus(uiFlow) == STATUS.ERROR && (
+        <span className="errorText">
+          <InfoCircleOutlined /> Unable to execute your automation. Please validate and reschedule.
+        </span>
+      )}
       {getStatus(uiFlow) == STATUS.MONITORING_EXECUTION && (
         <span>
           <Loader type="ThreeDots" color="#5ac4be" height={50} width={70} />
