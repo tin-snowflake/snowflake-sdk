@@ -1,0 +1,12 @@
+{
+    "scripts": {
+        "test": "ts-node test/test-price-checker.ts"
+    },
+    "dependencies": {
+        "@solana/web3.js": "^1.18.0",
+        "@pythnetwork/client": "^2.2.0"
+    },
+    "devDependencies": {
+        "@types/node": "^16.11.10"
+    }
+}
