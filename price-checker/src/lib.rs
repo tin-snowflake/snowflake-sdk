@@ -1,15 +1,16 @@
 pub mod instruction;
 pub mod utils;
+pub mod error;
 
 use solana_program::{
     entrypoint,
     pubkey::Pubkey,
     account_info::{AccountInfo, next_account_info},
-    program_error::ProgramError,
-    msg
+    // msg
 };
 use pyth_client::{PriceStatus, Price};
 use crate::instruction::{PriceCheckCriteria};
+use crate::error::PriceCheckError;
 
 
 entrypoint!(process_instruction);
@@ -30,17 +31,16 @@ pub fn process_instruction(
         let pyth_price = pyth_client::cast::<pyth_client::Price>(pyth_price_data);
         
         if !is_active(&pyth_price) {
-            return Err(ProgramError::InvalidInstructionData); 
+            // msg!("Price account is not active: {}", &price_account.key);
+            return Err(PriceCheckError::PriceAccountNotActive.into());
         }
 
-        msg!("Price account: {}, {} - {}", price_account.key, pyth_price.agg.price, pyth_price.expo);
-        
+        // msg!("Price account: {}, {} - {}", price_account.key, pyth_price.agg.price, pyth_price.expo);
+
         //Should we worry about pyth_price.agg.conf ?
-        if c.match_condition(pyth_price.agg.price, pyth_price.expo) {
-            msg!("Match condition");
-        } else {
-            msg!("Not match condition: ");
-        }
+        if !c.match_condition(pyth_price.agg.price, pyth_price.expo) {
+            return Err(PriceCheckError::PriceCriteriaNotMatch.into());
+        } 
     }
 
     Ok(())

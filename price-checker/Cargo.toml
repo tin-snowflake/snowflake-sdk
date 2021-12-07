@@ -9,6 +9,7 @@ no-entrypoint = []
 [dependencies]
 solana-program = "=1.7.9"
 pyth-client = "0.2.2"
+thiserror = "1.0.24"
 
 [dev-dependencies]
 solana-program-test = "=1.7.9"
