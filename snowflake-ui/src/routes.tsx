@@ -1,18 +1,25 @@
-import { HashRouter, Route, Switch } from 'react-router-dom';
-import React, { useMemo } from 'react';
-import { WalletProvider } from '@solana/wallet-adapter-react';
-import { ConnectionProvider } from './contexts/connection';
-import { AccountsProvider } from './contexts/accounts';
-import { MarketProvider } from './contexts/market';
-import { AppLayout } from './components/Layout';
+import {HashRouter, Route, Switch} from 'react-router-dom';
+import React, {useMemo} from 'react';
+import {WalletProvider} from '@solana/wallet-adapter-react';
+import {ConnectionProvider} from './contexts/connection';
+import {AccountsProvider} from './contexts/accounts';
+import {MarketProvider} from './contexts/market';
+import {AppLayout} from './components/Layout';
 
-import { FaucetView, HomeView } from './views';
-import { getLedgerWallet, getMathWallet, getPhantomWallet, getSolflareWallet, getSolletWallet, getSolongWallet, getTorusWallet } from '@solana/wallet-adapter-wallets';
-import { EditFlow } from './components/EditFlow';
-import { FlowDetail } from './components/FlowDetail';
-import { Test } from './components/Test';
-import { FormValidatorProvider } from './components/FormValidator';
-import { EditFlowWrapper } from './components/EditFlowWrapper';
+import {FaucetView, HomeView} from './views';
+import {
+    getLedgerWallet,
+    getMathWallet,
+    getPhantomWallet,
+    getSolflareWallet,
+    getSolletWallet,
+    getSolongWallet,
+    getTorusWallet
+} from '@solana/wallet-adapter-wallets';
+import {FlowDetail} from './components/FlowDetail';
+import {Test} from './components/Test';
+import {EditFlowWrapper} from './components/EditFlowWrapper';
+import {SnowSettings} from './components/SnowSettings';
 
 export function Routes() {
   const wallets = useMemo(
@@ -46,6 +53,7 @@ export function Routes() {
                   <Route exact path="/flowDetail" component={() => <FlowDetail />} />
                   <Route exact path="/editflow/:flowKey" component={() => <EditFlowWrapper />} />
                   <Route exact path="/editflow" component={() => <EditFlowWrapper />} />
+                  <Route exact path="/settings" component={() => <SnowSettings />} />
                   <Route exact path="/test" component={() => <Test />} />
                   <Route exact path="/faucet" children={<FaucetView />} />
                 </Switch>

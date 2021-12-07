@@ -21,7 +21,7 @@ export function createSplAccount(instructions: TransactionInstruction[], payer: 
 
 let x: [number, string] = [1, '10'];
 export async function createAssociatedTokenAccountIfNotExist(owner: PublicKey, payer: PublicKey, mint: PublicKey, connection: Connection): Promise<[PublicKey, TransactionInstruction[]]> {
-  const ata = await Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, mint, owner);
+  const ata = await Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, mint, owner, true);
   let ataInfo = await connection.getAccountInfo(ata);
   let instructions: TransactionInstruction[] = [];
   if (!ataInfo) {

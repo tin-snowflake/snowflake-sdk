@@ -7,6 +7,7 @@ import EllipsisText from 'react-ellipsis-text';
 import { findAssociatedTokenAddress } from '../../utils/web3';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
+import { SizeType } from 'antd/lib/config-provider/SizeContext';
 
 export const TokenInput = ({ token, handleChange }) => {
   const { Option } = Select;
@@ -48,7 +49,7 @@ export const TokenInput = ({ token, handleChange }) => {
               }>
               <div style={{ display: 'flex' }}>
                 <TokenIcon mintAddress={token.address} /> {token.symbol} - &nbsp;
-                <EllipsisText text={token.name} length={'20'} style={{ marginRight: '20px' }} />
+                <EllipsisText text={token.name} length={20} style={{ marginRight: '20px' }} />
               </div>
             </Option>
           );

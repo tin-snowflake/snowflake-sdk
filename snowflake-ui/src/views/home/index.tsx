@@ -459,7 +459,7 @@ export const HomeView = () => {
         ghost={false}
         title="Your Automations"
         extra={[
-          <Link to="/editflow">
+          <Link key="editFlow" to="/editflow">
             <Button type="primary" size="large">
               + New Automation
             </Button>

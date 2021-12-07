@@ -22,6 +22,7 @@ declare_id!("86G3gad5tVjJxdQmmdQ6E3rLQNnDNh4KYcqiiSd7Az63");
 pub mod snowflake {
     use super::*;
     use spl_token::solana_program::program::invoke_signed;
+    use anchor_lang::solana_program;
 
     pub fn create_flow(ctx: Context<CreateFlow>, client_flow: Flow) -> ProgramResult {
         let flow = &mut ctx.accounts.flow;
@@ -122,10 +123,39 @@ pub mod snowflake {
 
         Ok(())
     }
+
+    pub fn withdraw(ctx: Context<WithdrawFund>) -> ProgramResult {
+        let caller = &ctx.accounts.caller;
+        let (pda, bump) = Pubkey::find_program_address(&[&caller.key().to_bytes()], ctx.program_id);
+
+        let ix = solana_program::system_instruction::transfer(
+            &pda,
+       &caller.key(),
+        1000,
+        );
+
+        invoke_signed(
+            &ix,
+            &[caller.to_account_info(), ctx.accounts.pda.to_account_info()],
+            &[&[&caller.key().to_bytes(), &[bump]]],
+        )?;
+        Ok(())
+    }
 }
 
 
 /************************ CONTEXTS */
+
+#[derive(Accounts)]
+pub struct WithdrawFund<'info> {
+    #[account(signer,mut)]
+    pub caller: AccountInfo<'info>,
+
+    #[account(mut)]
+    pub pda: AccountInfo<'info>,
+
+    pub system_program: AccountInfo<'info>,
+}
 
 #[derive(Accounts)]
 pub struct CreateFlow<'info> {

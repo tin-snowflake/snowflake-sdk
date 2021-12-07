@@ -15,13 +15,13 @@ export function AppMenu(props) {
       <Menu.Item key="flows" icon={<BorderlessTableOutlined />}>
         <a href="/#">Automations</a>
       </Menu.Item>
-      <Menu.Item key="mail" disabled icon={<SettingOutlined />}>
-        Settings
+      <Menu.Item key="setting" icon={<SettingOutlined />}>
+        <a href="/#/settings">Settings</a>
       </Menu.Item>
-      <Menu.Item key="app" disabled icon={<AppstoreOutlined />}>
+      <Menu.Item key="stats" disabled icon={<AppstoreOutlined />}>
         Stats
       </Menu.Item>
-      <Menu.Item key="app" disabled icon={<InfoCircleOutlined />}>
+      <Menu.Item key="info" disabled icon={<InfoCircleOutlined />}>
         Info
       </Menu.Item>
     </Menu>

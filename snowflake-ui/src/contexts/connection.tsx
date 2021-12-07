@@ -3,7 +3,7 @@ import { Keypair, clusterApiUrl, Connection, PublicKey, Transaction, Transaction
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { notify } from './../utils/notifications';
 import { ExplorerLink } from '../components/ExplorerLink';
-import { setProgramIds } from '../utils/ids';
+import { setProgramIds, SOL_MINT } from '../utils/ids';
 import { cache, getMultipleAccounts, MintParser } from './accounts';
 import { TokenListProvider, ENV as ChainID, TokenInfo } from '@solana/spl-token-registry';
 import { WalletAdapter } from '@solana/wallet-adapter-base';
@@ -85,11 +85,11 @@ export function ConnectionProvider({ children = undefined as any }) {
       console.log('token list', list);
       list.push({
         chainId: 103,
-        address: '9UA4S1CJTfNaYfCn6vBdaWJF3Ydhs3HDpxxM5GAFZRJY',
-        symbol: 'SNOW',
-        name: 'Snowflake',
+        address: SOL_MINT.toString(),
+        symbol: 'SOL',
+        name: 'Native',
         decimals: 9,
-        logoURI: 'https://snowflake.so/assets/snowflake.svg',
+        logoURI: 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png',
         tags: [],
         extensions: {
           coingeckoId: 'solana',
