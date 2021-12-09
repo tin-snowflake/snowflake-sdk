@@ -96,7 +96,7 @@ export function chunks<T>(array: T[], size: number): T[][] {
 
 export function toLamports(account?: TokenAccount | number, mint?: MintInfo): number {
   let decimals = mint?.decimals || 0;
-  return toLamportsByDecimal(decimals);
+  return toLamportsByDecimal(account, decimals);
 }
 
 export function toLamportsByDecimal(account?: TokenAccount | number, decimals?: number): number {

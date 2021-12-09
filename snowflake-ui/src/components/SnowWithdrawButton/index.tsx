@@ -14,20 +14,21 @@ import { findAssociatedTokenAddress } from '../../utils/web3';
 import { FormValidatorProvider, useFormValidator, validateForm } from '../FormValidator';
 import { FieldRequire, FormItem } from '../FormItem';
 import { createAssociatedTokenAccountIfNotExist } from '../../utils/tokens';
-import { cachebleMintByKey, useMint } from '../../contexts/accounts';
+import { cachebleMintByKey } from '../../contexts/accounts';
+import BN from 'bn.js';
 
-export function SnowDepositButton({ onClose }) {
+export function SnowWithdrawButton({ onClose }) {
   const program = useAnchorProgram();
   const connectionConfig = useConnectionConfig();
   const walletCtx = useWallet();
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [deposit, setDeposit] = useState({ token: { mint: SOL_MINT.toString(), ata: undefined }, amount: undefined });
+  const [withdraw, setWithdraw] = useState({ token: { mint: SOL_MINT.toString(), ata: undefined }, amount: undefined });
   const showModal = () => {
     setIsModalVisible(true);
   };
 
   let formValidator = useFormValidator();
-  async function validateAndDeposit() {
+  async function validateAndWithdraw() {
     let errors = validateForm(formValidator);
     console.log('form validation errors', errors);
     if (errors.length > 0) return;
@@ -35,28 +36,31 @@ export function SnowDepositButton({ onClose }) {
 
     const ixs = [];
 
-    if (deposit.token.mint == SOL_MINT.toString()) {
+    if (withdraw.token.mint == SOL_MINT.toString()) {
       ixs.push(
-        SystemProgram.transfer({
-          fromPubkey: walletCtx.publicKey,
-          toPubkey: pda,
-          lamports: toLamportsByDecimal(+deposit.amount, 9),
+        program.instruction.withdrawNative(new BN(toLamportsByDecimal(+withdraw.amount, 9)), {
+          accounts: {
+            caller: walletCtx.publicKey,
+            systemProgram: SystemProgram.programId,
+            pda: pda,
+          },
         })
       );
     } else {
-      const mintInfo = await cachebleMintByKey(connectionConfig.connection, new PublicKey(deposit.token.mint));
-      const sourceAta = deposit.token.ata;
-      const [destinationAta, createDestinationAta] = await createAssociatedTokenAccountIfNotExist(pda, walletCtx.publicKey, new PublicKey(deposit.token.mint), connectionConfig.connection);
+      const sourceAta = await findAssociatedTokenAddress(pda, new PublicKey(withdraw.token.mint));
+      const [destinationAta, createDestinationAta] = await createAssociatedTokenAccountIfNotExist(walletCtx.publicKey, walletCtx.publicKey, new PublicKey(withdraw.token.mint), connectionConfig.connection);
+      const mintInfo = await cachebleMintByKey(connectionConfig.connection, new PublicKey(withdraw.token.mint));
       ixs.push(...createDestinationAta);
       ixs.push(
-        Token.createTransferInstruction(
-          programIds().token,
-          sourceAta,
-          destinationAta,
-          walletCtx.publicKey, // authority
-          [],
-          toLamports(+deposit.amount, mintInfo)
-        )
+        program.instruction.withdraw(new BN(toLamports(+withdraw.amount, mintInfo)), {
+          accounts: {
+            caller: walletCtx.publicKey,
+            pda: pda,
+            sourceAta: sourceAta,
+            destinationAta: destinationAta,
+            tokenProgram: programIds().token,
+          },
+        })
       );
     }
     await new SmartTxnClient(connectionConfig, ixs, [], walletCtx).send();
@@ -64,7 +68,7 @@ export function SnowDepositButton({ onClose }) {
     onClose();
   }
   function updateState() {
-    setDeposit({ ...deposit });
+    setWithdraw({ ...withdraw });
   }
   const handleCancel = () => {
     setIsModalVisible(false);
@@ -72,30 +76,30 @@ export function SnowDepositButton({ onClose }) {
 
   return (
     <>
-      <Button onClick={showModal}>Deposit</Button>
+      <Button onClick={showModal}>Withdraw</Button>
       <Modal
         destroyOnClose={true}
         centered
-        title="Deposit"
+        title="Withdraw"
         maskClosable={false}
         visible={isModalVisible}
-        onOk={validateAndDeposit}
+        onOk={validateAndWithdraw}
         onCancel={handleCancel}
         footer={[
           <Button key="back" onClick={handleCancel}>
             Cancel
           </Button>,
-          <Button key="submit" type="primary" onClick={validateAndDeposit}>
-            Deposit
+          <Button key="submit" type="primary" onClick={validateAndWithdraw}>
+            Withdraw
           </Button>,
         ]}>
         <br />
 
-        <FormItem style={{ width: '700px' }} validators={[new FieldRequire('Amount is required.')]} validate={deposit.amount}>
+        <FormItem style={{ width: '700px' }} validators={[new FieldRequire('Amount is required.')]} validate={withdraw.amount}>
           <div style={{ display: 'flex' }}>
-            <Input name="amount" value={deposit.amount} onChange={handleInputChange(deposit, updateState)} placeholder="enter deposit amount" />
+            <Input name="amount" value={withdraw.amount} onChange={handleInputChange(withdraw, updateState)} placeholder="enter withdrawal amount" />
             &nbsp;
-            <TokenInput token={deposit.token} handleChange={() => {}} />
+            <TokenInput token={withdraw.token} handleChange={() => {}} />
           </div>
         </FormItem>
         <br />

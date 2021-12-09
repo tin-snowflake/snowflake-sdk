@@ -128,13 +128,13 @@ export const cache = {
     cache.registerParser(id, deserialize);
     pendingCalls.delete(address);
     // const account = deserialize(new PublicKey(address), obj);
-    var account; 
-    try { 
-      account = deserialize(new PublicKey(address), obj); 
-    } catch(e) { 
-      console.error(e); 
+    var account;
+    try {
+      account = deserialize(new PublicKey(address), obj);
+    } catch (e) {
+      console.error(e);
     }
-    
+
     if (!account) {
       return;
     }
@@ -364,7 +364,7 @@ export function AccountsProvider({ children = null as any }) {
         programIds().token,
         info => {
           // TODO: fix type in web3.js
-          const id = (info.accountId as unknown) as string;
+          const id = info.accountId as unknown as string;
           // TODO: do we need a better way to identify layout (maybe a enum identifing type?)
           if (info.accountInfo.data.length === AccountLayout.span) {
             const data = deserializeAccount(info.accountInfo.data);
@@ -444,6 +444,10 @@ const getMultipleAccountsCore = async (connection: any, keys: string[], commitme
   throw new Error();
 };
 
+export async function cachebleMintByKey(connection: Connection, key: PublicKey): Promise<MintInfo> {
+  const mintParser = await cache.query(connection, key, MintParser);
+  return mintParser.info;
+}
 export function useMint(key?: string | PublicKey) {
   const connection = useConnection();
   const [mint, setMint] = useState<MintInfo>();

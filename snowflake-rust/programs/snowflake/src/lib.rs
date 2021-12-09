@@ -23,6 +23,7 @@ pub mod snowflake {
     use super::*;
     use spl_token::solana_program::program::invoke_signed;
     use anchor_lang::solana_program;
+    use spl_token::instruction;
 
     pub fn create_flow(ctx: Context<CreateFlow>, client_flow: Flow) -> ProgramResult {
         let flow = &mut ctx.accounts.flow;
@@ -124,21 +125,48 @@ pub mod snowflake {
         Ok(())
     }
 
-    pub fn withdraw(ctx: Context<WithdrawFund>) -> ProgramResult {
+    pub fn withdraw_native(ctx: Context<WithdrawNative>, amount: u64) -> ProgramResult {
         let caller = &ctx.accounts.caller;
         let (pda, bump) = Pubkey::find_program_address(&[&caller.key().to_bytes()], ctx.program_id);
 
         let ix = solana_program::system_instruction::transfer(
             &pda,
        &caller.key(),
-        1000,
+            amount,
         );
-
         invoke_signed(
             &ix,
             &[caller.to_account_info(), ctx.accounts.pda.to_account_info()],
             &[&[&caller.key().to_bytes(), &[bump]]],
         )?;
+        Ok(())
+    }
+
+    pub fn withdraw(ctx: Context<Withdraw>, amount: u64) -> ProgramResult {
+        let caller = &ctx.accounts.caller;
+        let (pda, bump) = Pubkey::find_program_address(&[&caller.key().to_bytes()], ctx.program_id);
+
+        let ix_result: Result<Instruction, ProgramError>  = instruction::transfer(
+            ctx.accounts.token_program.key,
+            ctx.accounts.source_ata.key,
+            ctx.accounts.destination_ata.key,
+            &pda,
+            &[],
+            amount,
+        );
+
+        let ix = ix_result?;
+        invoke_signed(
+            &ix,
+            &[
+                ctx.accounts.source_ata.to_account_info(),
+                ctx.accounts.destination_ata.to_account_info(),
+                caller.to_account_info(),
+                ctx.accounts.pda.to_account_info()
+            ],
+            &[&[&caller.key().to_bytes(), &[bump]]],
+        );
+
         Ok(())
     }
 }
@@ -147,7 +175,7 @@ pub mod snowflake {
 /************************ CONTEXTS */
 
 #[derive(Accounts)]
-pub struct WithdrawFund<'info> {
+pub struct WithdrawNative<'info> {
     #[account(signer,mut)]
     pub caller: AccountInfo<'info>,
 
@@ -155,6 +183,22 @@ pub struct WithdrawFund<'info> {
     pub pda: AccountInfo<'info>,
 
     pub system_program: AccountInfo<'info>,
+}
+
+#[derive(Accounts)]
+pub struct Withdraw<'info> {
+    #[account(signer)]
+    pub caller: AccountInfo<'info>,
+
+    pub pda: AccountInfo<'info>,
+
+    #[account(mut)]
+    pub destination_ata: AccountInfo<'info>,
+
+    #[account(mut)]
+    pub source_ata: AccountInfo<'info>,
+
+    token_program : AccountInfo<'info>
 }
 
 #[derive(Accounts)]

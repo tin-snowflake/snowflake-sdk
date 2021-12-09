@@ -23,6 +23,7 @@ import { programIds } from '../../utils/ids';
 import { fromLamportsDecimals, toLamports, toLamportsByDecimal } from '../../utils/utils';
 import { SnowDepositButton } from '../SnowDepositButton';
 import { FormValidatorProvider } from '../FormValidator';
+import { SnowWithdrawButton } from '../SnowWithdrawButton';
 
 export const SnowSettings = ({}) => {
   const program = useAnchorProgram();
@@ -69,7 +70,7 @@ export const SnowSettings = ({}) => {
       pda: pda,
     };
 
-    const ix = await program.instruction.withdraw({
+    const ix = await program.instruction.withdrawNative({
       accounts: accounts,
     });
     await new SmartTxnClient(connectionConfig, [ix], [], walletCtx).send();
@@ -135,11 +136,17 @@ export const SnowSettings = ({}) => {
                   title="Snowflake Balance"
                   size="small"
                   extra={
-                    <FormValidatorProvider>
-                      <SnowDepositButton onClose={() => setBalanceRefresh(+new Date())} />
-                    </FormValidatorProvider>
+                    <span>
+                      <FormValidatorProvider>
+                        <SnowDepositButton onClose={() => setBalanceRefresh(+new Date())} />
+                      </FormValidatorProvider>{' '}
+                      &nbsp;
+                      <FormValidatorProvider>
+                        <SnowWithdrawButton onClose={() => setBalanceRefresh(+new Date())} />
+                      </FormValidatorProvider>
+                    </span>
                   }>
-                  {pda && <TokenListWithBalances owner={pda} balanceRefresh={balanceRefresh} />}
+                  {pda && <TokenListWithBalances owner={walletCtx.publicKey} balanceRefresh={balanceRefresh} />}
                 </Card>
               </Form>
 

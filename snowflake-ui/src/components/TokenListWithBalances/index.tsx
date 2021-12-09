@@ -5,9 +5,10 @@ import { useConnectionConfig } from '../../contexts/connection';
 import { programIds } from '../../utils/ids';
 import { PublicKey } from '@solana/web3.js';
 import { TokenAccount } from '../../models';
-import { MintParser, TokenAccountParser } from '../../contexts/accounts';
+import { cachebleMintByKey, MintParser, TokenAccountParser } from '../../contexts/accounts';
 import { fromLamports, fromLamportsDecimals } from '../../utils/utils';
 import { TokenIcon } from '../TokenIcon';
+import * as snowUtil from '../../utils/snowUtils';
 
 export function TokenListWithBalances({ owner, balanceRefresh }) {
   const connection = useConnectionConfig().connection;
@@ -23,20 +24,32 @@ export function TokenListWithBalances({ owner, balanceRefresh }) {
       })
     ).value.map(a => TokenAccountParser(a.pubkey, a.account));
 
-    let list = accounts.map(a => {
-      let tokenInfo = tokenMap.get(a.info.mint.toString());
-      let tokenName = tokenInfo ? tokenInfo.name : 'unknown';
+    let list = await Promise.all(
+      accounts.map(async a => {
+        let tokenInfo = tokenMap.get(a.info.mint.toString());
+        let tokenName = tokenInfo ? tokenInfo.name : 'unknown';
 
-      let tokenAmount = fromLamportsDecimals(a, tokenInfo ? tokenInfo.decimals : 6);
-      let tokenIcon = tokenInfo ? tokenInfo.logoURI : '';
-      return {
-        key: a.info.mint,
-        mint: a.info.mint,
-        name: tokenName,
-        amount: tokenAmount,
-        tokenIcon: tokenIcon,
-      };
-    });
+        let decimals = 0;
+        if (tokenInfo) {
+          decimals = tokenInfo.decimals;
+        } else {
+          const mintInfo = await cachebleMintByKey(connection, new PublicKey(a.info.mint));
+          decimals = mintInfo.decimals;
+        }
+
+        let tokenAmount = fromLamportsDecimals(a, 6);
+        let tokenIcon = tokenInfo ? tokenInfo.logoURI : '';
+        let tokenSymbol = tokenInfo ? tokenInfo.symbol : 'unknown';
+        return {
+          key: a.info.mint,
+          mint: a.info.mint,
+          symbol: tokenSymbol,
+          name: tokenName,
+          amount: tokenAmount,
+          tokenIcon: tokenIcon,
+        };
+      })
+    );
 
     return list;
   }
@@ -54,6 +67,13 @@ export function TokenListWithBalances({ owner, balanceRefresh }) {
       title: 'Token',
       dataIndex: 'name',
       key: 'name',
+      render: (text, token) => {
+        return (
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <TokenIcon mintAddress={token.mint} /> {token.symbol}
+          </div>
+        );
+      },
     },
     {
       title: 'Balance',
@@ -64,7 +84,7 @@ export function TokenListWithBalances({ owner, balanceRefresh }) {
 
   return (
     <span>
-      <Table dataSource={tokenList} columns={columns} pagination={false} />
+      <Table rowKey="key" dataSource={tokenList} columns={columns} pagination={false} />
       {/*  {tokenList.map(a => (
         <span key={a.mint}>
           <TokenIcon mintAddress={a.mint} /> {a.name} - {a.amount}
