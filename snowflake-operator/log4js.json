@@ -1,0 +1,14 @@
+{
+    "appenders": { 
+        "operator": { 
+            "type": "file", 
+            "filename": "logs/snow-operator.log"
+        }
+    },
+    "categories": { 
+        "default": { 
+            "appenders": ["operator"], 
+            "level": "info"
+        }
+    }
+}

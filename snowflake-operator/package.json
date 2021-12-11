@@ -1,12 +1,14 @@
 {
     "scripts": {
-        "start": "ts-node src/local-operator.ts",
-        "build": "rm -rf dist/ && tsc",
+        "start": "ts-node src/snow-operator.ts",
+        "build": "rm -rf dist/ && tsc && cp package.json.prod dist/package.json && cp log4js.json dist/",
         "package-lambda": "cd dist/ && zip -r function.zip ../idl ../keys ../node_modules index.js snow-service.js",
-        "deploy-lambda": "aws lambda update-function-code --function-name snowflake-operator --zip-file fileb://dist/function.zip"
+        "deploy-lambda": "aws lambda update-function-code --function-name snowflake-operator --zip-file fileb://dist/function.zip",
+        "package-app": "cd dist/ && zip -r snow-operator.zip package.json log4js.json ../idl snow-operator.js snow-service.js"
     },
     "dependencies": {
         "@project-serum/anchor": "^0.17.0",
+        "log4js": "^6.3.0",
         "node-cron": "^3.0.0"
     },
     "devDependencies": {

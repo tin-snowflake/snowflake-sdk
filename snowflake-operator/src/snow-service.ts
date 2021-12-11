@@ -1,5 +1,9 @@
 import { PublicKey } from "@solana/web3.js";
 import {Provider, Program, ProgramAccount, setProvider } from "@project-serum/anchor";
+import log4js from 'log4js';
+
+log4js.configure('log4js.json');
+const logger = log4js.getLogger("Operator");
 
 const SNOW_PROGRAM_ID = '86G3gad5tVjJxdQmmdQ6E3rLQNnDNh4KYcqiiSd7Az63';
 const SNOW_IDL = 'idl/snowflake.json';
@@ -31,7 +35,6 @@ export default class SnowService {
 
     try {
       const allFlows = await this.program.account.flow.all([dataSizeFilter]);
-      console.log('All flows: ', allFlows);
       
       for (let flow of allFlows) {
         if (this.shouldExecuteFlow(flow)) {
@@ -39,7 +42,7 @@ export default class SnowService {
         }
       }
     } catch (error) {
-      console.log('Error listing flows to be executed: ', error);
+      logger.error('Error listing flows to be executed: ', error);
     }
 
     return results;
@@ -63,11 +66,8 @@ export default class SnowService {
   }
 
   async excecuteFlow(flow: ProgramAccount) {
-    console.log('Executing flow: ', flow);
-
     try {
       let flowAddress = flow.publicKey;
-
       let accounts = { flow: flowAddress };
 
       let remainAccountMetas = flow.account.actions.reduce(
@@ -91,9 +91,9 @@ export default class SnowService {
         remainingAccounts: remainAccountMetas,
       });
 
-      console.log('Your transaction signature', tx);
+      logger.info('Executed flow: ', flowAddress.toBase58(), '. Transaction signature:', tx);
     } catch (error) {
-      console.log('Error excecuting flow: ', error);
+      logger.error('Error excecuting flow: ', error);
     }
   }
 
@@ -112,7 +112,7 @@ export default class SnowService {
         }
       }
     } catch (error) {
-      console.log('Error listing expired flows: ', error);
+      logger.error('Error listing expired flows: ', error);
     }
 
     return results;
@@ -132,15 +132,14 @@ export default class SnowService {
   }
 
   async markTimedFlowAsError(flow: ProgramAccount) {
-    console.log('Mark flow Error: ', flow);
     try {
       const tx = await this.program.rpc.markTimedFlowAsError({
         accounts:  {flow: flow.publicKey},
       });
 
-      console.log('Mark Error transaction signature', tx);
-      } catch (error) {
-      console.log('Error marking flow as error: ', error);
+      logger.info('Marked flow as error', flow.publicKey.toBase58(), '. Transaction signature: ', tx);
+    } catch (error) {
+      logger.error('Error marking flow as error: ', error);
     }
   }
 }
