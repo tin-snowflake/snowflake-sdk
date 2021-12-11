@@ -360,7 +360,7 @@ export const FlowDetail = ({}) => {
                     <br />
                   </Card>
                 </TabPane>
-                <TabPane
+                {/* <TabPane
                   tab={
                     <div className="iconAndText">
                       <MdOutlineArrowCircleUp /> Actions
@@ -370,7 +370,7 @@ export const FlowDetail = ({}) => {
                   {uiFlow.actions.map(function (action, i) {
                     return (
                       <span>
-                        {/* TO BE DONE
+                         TO BE DONE
                         <Card size="small">
                           <Form.Item label="Program">{action.program}</Form.Item>
                           <Form.Item label="Instruction">{action.instruction}</Form.Item>
@@ -381,11 +381,11 @@ export const FlowDetail = ({}) => {
                               </span>
                             );
                           })}
-                        </Card>*/}
+                        </Card>
                       </span>
                     );
                   })}
-                </TabPane>
+                </TabPane>*/}
               </Tabs>
             </span>
           </Form>

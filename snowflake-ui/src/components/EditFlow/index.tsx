@@ -329,23 +329,23 @@ export const EditFlow = ({}) => {
                           <img className="itemSelecIcon" src="/icons/eco/saber.svg" />
                           &nbsp; Saber pool withdrawal
                         </Option>
-                        <Option value={actionUtil.ACTION_TYPES.blankAction.code}>
+                        <Option disabled value={actionUtil.ACTION_TYPES.blankAction.code}>
                           <img className="itemSelecIcon" src="/icons/eco/saber.svg" />
                           &nbsp; Saber swap
                         </Option>
-                        <Option value={actionUtil.ACTION_TYPES.blankAction.code}>
+                        <Option disabled value={actionUtil.ACTION_TYPES.blankAction.code}>
                           <img className="itemSelecIcon" src="/icons/eco/serum.svg" />
                           &nbsp; Serum
                         </Option>
-                        <Option value={actionUtil.ACTION_TYPES.blankAction.code}>
+                        <Option disabled value={actionUtil.ACTION_TYPES.blankAction.code}>
                           <img className="itemSelecIcon" src="/icons/eco/raydium.svg" />
                           &nbsp; Raydium
                         </Option>
-                        <Option value={actionUtil.ACTION_TYPES.blankAction.code}>
+                        <Option disabled value={actionUtil.ACTION_TYPES.blankAction.code}>
                           <img className="itemSelecIcon" src="/icons/eco/solend.svg" />
                           &nbsp; Solend
                         </Option>
-                        <Option value={actionUtil.ACTION_TYPES.blankAction.code}>
+                        <Option disabled value={actionUtil.ACTION_TYPES.blankAction.code}>
                           <img className="itemSelecIcon" src="/icons/eco/orca.svg" />
                           &nbsp; Orca
                         </Option>
