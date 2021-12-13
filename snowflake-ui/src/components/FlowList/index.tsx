@@ -35,7 +35,7 @@ export const FlowList = (props: {}) => {
   return (
     <span style={{ width: '100%' }}>
       {flows.map(flow => (
-        <span>
+        <span key={flow.publicKey}>
           <FlowListItem flowInfo={flow} />
         </span>
       ))}

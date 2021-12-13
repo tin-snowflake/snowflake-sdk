@@ -1,10 +1,11 @@
 mod error;
 mod cron;
 use anchor_lang::prelude::*;
-use anchor_lang::{Accounts, Key};
+use anchor_lang::{Accounts, Key, solana_program};
 use anchor_lang::solana_program::instruction::Instruction;
 use cron::Crontab;
 use crate::cron::Tm;
+use anchor_lang::solana_program::program::invoke_signed;
 
 const TRIGGER_TYPE_NONE: u8 = 1;
 const TRIGGER_TYPE_TIME: u8 = 2;
@@ -22,6 +23,8 @@ declare_id!("86G3gad5tVjJxdQmmdQ6E3rLQNnDNh4KYcqiiSd7Az63");
 pub mod snowflake {
     use super::*;
     use spl_token::solana_program::program::invoke_signed;
+    use anchor_lang::solana_program;
+    use spl_token::instruction;
 
     pub fn create_flow(ctx: Context<CreateFlow>, client_flow: Flow) -> ProgramResult {
         let flow = &mut ctx.accounts.flow;
@@ -67,35 +70,13 @@ pub mod snowflake {
     }
 
     pub fn execute_flow(ctx: Context<ExecuteFlow>) -> ProgramResult {
-        let flow = &ctx.accounts.flow;
-        let (pda, bump) = Pubkey::find_program_address(&[&flow.flow_owner.to_bytes()], ctx.program_id);
-
-        for action in flow.actions.iter() {
-            let mut metas = action.target_account_metas();
-
-            for meta in &mut metas {
-                if meta.pubkey.eq(&pda) {
-                    meta.is_signer = true;
-                }
-            }
-
-            let ix = Instruction {
-                program_id: action.program,
-                accounts: metas,
-                data: action.instruction.clone(),
-            };
-
-            invoke_signed(
-                &ix,
-                ctx.remaining_accounts,
-                &[&[&flow.flow_owner.to_bytes(), &[bump]]],
-            )?;
-        }
-
-        Ok(())
+        let pda_bump = validate_execute_flow_pda(&ctx)?;
+        do_execute_flow(ctx, pda_bump)
     }
 
     pub fn execute_scheduled_flow(ctx: Context<ExecuteFlow>) -> ProgramResult {
+        let pda_bump = validate_execute_flow_pda(&ctx)?;
+        charge_fee(&ctx, pda_bump);
         let flow = &mut ctx.accounts.flow;
         let now = Clock::get()?.unix_timestamp;
 
@@ -103,10 +84,9 @@ pub mod snowflake {
             return Err(ProgramError::Custom(1));
         }
 
-        charge_fee();
         flow.update_after_schedule_run(now);
 
-        execute_flow(ctx)
+        do_execute_flow(ctx, pda_bump)
     }
 
     pub fn mark_timed_flow_as_error(ctx: Context<ExecuteFlow>) -> ProgramResult {
@@ -122,10 +102,118 @@ pub mod snowflake {
 
         Ok(())
     }
+
+    pub fn withdraw_native(ctx: Context<WithdrawNative>, amount: u64) -> ProgramResult {
+        let caller = &ctx.accounts.caller;
+        let (pda, bump) = Pubkey::find_program_address(&[&caller.key().to_bytes()], ctx.program_id);
+
+        let ix = solana_program::system_instruction::transfer(
+            &pda,
+       &caller.key(),
+            amount,
+        );
+        invoke_signed(
+            &ix,
+            &[caller.to_account_info(), ctx.accounts.pda.to_account_info()],
+            &[&[&caller.key().to_bytes(), &[bump]]],
+        )?;
+        Ok(())
+    }
+
+    pub fn withdraw(ctx: Context<Withdraw>, amount: u64) -> ProgramResult {
+        let caller = &ctx.accounts.caller;
+        let (pda, bump) = Pubkey::find_program_address(&[&caller.key().to_bytes()], ctx.program_id);
+
+        let ix_result: Result<Instruction, ProgramError>  = instruction::transfer(
+            ctx.accounts.token_program.key,
+            ctx.accounts.source_ata.key,
+            ctx.accounts.destination_ata.key,
+            &pda,
+            &[],
+            amount,
+        );
+
+        let ix = ix_result?;
+        invoke_signed(
+            &ix,
+            &[
+                ctx.accounts.source_ata.to_account_info(),
+                ctx.accounts.destination_ata.to_account_info(),
+                caller.to_account_info(),
+                ctx.accounts.pda.to_account_info()
+            ],
+            &[&[&caller.key().to_bytes(), &[bump]]],
+        );
+
+        Ok(())
+    }
 }
 
+pub fn do_execute_flow(ctx: Context<ExecuteFlow>, pda_bump : u8) -> ProgramResult {
+    let flow = &ctx.accounts.flow;
+    let pda = &ctx.accounts.pda.key();
 
+    for action in flow.actions.iter() {
+        let mut metas = action.target_account_metas();
+
+        for meta in &mut metas {
+            if meta.pubkey.eq(pda) {
+                meta.is_signer = true;
+            }
+        }
+
+        let ix = Instruction {
+            program_id: action.program,
+            accounts: metas,
+            data: action.instruction.clone(),
+        };
+
+        invoke_signed(
+            &ix,
+            ctx.remaining_accounts,
+            &[&[&flow.flow_owner.to_bytes(), &[pda_bump]]],
+        )?;
+    }
+    Ok(())
+}
+
+pub fn validate_execute_flow_pda(ctx: &Context<ExecuteFlow>) -> Result<u8, ProgramError> {
+    let flow = &ctx.accounts.flow;
+    let (pda, bump) = Pubkey::find_program_address(&[&flow.flow_owner.to_bytes()], ctx.program_id);
+    if pda.eq(&ctx.accounts.pda.key()) {
+        Ok(bump)
+    } else {
+        Err(ProgramError::InvalidArgument)
+    }
+}
 /************************ CONTEXTS */
+
+#[derive(Accounts)]
+pub struct WithdrawNative<'info> {
+    #[account(signer,mut)]
+    pub caller: AccountInfo<'info>,
+
+    #[account(mut)]
+    pub pda: AccountInfo<'info>,
+
+    pub system_program: AccountInfo<'info>,
+}
+
+#[derive(Accounts)]
+pub struct Withdraw<'info> {
+    #[account(signer)]
+    pub caller: AccountInfo<'info>,
+
+    pub pda: AccountInfo<'info>,
+
+    #[account(mut)]
+    pub destination_ata: AccountInfo<'info>,
+
+    #[account(mut)]
+    pub source_ata: AccountInfo<'info>,
+
+    token_program : AccountInfo<'info>
+}
 
 #[derive(Accounts)]
 pub struct CreateFlow<'info> {
@@ -156,6 +244,11 @@ pub struct DeleteFlow<'info> {
 pub struct ExecuteFlow<'info> {
     #[account(mut)]
     flow: Account<'info, Flow>,
+    #[account(mut)]
+    pub pda: AccountInfo<'info>,
+    #[account(signer,mut)]
+    pub caller: AccountInfo<'info>,
+    pub system_program: AccountInfo<'info>,
 }
 
 
@@ -311,8 +404,22 @@ fn calculate_next_execution_time(_cron: &str, utc_offset: i64) -> i64 {
     next_execution
 }
 
-fn charge_fee() {
-
+fn charge_fee(ctx: &Context<ExecuteFlow>, pda_bump: u8) -> ProgramResult {
+    let fee = Fees::get().unwrap().fee_calculator.lamports_per_signature;
+    let pda = &ctx.accounts.pda;
+    let caller = &ctx.accounts.caller;
+    let flow = &ctx.accounts.flow;
+    let ix = solana_program::system_instruction::transfer(
+        &pda.key,
+        &caller.key,
+        fee,
+    );
+    invoke_signed(
+        &ix,
+        &[caller.to_account_info(), pda.to_account_info()],
+        &[&[&flow.flow_owner.to_bytes(), &[pda_bump]]],
+    )?;
+    Ok(())
 }
 
 fn charge_txn_fee() {

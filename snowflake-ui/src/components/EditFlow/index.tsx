@@ -295,6 +295,7 @@ export const EditFlow = ({}) => {
             {uiFlow.actions.map(function (action, i) {
               return (
                 <Card
+                  key={i}
                   title={
                     <span>
                       <div className="iconAndText">

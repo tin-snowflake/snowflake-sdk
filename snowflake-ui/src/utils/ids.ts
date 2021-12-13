@@ -35,6 +35,7 @@ export const programIds = () => {
 };
 
 export const WRAPPED_SOL_MINT = new PublicKey('So11111111111111111111111111111111111111112');
+export const SOL_MINT = new PublicKey('Ejmc1UB4EsES5oAaRN63SpoxMJidt3ZGBrqrZk49vjTZ');
 export const TOKEN_PROGRAM_ID = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
 export const SNOWFLAKE_PROGRAM_ID = new PublicKey('86G3gad5tVjJxdQmmdQ6E3rLQNnDNh4KYcqiiSd7Az63');
 export const SYSTEM_PROGRAM_ID = new PublicKey('11111111111111111111111111111111');
