@@ -194,7 +194,7 @@ export const FlowDetail = ({}) => {
     remainAccountMetas = remainAccountMetas.concat(targetProgramMetas);
     console.log('remaining account metas', remainAccountMetas);
 
-    const ix = await program.instruction.executeScheduledFlow({
+    const ix = await program.instruction.executeFlow({
       accounts: accounts,
       remainingAccounts: remainAccountMetas,
     });
