@@ -30,10 +30,9 @@ export const SnowSettings = ({}) => {
   const connectionConfig = useConnectionConfig();
   const walletCtx = useWallet();
 
-  const { flowKey } = useParams<{ flowKey: string }>();
-
   const [solBalance, setSolBalance] = useState(0);
   const [pda, setPda] = useState(undefined);
+  let [balanceRefresh, setBalanceRefresh] = useState(+new Date());
   async function init() {
     if (!walletCtx.publicKey) return;
     const [pda, bump] = await PublicKey.findProgramAddress([walletCtx.publicKey.toBuffer()], new PublicKey(programIds().snowflake));
@@ -44,52 +43,13 @@ export const SnowSettings = ({}) => {
 
   useEffect(() => {
     init();
-  }, [solBalance, walletCtx.publicKey]);
+  }, [solBalance, walletCtx.publicKey, balanceRefresh]);
 
-  async function deposit() {
-    const [pda, bump] = await PublicKey.findProgramAddress([walletCtx.publicKey.toBuffer()], new PublicKey(programIds().snowflake));
-    const ix = SystemProgram.transfer({
-      fromPubkey: walletCtx.publicKey,
-      toPubkey: pda,
-      lamports: toLamportsByDecimal(0.01, 9),
-    });
-    await new SmartTxnClient(connectionConfig, [ix], [], walletCtx).send();
-  }
-
-  async function withdraw() {
-    const [pda, bump] = await PublicKey.findProgramAddress([walletCtx.publicKey.toBuffer()], new PublicKey(programIds().snowflake));
-    /*const ix = SystemProgram.transfer({
-      fromPubkey: pda,
-      toPubkey: walletCtx.publicKey,
-      lamports: toLamportsByDecimal(0.01, 9),
-    });*/
-
-    let accounts = {
-      caller: walletCtx.publicKey,
-      systemProgram: SystemProgram.programId,
-      pda: pda,
-    };
-
-    const ix = await program.instruction.withdrawNative({
-      accounts: accounts,
-    });
-    await new SmartTxnClient(connectionConfig, [ix], [], walletCtx).send();
-  }
-  let [balanceRefresh, setBalanceRefresh] = useState(+new Date());
   return (
     <span style={{ width: '100%' }} className="flowDetailPage">
       {walletCtx.publicKey && (
         <span>
-          <PageHeader
-            ghost={false}
-            title={<div className="iconAndText">Settings</div>}
-            extra={
-              [
-                /*<Link to={'/editflow/' + flowKey}>
-                <Button size="large">Edit</Button>
-              </Link>,*/
-              ]
-            }></PageHeader>
+          <PageHeader ghost={false} title={<div className="iconAndText">Settings</div>} extra={[]}></PageHeader>
           <div className="card">
             <div className="card-body">
               <Form name="basic" labelAlign="left" labelCol={{ span: 3 }} wrapperCol={{ span: 12 }} initialValues={{ remember: true }} requiredMark={false} autoComplete="off">
@@ -101,35 +61,7 @@ export const SnowSettings = ({}) => {
                     </div>
                   </div>
                   <br />
-                  <br /> <br />
-                  <SensitiveButton htmlType="submit" size="medium" onClick={() => withdraw()}>
-                    Deposit SOL
-                  </SensitiveButton>{' '}
-                  &nbsp;
-                  <SensitiveButton htmlType="submit" size="medium" onClick={() => withdraw()}>
-                    Withdraw SOL
-                  </SensitiveButton>
-                  {/*<FormItem validators={[new FieldRequire('Amount is required.')]}>
-                    <div style={{ display: 'flex' }}>
-                      <Input name="amount" />
-                      &nbsp;
-                      <TokenInput token="" handleChange={() => {}} />
-                      &nbsp;
-                      <SensitiveButton htmlType="submit" size="medium" onClick={() => deposit()}>
-                        Deposit
-                      </SensitiveButton>
-                    </div>{' '}
-                    <br />
-                    <div style={{ display: 'flex' }}>
-                      <Input name="amount" />
-                      &nbsp;
-                      <TokenInput token="" handleChange={() => {}} />
-                      &nbsp;
-                      <SensitiveButton htmlType="submit" size="medium" onClick={() => withdraw()}>
-                        Withdraw
-                      </SensitiveButton>
-                    </div>
-                  </FormItem>*/}
+                  <br />
                 </Card>
 
                 <Card
@@ -146,14 +78,21 @@ export const SnowSettings = ({}) => {
                       </FormValidatorProvider>
                     </span>
                   }>
-                  {pda && <TokenListWithBalances owner={walletCtx.publicKey} balanceRefresh={balanceRefresh} />}
+                  {pda && <TokenListWithBalances owner={pda} balanceRefresh={balanceRefresh} />}
                 </Card>
+                {/* <Card title="Others" size="small">
+                  <div className="labelLayout">
+                    <div>
+                      <label style={{ width: '400px' }}>Your Snowflake Address :</label> {pda && pda.toString()}
+                      <br />
+                    </div>
+                  </div>
+                  <br />
+                  <br />
+                </Card>*/}
               </Form>
 
               <br />
-              {/*        <pre>{JSON.stringify(dto.idlFlow, null, 2)}</pre>
-        <Divider />
-        <pre>{JSON.stringify(uiFlow, null, 2)}</pre>*/}
             </div>
           </div>
         </span>

@@ -104,7 +104,7 @@ export class PaymentAction implements FlowActionResolver {
           <div style={{ display: 'flex' }}>
             <Input name="amount" value={uiAction.amount} onChange={handleChange(uiAction)} />
             &nbsp;
-            <TokenInput token={uiAction.token} handleChange={updateState} />
+            <TokenInput token={uiAction.token} handleChange={updateState} showNativeSol={false} />
           </div>
         </FormItem>
 

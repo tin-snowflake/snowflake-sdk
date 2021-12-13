@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useMint, useAccountByMint } from '../../contexts/accounts';
 import { TokenIcon } from '../TokenIcon';
 import { Select } from 'antd';
@@ -8,10 +8,12 @@ import { findAssociatedTokenAddress } from '../../utils/web3';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
 import { SizeType } from 'antd/lib/config-provider/SizeContext';
+import { SOL_MINT } from '../../utils/ids';
 
-export const TokenInput = ({ token, handleChange }) => {
+export const TokenInput = ({ token, handleChange, disableTokenSelect = false, showNativeSol = true }) => {
   const { Option } = Select;
-  const { tokens } = useConnectionConfig();
+  let { tokens } = useConnectionConfig();
+  let [tokenList, setTokenList] = useState(tokens);
   const wallet = useWallet();
   async function updateToken(value) {
     const mint = value;
@@ -23,6 +25,9 @@ export const TokenInput = ({ token, handleChange }) => {
 
   useEffect(() => {
     if (token.mint) updateToken(token.mint);
+    if (!showNativeSol) {
+      setTokenList(tokenList.filter(a => a.address != SOL_MINT.toString()));
+    }
   }, []);
 
   return (
@@ -31,12 +36,13 @@ export const TokenInput = ({ token, handleChange }) => {
         onChange={updateToken}
         defaultValue={token.mint}
         showSearch
+        disabled={disableTokenSelect}
         optionLabelProp="label"
         dropdownMatchSelectWidth={false}
         placeholder="Token"
         optionFilterProp="searchvalue"
         filterOption={(input, option) => option.searchvalue.toLowerCase().indexOf(input.toLowerCase()) >= 0}>
-        {tokens.map(function (token, i) {
+        {tokenList.map(function (token, i) {
           return (
             <Option
               key={token.address}

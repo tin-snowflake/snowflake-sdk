@@ -16,12 +16,12 @@ import { FieldRequire, FormItem } from '../FormItem';
 import { createAssociatedTokenAccountIfNotExist } from '../../utils/tokens';
 import { cachebleMintByKey, useMint } from '../../contexts/accounts';
 
-export function SnowDepositButton({ onClose }) {
+export function SnowDepositButton({ onClose, defaultToken = SOL_MINT.toString(), disableTokenSelect = false }) {
   const program = useAnchorProgram();
   const connectionConfig = useConnectionConfig();
   const walletCtx = useWallet();
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [deposit, setDeposit] = useState({ token: { mint: SOL_MINT.toString(), ata: undefined }, amount: undefined });
+  const [deposit, setDeposit] = useState({ token: { mint: defaultToken, ata: undefined }, amount: undefined });
   const showModal = () => {
     setIsModalVisible(true);
   };
@@ -47,6 +47,7 @@ export function SnowDepositButton({ onClose }) {
       const mintInfo = await cachebleMintByKey(connectionConfig.connection, new PublicKey(deposit.token.mint));
       const sourceAta = deposit.token.ata;
       const [destinationAta, createDestinationAta] = await createAssociatedTokenAccountIfNotExist(pda, walletCtx.publicKey, new PublicKey(deposit.token.mint), connectionConfig.connection);
+
       ixs.push(...createDestinationAta);
       ixs.push(
         Token.createTransferInstruction(
@@ -95,7 +96,7 @@ export function SnowDepositButton({ onClose }) {
           <div style={{ display: 'flex' }}>
             <Input name="amount" value={deposit.amount} onChange={handleInputChange(deposit, updateState)} placeholder="enter deposit amount" />
             &nbsp;
-            <TokenInput token={deposit.token} handleChange={() => {}} />
+            <TokenInput token={deposit.token} handleChange={() => {}} disableTokenSelect={disableTokenSelect} />
           </div>
         </FormItem>
         <br />

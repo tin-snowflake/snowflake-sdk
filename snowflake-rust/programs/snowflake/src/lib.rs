@@ -1,10 +1,11 @@
 mod error;
 mod cron;
 use anchor_lang::prelude::*;
-use anchor_lang::{Accounts, Key};
+use anchor_lang::{Accounts, Key, solana_program};
 use anchor_lang::solana_program::instruction::Instruction;
 use cron::Crontab;
 use crate::cron::Tm;
+use anchor_lang::solana_program::program::invoke_signed;
 
 const TRIGGER_TYPE_NONE: u8 = 1;
 const TRIGGER_TYPE_TIME: u8 = 2;
@@ -69,35 +70,13 @@ pub mod snowflake {
     }
 
     pub fn execute_flow(ctx: Context<ExecuteFlow>) -> ProgramResult {
-        let flow = &ctx.accounts.flow;
-        let (pda, bump) = Pubkey::find_program_address(&[&flow.flow_owner.to_bytes()], ctx.program_id);
-
-        for action in flow.actions.iter() {
-            let mut metas = action.target_account_metas();
-
-            for meta in &mut metas {
-                if meta.pubkey.eq(&pda) {
-                    meta.is_signer = true;
-                }
-            }
-
-            let ix = Instruction {
-                program_id: action.program,
-                accounts: metas,
-                data: action.instruction.clone(),
-            };
-
-            invoke_signed(
-                &ix,
-                ctx.remaining_accounts,
-                &[&[&flow.flow_owner.to_bytes(), &[bump]]],
-            )?;
-        }
-
-        Ok(())
+        let pda_bump = validate_execute_flow_pda(&ctx)?;
+        do_execute_flow(ctx, pda_bump)
     }
 
     pub fn execute_scheduled_flow(ctx: Context<ExecuteFlow>) -> ProgramResult {
+        let pda_bump = validate_execute_flow_pda(&ctx)?;
+        charge_fee(&ctx, pda_bump);
         let flow = &mut ctx.accounts.flow;
         let now = Clock::get()?.unix_timestamp;
 
@@ -105,10 +84,9 @@ pub mod snowflake {
             return Err(ProgramError::Custom(1));
         }
 
-        charge_fee();
         flow.update_after_schedule_run(now);
 
-        execute_flow(ctx)
+        do_execute_flow(ctx, pda_bump)
     }
 
     pub fn mark_timed_flow_as_error(ctx: Context<ExecuteFlow>) -> ProgramResult {
@@ -171,7 +149,43 @@ pub mod snowflake {
     }
 }
 
+pub fn do_execute_flow(ctx: Context<ExecuteFlow>, pda_bump : u8) -> ProgramResult {
+    let flow = &ctx.accounts.flow;
+    let pda = &ctx.accounts.pda.key();
 
+    for action in flow.actions.iter() {
+        let mut metas = action.target_account_metas();
+
+        for meta in &mut metas {
+            if meta.pubkey.eq(pda) {
+                meta.is_signer = true;
+            }
+        }
+
+        let ix = Instruction {
+            program_id: action.program,
+            accounts: metas,
+            data: action.instruction.clone(),
+        };
+
+        invoke_signed(
+            &ix,
+            ctx.remaining_accounts,
+            &[&[&flow.flow_owner.to_bytes(), &[pda_bump]]],
+        )?;
+    }
+    Ok(())
+}
+
+pub fn validate_execute_flow_pda(ctx: &Context<ExecuteFlow>) -> Result<u8, ProgramError> {
+    let flow = &ctx.accounts.flow;
+    let (pda, bump) = Pubkey::find_program_address(&[&flow.flow_owner.to_bytes()], ctx.program_id);
+    if pda.eq(&ctx.accounts.pda.key()) {
+        Ok(bump)
+    } else {
+        Err(ProgramError::InvalidArgument)
+    }
+}
 /************************ CONTEXTS */
 
 #[derive(Accounts)]
@@ -230,6 +244,11 @@ pub struct DeleteFlow<'info> {
 pub struct ExecuteFlow<'info> {
     #[account(mut)]
     flow: Account<'info, Flow>,
+    #[account(mut)]
+    pub pda: AccountInfo<'info>,
+    #[account(signer,mut)]
+    pub caller: AccountInfo<'info>,
+    pub system_program: AccountInfo<'info>,
 }
 
 
@@ -385,8 +404,22 @@ fn calculate_next_execution_time(_cron: &str, utc_offset: i64) -> i64 {
     next_execution
 }
 
-fn charge_fee() {
-
+fn charge_fee(ctx: &Context<ExecuteFlow>, pda_bump: u8) -> ProgramResult {
+    let fee = Fees::get().unwrap().fee_calculator.lamports_per_signature;
+    let pda = &ctx.accounts.pda;
+    let caller = &ctx.accounts.caller;
+    let flow = &ctx.accounts.flow;
+    let ix = solana_program::system_instruction::transfer(
+        &pda.key,
+        &caller.key,
+        fee,
+    );
+    invoke_signed(
+        &ix,
+        &[caller.to_account_info(), pda.to_account_info()],
+        &[&[&flow.flow_owner.to_bytes(), &[pda_bump]]],
+    )?;
+    Ok(())
 }
 
 fn charge_txn_fee() {

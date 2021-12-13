@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAnchorProgram } from '../../contexts/anchorContext';
-import { AccountMeta, PublicKey } from '@solana/web3.js';
+import { AccountMeta, PublicKey, SystemProgram } from '@solana/web3.js';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { Button, Card, Divider, Form, Modal, PageHeader, Skeleton, Table, Tabs } from 'antd';
 import { Link, useHistory, useLocation, useParams } from 'react-router-dom';
@@ -16,6 +16,7 @@ import { useInterval } from 'usehooks-ts';
 import { ExclamationCircleOutlined } from '@ant-design/icons/lib';
 import { FlowLiveStatus } from '../FlowLiveStatus';
 import '../../utils/prettycron.js';
+import { programIds } from '../../utils/ids';
 
 export const FlowDetail = ({}) => {
   const program = useAnchorProgram();
@@ -172,9 +173,12 @@ export const FlowDetail = ({}) => {
   async function executeFlow(simulate: boolean = false) {
     let flowAddress = new PublicKey(flowKey);
     let flow = await program.account.flow.fetch(flowKey);
-
+    const [pda, bump] = await PublicKey.findProgramAddress([walletCtx.publicKey.toBuffer()], new PublicKey(programIds().snowflake));
     let accounts = {
       flow: new PublicKey(flowAddress),
+      caller: walletCtx.publicKey,
+      pda: pda,
+      systemProgram: SystemProgram.programId,
     };
 
     let remainAccountMetas: AccountMeta[] = flow.actions.reduce((result, current) => result.concat(current.accounts), []);
@@ -190,7 +194,7 @@ export const FlowDetail = ({}) => {
     remainAccountMetas = remainAccountMetas.concat(targetProgramMetas);
     console.log('remaining account metas', remainAccountMetas);
 
-    const ix = await program.instruction.executeFlow({
+    const ix = await program.instruction.executeScheduledFlow({
       accounts: accounts,
       remainingAccounts: remainAccountMetas,
     });
