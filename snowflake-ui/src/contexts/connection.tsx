@@ -15,7 +15,7 @@ import _ from 'lodash';
 // export type ENV = 'mainnet-beta' | 'testnet' | 'devnet' | 'localnet';
 
 export const ENDPOINTS = [
-  {
+  /*{
     name: 'mainnet-beta' as ENV,
     endpoint: 'https://solana-api.projectserum.com/',
     chainID: ChainID.MainnetBeta,
@@ -24,7 +24,7 @@ export const ENDPOINTS = [
     name: 'testnet' as ENV,
     endpoint: clusterApiUrl('testnet'),
     chainID: ChainID.Testnet,
-  },
+  },*/
   {
     name: 'devnet' as ENV,
     endpoint: clusterApiUrl('devnet'),

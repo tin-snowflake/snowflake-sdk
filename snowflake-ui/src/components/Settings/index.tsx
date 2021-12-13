@@ -12,18 +12,24 @@ export const Settings = () => {
     <>
       <div style={{ display: 'grid' }}>
         Network:{' '}
-        <Select onSelect={setEndpoint} value={endpoint} style={{ marginBottom: 20 }}>
+        <Select
+          onSelect={v => {
+            setEndpoint(v);
+            window.location.reload();
+          }}
+          value={endpoint}
+          style={{ marginBottom: 20 }}>
           {ENDPOINTS.map(({ name, endpoint }) => (
             <Select.Option value={endpoint} key={endpoint}>
               {name}
             </Select.Option>
           ))}
         </Select>
-        {connected && (
+        {/* {connected && (
           <Button type="primary" onClick={disconnect}>
             Disconnect
           </Button>
-        )}
+        )}*/}
         {!connected && wallet && (
           <Button
             type="primary"
