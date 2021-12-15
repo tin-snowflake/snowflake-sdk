@@ -523,3 +523,17 @@ iframe
     margin-right:8px;
   }
 }
+
+.ant-menu-item {
+  &:hover {
+    border-bottom: none !important;
+  }
+}
+
+.ant-menu-horizontal:not(.ant-menu-dark) > .ant-menu-item:hover::after {
+  border-bottom: none !important;
+}
+
+.ant-menu-horizontal > .ant-menu-item::after {
+  transition: none !important;
+}

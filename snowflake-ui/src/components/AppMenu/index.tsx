@@ -13,7 +13,10 @@ export function AppMenu(props) {
   return (
     <Menu mode="horizontal" onClick={handleClick} selectedKeys={[current]}>
       <Menu.Item key="flows" icon={<BorderlessTableOutlined />}>
-        <a href="/#">Automations</a>
+        <a href="/#">Your Automations</a>
+      </Menu.Item>
+      <Menu.Item key="global" icon={<BorderlessTableOutlined />}>
+        <a href="/#/global">Global</a>
       </Menu.Item>
       <Menu.Item key="setting" icon={<SettingOutlined />}>
         <a href="/#/settings">Settings</a>

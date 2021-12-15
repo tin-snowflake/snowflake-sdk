@@ -1,36 +1,31 @@
 import React, { useEffect, useState } from 'react';
 import { FlowListItem } from '../FlowListItem';
 import { useAnchorProgram } from '../../contexts/anchorContext';
-import { GetProgramAccountsFilter } from '@solana/web3.js';
+import { PublicKey } from '@solana/web3.js';
 import * as flowUtil from '../../utils/flowUtil';
 import { useWallet } from '@solana/wallet-adapter-react';
 
-export const FlowList = (props: {}) => {
+export const FlowList = (props: { owner?: PublicKey }) => {
   const program = useAnchorProgram();
   const walletCtx = useWallet();
 
   let [flows, setFlows] = useState([]);
 
   async function init() {
-    /*let flowsByOwner = await flowUtil.fetchFlowsByOwner(program, walletCtx.publicKey);
-    console.log('flows by owner = ', flowsByOwner);*/
+    let flowList = [];
+    if (props.owner) {
+      flowList = await flowUtil.fetchFlowsByOwner(program, props.owner);
+    } else {
+      flowList = await flowUtil.fetchGlobalFlows(program);
+    }
 
-    let flows = await flowUtil.fetchGlobalFlows(program);
-    setFlows(flows);
-    console.log('global flows = ', flows);
+    setFlows(flowList);
+    console.log('global flows = ', flowList);
   }
 
   useEffect(() => {
     init();
   }, []);
-
-  async function getFlows() {
-    let flowOwnerFilter: GetProgramAccountsFilter = {
-      memcmp: { bytes: '', offset: 8 },
-    };
-    let allFlows = await program.account.flow.all();
-    console.log('all flows', allFlows);
-  }
 
   return (
     <span style={{ width: '100%' }}>
