@@ -4,6 +4,7 @@ import { useAnchorProgram } from '../../contexts/anchorContext';
 import { PublicKey } from '@solana/web3.js';
 import * as flowUtil from '../../utils/flowUtil';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { Card, Empty, Form } from 'antd';
 
 export const FlowList = (props: { owner?: PublicKey }) => {
   const program = useAnchorProgram();
@@ -34,6 +35,15 @@ export const FlowList = (props: { owner?: PublicKey }) => {
           <FlowListItem flowInfo={flow} />
         </span>
       ))}
+      {flows.length == 0 && (
+        <div>
+          <div className="card">
+            <div className="card-body" style={{ textAlign: 'center' }}>
+              <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No Automation" />
+            </div>
+          </div>
+        </div>
+      )}
     </span>
   );
 };
