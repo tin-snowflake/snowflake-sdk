@@ -1,4 +1,4 @@
-import { PublicKey } from "@solana/web3.js";
+import { PublicKey, SystemProgram } from "@solana/web3.js";
 import {Provider, Program, ProgramAccount, setProvider } from "@project-serum/anchor";
 import log4js from 'log4js';
 
@@ -67,8 +67,16 @@ export default class SnowService {
 
   async excecuteFlow(flow: ProgramAccount) {
     try {
-      let flowAddress = flow.publicKey;
-      let accounts = { flow: flowAddress };
+      const flowAddress = flow.publicKey;
+      const operatorWalletKey = this.program.provider.wallet.publicKey;
+      const [pda, bump] = await PublicKey.findProgramAddress([flow.account.flowOwner.toBuffer()], this.program.programId);
+      
+      let accounts = { 
+        flow: flowAddress,
+        caller: operatorWalletKey,
+        pda: pda,
+        systemProgram: SystemProgram.programId
+      };
 
       let remainAccountMetas = flow.account.actions.reduce(
         (result: string | any[], current: { accounts: any; }) => result.concat(current.accounts), []
