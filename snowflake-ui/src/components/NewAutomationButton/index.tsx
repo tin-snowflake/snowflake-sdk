@@ -38,35 +38,35 @@ export function NewAutomationButton({}) {
       <Button type="primary" size="large" onClick={showModal}>
         New Automation
       </Button>
-      <Modal destroyOnClose={true} title="Select Template" maskClosable={false} visible={isModalVisible} onOk={() => {}} onCancel={handleCancel} width={1200} footer={null}>
+      <Modal destroyOnClose={true} title="Select Template" maskClosable={false} visible={isModalVisible} onOk={() => {}} onCancel={handleCancel} width={900} footer={null}>
         <br />
         <span className="flowTemplateSelect">
           <Row gutter={16}>
-            <Col span={8}>
+            <Col span={12}>
               <FlowTemplateItem templateId={TEMPLATE.blank} title="Start from scratch" icon="snowflake">
                 Compose your automation from scratch using prebuilt actions or roll your own custom actions.
               </FlowTemplateItem>
             </Col>
-            <Col span={8}>
+            <Col span={12}>
               <FlowTemplateItem templateId={TEMPLATE.oneOffScheduledCustomAction} title="Sample time triggered automation" icon="snowflake">
-                A sample automation that is triggered at a specific time in the future, invoking a program defined by developers.
-              </FlowTemplateItem>
-            </Col>
-            <Col span={8}>
-              <FlowTemplateItem templateId={TEMPLATE.sampleProgramConditionFlow} title="Sample program triggered automation" icon="snowflake">
-                A sample automation triggered by a condition defined within a program developed by developers.
+                A sample automation that is triggered at a specific time in the future and invoking a simple program.
               </FlowTemplateItem>
             </Col>
           </Row>
           <br />
           <br />
           <Row gutter={16}>
-            <Col span={8}>
+            <Col span={12}>
+              <FlowTemplateItem templateId={TEMPLATE.sampleProgramConditionFlow} title="Sample program triggered automation" icon="snowflake">
+                A sample automation triggered by a condition defined within a program developed by developers.
+              </FlowTemplateItem>
+            </Col>
+            <Col span={12}>
               <FlowTemplateItem templateId={TEMPLATE.recurringPayment} title="Recurring payment" icon="snowflake">
                 Making regular payments, paying salary or subscription services with Snowflake payment flow.
               </FlowTemplateItem>
             </Col>
-            <Col span={8}>
+            {/* <Col span={8}>
               <FlowTemplateItem templateId={TEMPLATE.recurringPayment} title="Limit Order on Orca [ In Dev ]" icon="orca">
                 Create limit orders on Orca. <br />
                 <br /> <br />
@@ -77,7 +77,7 @@ export function NewAutomationButton({}) {
                 Protect your position on Solend <br />
                 <br /> <br />
               </FlowTemplateItem>
-            </Col>
+            </Col>*/}
           </Row>
         </span>
         <br />

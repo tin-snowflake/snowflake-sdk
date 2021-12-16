@@ -10,18 +10,7 @@ export const HomeView = () => {
 
   return (
     <div style={{ width: '100%' }}>
-      <PageHeader
-        ghost={false}
-        title="Your Automations"
-        extra={[
-          /* <Link key="editFlow" to="/editflow">
-              <Button type="primary" size="large">
-              + New Automation
-            </Button>
-          </Link>,*/
-
-          <NewAutomationButton />,
-        ]}></PageHeader>
+      <PageHeader ghost={false} title="Your Automations" extra={[<NewAutomationButton />]}></PageHeader>
 
       {walletCtx.publicKey && <FlowList owner={walletCtx.publicKey} />}
     </div>

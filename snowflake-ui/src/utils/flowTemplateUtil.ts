@@ -59,11 +59,12 @@ export const FLOW_TEMPLATES = {
       ],
     },
     [TEMPLATE.oneOffScheduledCustomAction]: {
-      name: 'A once-off scheduled automation using custom action',
+      name: 'A once-off time scheduled automation',
       retryWindow: RETRY_WINDOW,
       triggerType: TriggerType.Time,
       cron: defaultCron,
       recurring: RecurringUIOption.No,
+      nextExecutionTime: defaultScheduleTime,
       remainingRuns: -999,
       actions: [
         {
