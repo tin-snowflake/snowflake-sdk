@@ -16,6 +16,7 @@ import { FieldRequire, FormItem } from '../FormItem';
 import { createAssociatedTokenAccountIfNotExist } from '../../utils/tokens';
 import { cachebleMintByKey } from '../../contexts/accounts';
 import BN from 'bn.js';
+import { SensitiveButton } from '../SensitiveButton';
 
 export function SnowWithdrawButton({ onClose }) {
   const program = useAnchorProgram();
@@ -89,9 +90,9 @@ export function SnowWithdrawButton({ onClose }) {
           <Button key="back" onClick={handleCancel}>
             Cancel
           </Button>,
-          <Button key="submit" type="primary" onClick={validateAndWithdraw}>
+          <SensitiveButton key="submit" type="primary" onClick={validateAndWithdraw}>
             Withdraw
-          </Button>,
+          </SensitiveButton>,
         ]}>
         <br />
 

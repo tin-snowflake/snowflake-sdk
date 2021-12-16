@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Table } from 'antd';
+import { Button, Skeleton, Table } from 'antd';
 import { smartClick } from '../../utils/reactUtil';
 import { useConnectionConfig } from '../../contexts/connection';
 import { programIds, SOL_MINT } from '../../utils/ids';
@@ -69,6 +69,7 @@ export function TokenListWithBalances({ owner, balanceRefresh }) {
 
   async function init() {
     setTokenList(await queryTokenList());
+    setLoading(false);
   }
 
   useEffect(() => {
@@ -101,9 +102,13 @@ export function TokenListWithBalances({ owner, balanceRefresh }) {
     },
   ];
 
+  let [loading, setLoading] = useState(true);
+
   return (
     <span>
-      <Table rowKey="key" dataSource={tokenList} columns={columns as any} pagination={false} />
+      <Skeleton loading={loading} active>
+        <Table rowKey="key" dataSource={tokenList} columns={columns as any} pagination={false} />
+      </Skeleton>
     </span>
   );
 }
