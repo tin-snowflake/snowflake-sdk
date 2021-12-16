@@ -20,8 +20,9 @@ import moment from 'moment';
 import { FieldRequire, FormItem } from '../FormItem';
 import { useFormValidator, validateForm } from '../FormValidator';
 import Cron from 'react-js-cron';
+import { BLANK_TEMPLATE, FLOW_TEMPLATES } from '../../utils/flowTemplateUtil';
 
-export const EditFlow = ({}) => {
+export const EditFlow = (props: {}) => {
   const program = useAnchorProgram();
   const anchor = useAnchor();
   const history = useHistory();
@@ -36,18 +37,8 @@ export const EditFlow = ({}) => {
     return React.useMemo(() => new URLSearchParams(search), [search]);
   }
   let query = useQuery();
-  const defaultCron = '0 10 * * *';
-  const [cron, setCron] = useState(defaultCron);
-  let defaultScheduleTime = moment().add(1, 'week'); // 1 week from now
-  let initialFlow: any = {
-    retryWindow: RETRY_WINDOW,
-    triggerType: TriggerType.Time,
-    cron: defaultCron,
-    recurring: RecurringUIOption.No.toString(),
-    nextExecutionTime: defaultScheduleTime,
-    remainingRuns: -999,
-    actions: [],
-  };
+  const template = query.get('template') ? FLOW_TEMPLATES[connectionConfig.env][query.get('template')] : BLANK_TEMPLATE;
+  let initialFlow: any = _.cloneDeep(template);
   let [uiFlow, setUIFlow] = useState(initialFlow);
 
   async function init() {
@@ -61,7 +52,7 @@ export const EditFlow = ({}) => {
       uiFlow = await flowUtil.convertFlow(fetchedFlow, connectionConfig, walletCtx);
       setLoading(false);
     } else {
-      initialFlow.actions = [newDefaultAction()];
+      if (!initialFlow.actions.length) initialFlow.actions = [newDefaultAction()];
     }
     updateState();
   }

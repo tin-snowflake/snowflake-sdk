@@ -1,0 +1,87 @@
+import React, { useState } from 'react';
+import { Button, Card, Col, Input, Modal, Row, Statistic } from 'antd';
+import { handleInputChange } from '../../utils/reactUtil';
+import { TokenInput } from '../TokenInput';
+import { PublicKey, SystemProgram, TransactionInstruction } from '@solana/web3.js';
+import { programIds, SOL_MINT } from '../../utils/ids';
+import { toLamports, toLamportsByDecimal } from '../../utils/utils';
+import { SmartTxnClient } from '../../utils/smartTxnClient';
+import { useAnchorProgram } from '../../contexts/anchorContext';
+import { useConnectionConfig } from '../../contexts/connection';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { Token } from '@solana/spl-token';
+import { findAssociatedTokenAddress } from '../../utils/web3';
+import { FormValidatorProvider, useFormValidator, validateForm } from '../FormValidator';
+import { FieldRequire, FormItem } from '../FormItem';
+import { createAssociatedTokenAccountIfNotExist } from '../../utils/tokens';
+import { cachebleMintByKey, useMint } from '../../contexts/accounts';
+import { ArrowUpOutlined } from '@ant-design/icons/lib';
+import { Link } from 'react-router-dom';
+import { TEMPLATE } from '../../utils/flowTemplateUtil';
+import { FlowTemplateItem } from '../FlowTemplateItem';
+
+export function NewAutomationButton({}) {
+  const program = useAnchorProgram();
+  const connectionConfig = useConnectionConfig();
+  const walletCtx = useWallet();
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const showModal = () => {
+    setIsModalVisible(true);
+  };
+
+  const handleCancel = () => {
+    setIsModalVisible(false);
+  };
+
+  return (
+    <>
+      <Button type="primary" size="large" onClick={showModal}>
+        New Automation
+      </Button>
+      <Modal destroyOnClose={true} title="Select Template" maskClosable={false} visible={isModalVisible} onOk={() => {}} onCancel={handleCancel} width={1200} footer={null}>
+        <br />
+        <span className="flowTemplateSelect">
+          <Row gutter={16}>
+            <Col span={8}>
+              <FlowTemplateItem templateId={TEMPLATE.blank} title="Start from scratch" icon="snowflake">
+                Compose your automation from scratch using prebuilt actions or roll your own custom actions.
+              </FlowTemplateItem>
+            </Col>
+            <Col span={8}>
+              <FlowTemplateItem templateId={TEMPLATE.oneOffScheduledCustomAction} title="Sample time triggered automation" icon="snowflake">
+                A sample automation that is triggered at a specific time in the future, invoking a program defined by developers.
+              </FlowTemplateItem>
+            </Col>
+            <Col span={8}>
+              <FlowTemplateItem templateId={TEMPLATE.sampleProgramConditionFlow} title="Sample program triggered automation" icon="snowflake">
+                A sample automation triggered by a condition defined within a program developed by developers.
+              </FlowTemplateItem>
+            </Col>
+          </Row>
+          <br />
+          <br />
+          <Row gutter={16}>
+            <Col span={8}>
+              <FlowTemplateItem templateId={TEMPLATE.recurringPayment} title="Recurring payment" icon="snowflake">
+                Making regular payments, paying salary or subscription services with Snowflake payment flow.
+              </FlowTemplateItem>
+            </Col>
+            <Col span={8}>
+              <FlowTemplateItem templateId={TEMPLATE.recurringPayment} title="Limit Order on Orca [ In Dev ]" icon="orca">
+                Create limit orders on Orca. <br />
+                <br /> <br />
+              </FlowTemplateItem>
+            </Col>
+            <Col span={8}>
+              <FlowTemplateItem templateId={TEMPLATE.sampleProgramConditionFlow} title="Liquidation Protection [ In Dev ]" icon="solend">
+                Protect your position on Solend <br />
+                <br /> <br />
+              </FlowTemplateItem>
+            </Col>
+          </Row>
+        </span>
+        <br />
+      </Modal>
+    </>
+  );
+}

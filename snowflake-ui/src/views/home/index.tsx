@@ -3,6 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useWallet, WalletContextState } from '@solana/wallet-adapter-react';
 import { FlowList } from '../../components/FlowList';
+import { NewAutomationButton } from '../../components/NewAutomationButton';
 
 export const HomeView = () => {
   const walletCtx: WalletContextState = useWallet();
@@ -13,11 +14,13 @@ export const HomeView = () => {
         ghost={false}
         title="Your Automations"
         extra={[
-          <Link key="editFlow" to="/editflow">
-            <Button type="primary" size="large">
+          /* <Link key="editFlow" to="/editflow">
+              <Button type="primary" size="large">
               + New Automation
             </Button>
-          </Link>,
+          </Link>,*/
+
+          <NewAutomationButton />,
         ]}></PageHeader>
 
       {walletCtx.publicKey && <FlowList owner={walletCtx.publicKey} />}
