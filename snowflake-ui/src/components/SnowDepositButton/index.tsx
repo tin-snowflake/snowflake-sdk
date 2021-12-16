@@ -15,6 +15,7 @@ import { FormValidatorProvider, useFormValidator, validateForm } from '../FormVa
 import { FieldRequire, FormItem } from '../FormItem';
 import { createAssociatedTokenAccountIfNotExist } from '../../utils/tokens';
 import { cachebleMintByKey, useMint } from '../../contexts/accounts';
+import { SensitiveButton } from '../SensitiveButton';
 
 export function SnowDepositButton({ onClose, defaultToken = SOL_MINT.toString(), disableTokenSelect = false }) {
   const program = useAnchorProgram();
@@ -86,9 +87,9 @@ export function SnowDepositButton({ onClose, defaultToken = SOL_MINT.toString(),
           <Button key="back" onClick={handleCancel}>
             Cancel
           </Button>,
-          <Button key="submit" type="primary" onClick={validateAndDeposit}>
+          <SensitiveButton key="submit" type="primary" onClick={validateAndDeposit}>
             Deposit
-          </Button>,
+          </SensitiveButton>,
         ]}>
         <br />
 
