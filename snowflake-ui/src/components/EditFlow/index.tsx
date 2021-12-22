@@ -321,6 +321,10 @@ export const EditFlow = (props: {}) => {
                           <img className="itemSelecIcon" src="/icons/eco/saber.svg" />
                           &nbsp; Saber pool withdrawal
                         </Option>
+                        <Option value={actionUtil.ACTION_TYPES.priceCheckAction.code}>
+                          <img className="itemSelecIcon" src="/icons/eco/pyth.svg" />
+                          &nbsp; Price check
+                        </Option>
                         <Option disabled value={actionUtil.ACTION_TYPES.blankAction.code}>
                           <img className="itemSelecIcon" src="/icons/eco/saber.svg" />
                           &nbsp; Saber swap

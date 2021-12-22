@@ -1,11 +1,8 @@
 use solana_program::program_error::ProgramError;
 use crate::utils;
 
-pub const CONDITION_EQUAL: u8 = 0;
-pub const CONDITION_GREATER: u8 = 1;
-pub const CONDITION_LESS: u8 = 2;
-pub const CONDITION_GREATER_OR_EQUAL: u8 = 3;
-pub const CONDITION_LESS_OR_EQUAL: u8 = 4;
+pub const CONDITION_GREATER_OR_EQUAL: i8 = 1;
+pub const CONDITION_LESS_OR_EQUAL: i8 = -1;
 
 
 #[derive(Debug)]
@@ -27,7 +24,7 @@ impl PriceCheckCriteria {
             position += 8;
             let price_exponent = utils::unpack_i8(input, position)?;
             position += 1;
-            let condition = utils::unpack_u8(input, position)?;
+            let condition = utils::unpack_i8(input, position)?;
             position += 1;
 
             criteria.push(PriceCondition{price, price_exponent, condition});
@@ -40,7 +37,7 @@ impl PriceCheckCriteria {
 pub struct PriceCondition {
     pub price: i64,
     pub price_exponent: i8,
-    pub condition: u8,
+    pub condition: i8,
 }
 
 impl PriceCondition {
@@ -49,10 +46,7 @@ impl PriceCondition {
         let actual_price = utils::get_price(price, exponent);
 
         match self.condition {
-            CONDITION_EQUAL => actual_price == target,
-            CONDITION_GREATER => actual_price > target,
             CONDITION_GREATER_OR_EQUAL => actual_price >= target,
-            CONDITION_LESS => actual_price < target,
             CONDITION_LESS_OR_EQUAL => actual_price <= target,
             _ => false
         }
@@ -67,15 +61,15 @@ mod tests {
     fn test_unpack() {
         let mut input: Vec<u8> = Vec::new();
 
-        add_values(&mut input, 19814, -2, CONDITION_EQUAL);
-        add_values(&mut input, 300, 0, CONDITION_EQUAL);
-        add_values(&mut input, 122, 1, CONDITION_EQUAL);
+        add_values(&mut input, 19814, -2, CONDITION_GREATER_OR_EQUAL);
+        add_values(&mut input, 300, 0, CONDITION_GREATER_OR_EQUAL);
+        add_values(&mut input, 122, 1, CONDITION_LESS_OR_EQUAL);
 
         let result = PriceCheckCriteria::unpack(&input).unwrap();
         println!("Result: {:?}", result);
     }
 
-    fn add_values(input: &mut Vec<u8>, price: i64, exponent: i8, condition: u8) {
+    fn add_values(input: &mut Vec<u8>, price: i64, exponent: i8, condition: i8) {
         for &item in &price.to_le_bytes() {
             input.push(item);
         }

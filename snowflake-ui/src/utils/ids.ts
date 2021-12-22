@@ -31,6 +31,7 @@ export const programIds = () => {
     system: SYSTEM_PROGRAM_ID,
     rent: RENT_PROGRAM_ID,
     clock: CLOCK_PROGRAM_ID,
+    priceChecker: PRICE_CHECKER_PROGRAM_ID,
   };
 };
 
@@ -43,3 +44,4 @@ export const MEMO_PROGRAM_ID = new PublicKey('Memo1UhkJRfHyvLMcVucJwxXeuD728EqVD
 export const RENT_PROGRAM_ID = new PublicKey('SysvarRent111111111111111111111111111111111');
 export const CLOCK_PROGRAM_ID = new PublicKey('SysvarC1ock11111111111111111111111111111111');
 export const ASSOCIATED_TOKEN_PROGRAM_ID = new PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL');
+export const PRICE_CHECKER_PROGRAM_ID = new PublicKey('8BVA9L8pTTPxcrP7AS9M9957Qy8WUBSLmgh37vUvUdRe');

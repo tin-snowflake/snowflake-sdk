@@ -26,18 +26,6 @@ pub fn unpack_i64(input: &[u8], position: usize) -> Result<i64, ProgramError> {
     Ok(value)
 }
 
-pub fn unpack_u8(input: &[u8], position: usize) -> Result<u8, ProgramError> {
-    if input.len() < position + 1 {
-        return Err(ProgramError::InvalidInstructionData);
-    }
-    let value = input
-        .get(position..(position + 1))
-        .and_then(|slice| slice.try_into().ok())
-        .map(u8::from_le_bytes)
-        .ok_or(ProgramError::InvalidInstructionData)?;
-    Ok(value)
-}
-
 pub fn get_price(price: i64, exponent: i32) -> f64 {
     if exponent == 0 {
         return price as f64;

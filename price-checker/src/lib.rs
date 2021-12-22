@@ -6,7 +6,7 @@ use solana_program::{
     entrypoint,
     pubkey::Pubkey,
     account_info::{AccountInfo, next_account_info},
-    // msg
+    msg
 };
 use pyth_client::{PriceStatus, Price};
 use crate::instruction::{PriceCheckCriteria};
@@ -31,18 +31,17 @@ pub fn process_instruction(
         let pyth_price = pyth_client::cast::<pyth_client::Price>(pyth_price_data);
         
         if !is_active(&pyth_price) {
-            // msg!("Price account is not active: {}", &price_account.key);
             return Err(PriceCheckError::PriceAccountNotActive.into());
         }
 
-        // msg!("Price account: {}, {} - {}", price_account.key, pyth_price.agg.price, pyth_price.expo);
-
         //Should we worry about pyth_price.agg.conf ?
         if !c.match_condition(pyth_price.agg.price, pyth_price.expo) {
+            msg!("Price condition not match Pyth price: {} ({})", pyth_price.agg.price, pyth_price.expo);
             return Err(PriceCheckError::PriceCriteriaNotMatch.into());
         } 
     }
 
+    msg!("Price criteria matched.");
     Ok(())
 }
 

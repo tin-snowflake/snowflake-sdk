@@ -21,11 +21,11 @@ async function main() {
           isSigner: false,
           isWritable: false,
         },
-        {// AAPL
-            pubkey: new PublicKey("CqFJLrT4rSpA46RQkVYWn8tdBDuQ7p7RXcp6Um76oaph"),
-            isSigner: false,
-            isWritable: false,
-        },
+        // {// AAPL
+        //     pubkey: new PublicKey("CqFJLrT4rSpA46RQkVYWn8tdBDuQ7p7RXcp6Um76oaph"),
+        //     isSigner: false,
+        //     isWritable: false,
+        // },
         // {// TSLA
         //     pubkey: new PublicKey("9TaWcpX3kdfdWQQdNtAjW12fNEKdiicmVXuourqn3xJh"),
         //     isSigner: false,
@@ -48,8 +48,8 @@ async function main() {
         keys,
         data: Buffer.from(
             Int8Array.of(
-                ...new BN(290680500).toArray("le", 8), -5, 0,
-                ...new BN(16820000).toArray("le", 8), -5, 1)
+                ...new BN(290680500).toArray("le", 8), -5, -1)
+                // ...new BN(16820000).toArray("le", 8), -5, 1)
                 // ...new BN(200000).toArray("le", 8), -5, 0,
                 // ...new BN(200000).toArray("le", 8), -5, 0,
                 // ...new BN(200000).toArray("le", 8), -5, 0)
