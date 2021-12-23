@@ -1,10 +1,11 @@
-import { PublicKey, SystemProgram } from "@solana/web3.js";
+import { PublicKey, SystemProgram, TransactionInstruction, Transaction } from "@solana/web3.js";
 import {Provider, Program, ProgramAccount, setProvider } from "@project-serum/anchor";
 import log4js from 'log4js';
 
 log4js.configure('log4js.json');
 const logger = log4js.getLogger("Operator");
 
+const MEMO_PROGRAM_ID = new PublicKey('Memo1UhkJRfHyvLMcVucJwxXeuD728EqVDDwQDxFMNo');
 const SNOW_PROGRAM_ID = '86G3gad5tVjJxdQmmdQ6E3rLQNnDNh4KYcqiiSd7Az63';
 const SNOW_IDL = 'idl/snowflake.json';
 
@@ -94,10 +95,12 @@ export default class SnowService {
 
       remainAccountMetas = remainAccountMetas.concat(targetProgramMetas);
 
-      const tx = await this.program.rpc.executeScheduledFlow({
+      const ix = await this.program.instruction.executeScheduledFlow({
         accounts: accounts,
         remainingAccounts: remainAccountMetas,
       });
+
+      const tx = await this.sendInstructionWithMemo(ix, 'snf_auto_exec');
 
       logger.info('Executed flow: ', flowAddress.toBase58(), '. Transaction signature:', tx);
     } catch (error) {
@@ -141,13 +144,36 @@ export default class SnowService {
 
   async markTimedFlowAsError(flow: ProgramAccount) {
     try {
-      const tx = await this.program.rpc.markTimedFlowAsError({
+      const ix = await this.program.instruction.markTimedFlowAsError({
         accounts:  {flow: flow.publicKey},
       });
+
+      const tx = await this.sendInstructionWithMemo(ix, 'snf_mark_error');
 
       logger.info('Marked flow as error', flow.publicKey.toBase58(), '. Transaction signature: ', tx);
     } catch (error) {
       logger.error('Error marking flow as error: ', error);
     }
+  }
+
+  async sendInstructionWithMemo(ix: TransactionInstruction, memo: string): Promise<string> {
+    const connection = this.program.provider.connection;
+    const wallet = this.program.provider.wallet;
+
+    const memoIx = new TransactionInstruction({
+      keys: [],
+      data: Buffer.from(memo, 'utf-8'),
+      programId: MEMO_PROGRAM_ID,
+    });
+
+    const transaction = new Transaction();
+    transaction.add(ix);
+    transaction.add(memoIx);
+    transaction.recentBlockhash = (await connection.getRecentBlockhash('max')).blockhash;
+    transaction.feePayer = wallet.publicKey;
+
+    const signedTransaction = await wallet.signTransaction(transaction);
+    
+    return connection.sendRawTransaction(signedTransaction.serialize())
   }
 }

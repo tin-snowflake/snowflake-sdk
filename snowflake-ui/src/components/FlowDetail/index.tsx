@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAnchorProgram } from '../../contexts/anchorContext';
-import { AccountMeta, PublicKey, SystemProgram } from '@solana/web3.js';
+import { AccountMeta, PublicKey, SystemProgram, TransactionInstruction } from '@solana/web3.js';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { Button, Card, Divider, Form, Modal, PageHeader, Skeleton, Table, Tabs } from 'antd';
 import { Link, useHistory, useLocation, useParams } from 'react-router-dom';
@@ -17,6 +17,7 @@ import { ExclamationCircleOutlined } from '@ant-design/icons/lib';
 import { FlowLiveStatus } from '../FlowLiveStatus';
 import '../../utils/prettycron.js';
 import { programIds } from '../../utils/ids';
+import {MEMO_PROGRAM_ID} from '../../utils/ids'
 
 export const FlowDetail = ({}) => {
   const program = useAnchorProgram();
@@ -154,9 +155,9 @@ export const FlowDetail = ({}) => {
   async function updateExecutionHistory() {
     setLoadingHistory(false);
     let signatures = await connectionConfig.connection.getConfirmedSignaturesForAddress2(new PublicKey(flowKey));
-    let executions = signatures.map(s => ({
+    let executions = signatures.filter(s => s.memo).map(s => ({
       key: s.signature,
-      txn_trigger: 'Manual',
+      txn_trigger: s.memo.endsWith('manual_exec') ? 'Manual' : s.memo.endsWith('auto_exec') ? 'Auto' : 'Error',
       txn_signature: s.signature,
       txn_time: s.blockTime,
       txn_status: s.err ? 'error' : 'success',
@@ -198,10 +199,19 @@ export const FlowDetail = ({}) => {
       accounts: accounts,
       remainingAccounts: remainAccountMetas,
     });
+    
+    const memoIx = new TransactionInstruction({
+      keys: [],
+      data: Buffer.from('snf_manual_exec', 'utf-8'),
+      programId: MEMO_PROGRAM_ID,
+    });
+
+    const ixs = [ix, memoIx];
+
     if (simulate) {
-      await new SmartTxnClient(connectionConfig, [ix], [], walletCtx).simulate();
+      await new SmartTxnClient(connectionConfig, ixs, [], walletCtx).simulate();
     } else {
-      await new SmartTxnClient(connectionConfig, [ix], [], walletCtx).send();
+      await new SmartTxnClient(connectionConfig, ixs, [], walletCtx).send();
       await updateExecutionHistory();
     }
   }

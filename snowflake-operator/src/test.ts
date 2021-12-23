@@ -13,7 +13,7 @@ async function main() {
   console.log('Flows: ', flows);
   
   for (let flow of flows) {
-    if (flow.publicKey.toBase58().endsWith('8tjGLSgkhQh')) {
+    if (flow.publicKey.toBase58().endsWith('fYbhaQAjgw')) {
       console.log('Executing flow: ', flow.account.name);
       
       await snowService.excecuteFlow(flow);
