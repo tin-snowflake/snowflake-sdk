@@ -155,7 +155,7 @@ export const FlowDetail = ({}) => {
   async function updateExecutionHistory() {
     setLoadingHistory(false);
     let signatures = await connectionConfig.connection.getConfirmedSignaturesForAddress2(new PublicKey(flowKey));
-    let executions = signatures.filter(s => s.memo).map(s => ({
+    let executions = signatures.filter(s => s.memo && s.memo.startsWith('snf_')).map(s => ({
       key: s.signature,
       txn_trigger: s.memo.endsWith('manual_exec') ? 'Manual' : s.memo.endsWith('auto_exec') ? 'Auto' : 'Error',
       txn_signature: s.signature,
