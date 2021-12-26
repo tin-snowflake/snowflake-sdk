@@ -66,18 +66,22 @@ export function NewAutomationButton({}) {
                 Making regular payments, paying salary or subscription services with Snowflake payment flow.
               </FlowTemplateItem>
             </Col>
-            {/* <Col span={8}>
+          </Row>
+          <br />
+          <br />
+          <Row gutter={16}>
+            <Col span={12}>
               <FlowTemplateItem templateId={TEMPLATE.recurringPayment} title="Limit Order on Orca [ In Dev ]" icon="orca">
                 Create limit orders on Orca. <br />
                 <br /> <br />
               </FlowTemplateItem>
             </Col>
-            <Col span={8}>
+            <Col span={12}>
               <FlowTemplateItem templateId={TEMPLATE.sampleProgramConditionFlow} title="Liquidation Protection [ In Dev ]" icon="solend">
                 Protect your position on Solend <br />
                 <br /> <br />
               </FlowTemplateItem>
-            </Col>*/}
+            </Col>
           </Row>
         </span>
         <br />
