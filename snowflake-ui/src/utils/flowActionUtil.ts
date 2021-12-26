@@ -4,12 +4,13 @@ import { CustomAction } from '../components/FlowActions/customAction';
 import { PaymentAction } from '../components/FlowActions/paymentAction';
 import { SaberPoolWithdrawAction } from '../components/FlowActions/saberPoolWithdrawAction';
 import { BlankAction } from '../components/FlowActions/blankAction';
-
+import { PriceCheckAction } from '../components/FlowActions/priceCheckAction'
 export const ACTION_TYPES = {
   customAction: new CustomAction(),
   paymentAction: new PaymentAction(),
   saberPoolWithdrawActio: new SaberPoolWithdrawAction(),
   blankAction: new BlankAction(),
+  priceCheckAction: new PriceCheckAction(),
   /*customAction: {
     code: 100,
     component: customAction.CustomAction,
@@ -41,7 +42,15 @@ export const ACTION_TYPES = {
     convertAction: saberSwap.convertAction,
     pushFlowInstructions: saberSwap.pushFlowInstructions,
     initNewAction: saberSwap.initNewAction,
-  },*/
+  },
+  priceCheckAction: {
+    code: 104,
+    component: priceCheckAction.priceCheckAction,
+    convertUIAction: priceCheckAction.convertUIAction,
+    convertAction: priceCheckAction.convertAction,
+    pushFlowInstructions: priceCheckAction.pushFlowInstructions,
+    initNewAction: priceCheckAction.initNewAction,
+  }*/
 };
 
 export function actionTypeFromCode(code): FlowActionResolver {

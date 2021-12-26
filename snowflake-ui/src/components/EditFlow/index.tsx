@@ -99,6 +99,7 @@ export const EditFlow = (props: {}) => {
     }
     return ixs;
   }
+
   let formValidator = useFormValidator();
   async function validateAndSave() {
     let errors = validateForm(formValidator);
@@ -111,7 +112,6 @@ export const EditFlow = (props: {}) => {
     let isNewFlow = !flowKey;
     let instructions: TransactionInstruction[] = await collectActionInstructions();
     await prepareFlowForSave();
-    let tx;
     let keyUsed;
     if (isNewFlow) {
       let newFlowKeyPair = anchor.web3.Keypair.generate();
@@ -126,7 +126,6 @@ export const EditFlow = (props: {}) => {
       };
       /* if (instructions.length > 0) createContext.instructions = instructions;
       tx = await program.instruction.createFlow(flow, createContext);*/
-
       const createIx = await program.instruction.createFlow(flow, createContext);
       const ixs = [...instructions, createIx];
       await new SmartTxnClient(connectionConfig, ixs, [newFlowKeyPair], walletCtx).send();
@@ -320,6 +319,10 @@ export const EditFlow = (props: {}) => {
                         <Option value={actionUtil.ACTION_TYPES.saberPoolWithdrawActio.code}>
                           <img className="itemSelecIcon" src="/icons/eco/saber.svg" />
                           &nbsp; Saber pool withdrawal
+                        </Option>
+                        <Option value={actionUtil.ACTION_TYPES.priceCheckAction.code}>
+                          <img className="itemSelecIcon" src="/icons/eco/pyth.svg" />
+                          &nbsp; Price check
                         </Option>
                         <Option disabled value={actionUtil.ACTION_TYPES.blankAction.code}>
                           <img className="itemSelecIcon" src="/icons/eco/saber.svg" />
