@@ -21,6 +21,8 @@ import { FieldRequire, FormItem } from '../FormItem';
 import { useFormValidator, validateForm } from '../FormValidator';
 import Cron from 'react-js-cron';
 import { BLANK_TEMPLATE, FLOW_TEMPLATES } from '../../utils/flowTemplateUtil';
+import { programIds } from '../../utils/ids';
+import { toLamportsByDecimal } from '../../utils/utils';
 
 export const EditFlow = (props: {}) => {
   const program = useAnchorProgram();
@@ -100,6 +102,24 @@ export const EditFlow = (props: {}) => {
     return ixs;
   }
 
+  async function getFeeDepositInstructions(): Promise<TransactionInstruction[]> {
+    const [pda, bump] = await PublicKey.findProgramAddress([walletCtx.publicKey.toBuffer()], new PublicKey(programIds().snowflake));
+    const balance = await connectionConfig.connection.getBalance(pda);
+    const ixs = [];
+
+    if (balance < toLamportsByDecimal(0.001, 9)) {
+      ixs.push(
+        SystemProgram.transfer({
+          fromPubkey: walletCtx.publicKey,
+          toPubkey: pda,
+          lamports: toLamportsByDecimal(+0.01, 9),
+        })
+      );
+    }
+
+    return ixs;
+  }
+
   let formValidator = useFormValidator();
   async function validateAndSave() {
     let errors = validateForm(formValidator);
@@ -111,6 +131,7 @@ export const EditFlow = (props: {}) => {
   async function saveFlow() {
     let isNewFlow = !flowKey;
     let instructions: TransactionInstruction[] = await collectActionInstructions();
+    instructions.push(...(await getFeeDepositInstructions()));
     await prepareFlowForSave();
     let keyUsed;
     if (isNewFlow) {
