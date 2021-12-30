@@ -275,7 +275,7 @@ export const EditFlow = (props: {}) => {
                           format="MMMM D, YYYY  h:mm a"
                           showTime={true}
                           name="trigger"
-                          value={uiFlow.nextExecutionTime}
+                          value={uiFlow.nextExecutionTime.year() > 1970 ? uiFlow.nextExecutionTime : null}
                           onChange={(date, dateString) => {
                             uiFlow.nextExecutionTime = date;
                             updateState();

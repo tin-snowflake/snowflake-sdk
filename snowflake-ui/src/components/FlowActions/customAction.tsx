@@ -1,5 +1,5 @@
 import { Action, ActionContext, FlowActionResolver, OutputIXSet, UIAction, UIContext } from '../../models/flowAction';
-import { Button, Form, Input, Select } from 'antd';
+import { Button, Form, Input, Select, Checkbox } from 'antd';
 import _ from 'lodash';
 import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons/lib';
 import React from 'react';
@@ -53,6 +53,12 @@ export class CustomAction implements FlowActionResolver {
       _.set(obj, e.target.name, e.target.value);
       ctx.updateState();
     };
+
+    const handleCheckboxChange = (obj, field) => e => {
+      _.set(obj, field, e.target.checked);
+      ctx.updateState();
+    };
+
     const removeAccount = (accounts, i) => e => {
       accounts.splice(i, 1);
       ctx.updateState();
@@ -78,7 +84,8 @@ export class CustomAction implements FlowActionResolver {
               <FormItem label={'Account ' + (j + 1)} validators={[new FieldRequire(), new FieldIsPubKey()]} validate={account.pubkey}>
                 {/*<Form.Item label={'Account ' + (j + 1)} rules={[{ required: false, message: 'Instruction is required' }]}>*/}
                 <Input name="pubkey" value={account.pubkey} onChange={handleChange(account)} style={{ marginRight: '-20px' }} />
-                <div style={{ float: 'right', marginRight: '-30px', marginTop: '4px' }}>{<MinusCircleOutlined onClick={removeAccount(ctx.action.accounts, j)} />}</div>
+                <div style={{ float: 'right', marginRight: '-30px', marginTop: '4px' }}>{<MinusCircleOutlined onClick={removeAccount(ctx.action.accounts, j)} />}</div><br/>
+                <div style={{ marginTop: '4px'}}><Checkbox checked={account.isWritable} onChange={handleCheckboxChange(account, "isWritable")}/> &nbsp; is writable</div>
               </FormItem>
             </span>
           );
