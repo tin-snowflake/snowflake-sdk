@@ -82,10 +82,13 @@ export class CustomAction implements FlowActionResolver {
           return (
             <span>
               <FormItem label={'Account ' + (j + 1)} validators={[new FieldRequire(), new FieldIsPubKey()]} validate={account.pubkey}>
-                {/*<Form.Item label={'Account ' + (j + 1)} rules={[{ required: false, message: 'Instruction is required' }]}>*/}
-                <Input name="pubkey" value={account.pubkey} onChange={handleChange(account)} style={{ marginRight: '-20px' }} />
-                <div style={{ float: 'right', marginRight: '-30px', marginTop: '4px' }}>{<MinusCircleOutlined onClick={removeAccount(ctx.action.accounts, j)} />}</div><br/>
-                <div style={{ marginTop: '4px'}}><Checkbox checked={account.isWritable} onChange={handleCheckboxChange(account, "isWritable")}/> &nbsp; is writable</div>
+                <div style={{ display: 'flex', alignItems: 'baseline', float: 'left', width: '100%', height: '35px' }}>
+                  <Input name="pubkey" value={account.pubkey} onChange={handleChange(account)} style={{ width: '340px' }} />
+                  <span style={{ fontWeight: '200' }}>&nbsp; writable &nbsp;</span>
+                  <Checkbox checked={account.isWritable} onChange={handleCheckboxChange(account, 'isWritable')} />
+                </div>
+                <div style={{ float: 'right', marginRight: '-50px', marginTop: '4px' }}>{<MinusCircleOutlined onClick={removeAccount(ctx.action.accounts, j)} />}</div>
+                <br />
               </FormItem>
             </span>
           );
