@@ -155,9 +155,9 @@ export const FlowDetail = ({}) => {
   async function updateExecutionHistory() {
     setLoadingHistory(false);
     let signatures = await connectionConfig.connection.getConfirmedSignaturesForAddress2(new PublicKey(flowKey));
-    let executions = signatures.filter(s => s.memo && s.memo.startsWith('snf_')).map(s => ({
+    let executions = signatures.filter(s => s.memo && s.memo.includes('snf_exec')).map(s => ({
       key: s.signature,
-      txn_trigger: s.memo.endsWith('manual_exec') ? 'Manual' : s.memo.endsWith('auto_exec') ? 'Auto' : 'Error',
+      txn_trigger: s.memo.endsWith('exec_manual') ? 'Manual' : s.memo.endsWith('exec_auto') ? 'Auto' : 'Error',
       txn_signature: s.signature,
       txn_time: s.blockTime,
       txn_status: s.err ? 'error' : 'success',
@@ -202,7 +202,7 @@ export const FlowDetail = ({}) => {
     
     const memoIx = new TransactionInstruction({
       keys: [],
-      data: Buffer.from('snf_manual_exec', 'utf-8'),
+      data: Buffer.from('snf_exec_manual', 'utf-8'),
       programId: MEMO_PROGRAM_ID,
     });
 
