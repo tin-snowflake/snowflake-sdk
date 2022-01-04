@@ -13,7 +13,7 @@ import { SOL_MINT } from '../../utils/ids';
 export const TokenInput = ({ token, handleChange, disableTokenSelect = false, showNativeSol = true }) => {
   const { Option } = Select;
   let { tokens } = useConnectionConfig();
-  let [tokenList, setTokenList] = useState(tokens);
+  let [tokenList, setTokenList] = useState([]);
   const wallet = useWallet();
   async function updateToken(value) {
     const mint = value;
@@ -26,9 +26,11 @@ export const TokenInput = ({ token, handleChange, disableTokenSelect = false, sh
   useEffect(() => {
     if (token.mint) updateToken(token.mint);
     if (!showNativeSol) {
-      setTokenList(tokenList.filter(a => a.address != SOL_MINT.toString()));
+      setTokenList(tokens.filter(a => a.address != SOL_MINT.toString()));
+    } else {
+      setTokenList(tokens);
     }
-  }, []);
+  }, [tokens]);
 
   return (
     <div className="tokenInput">

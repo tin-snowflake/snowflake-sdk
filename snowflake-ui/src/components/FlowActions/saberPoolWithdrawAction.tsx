@@ -2,18 +2,15 @@ import { Action, ActionContext, FlowActionResolver, OutputIXSet, UIAction, UICon
 import { Form, Input, Select } from 'antd';
 import React from 'react';
 import * as flowActionUtil from '../../utils/flowActionUtil';
-import { PublicKey, TransactionInstruction } from '@solana/web3.js';
+import { PublicKey } from '@solana/web3.js';
 import { useConnectionConfig } from '../../contexts/connection';
 import { getSaberClient } from '../../integrations/saber/saberClient';
-import BufferLayout from 'buffer-layout';
-import * as Layout from '../../utils/layout';
 import { MintParser } from '../../contexts/accounts';
 import { fromLamports, toLamports } from '../../utils/utils';
 import { programIds } from '../../utils/ids';
-import { Token, u64 } from '@solana/spl-token';
+import { u64 } from '@solana/spl-token';
 import { StableSwap } from '@saberhq/stableswap-sdk/dist';
-import { authorizeMax, createAssociatedTokenAccountIfNotExist, getAssociatedTokenAddress } from '../../utils/tokens';
-import _ from 'lodash';
+import { authorizeFullBalance, createAssociatedTokenAccountIfNotExist, getAssociatedTokenAddress } from '../../utils/tokens';
 import { handleInputChange, handleSelectChange } from '../../utils/reactUtil';
 
 export class SaberPoolWithdrawAction implements FlowActionResolver {
@@ -82,7 +79,7 @@ export class SaberPoolWithdrawAction implements FlowActionResolver {
     const [ataLp, createLP] = await createAssociatedTokenAccountIfNotExist(ctx.wallet.publicKey, ctx.wallet.publicKey, new PublicKey(pool.lpToken.address), connection);
     outputIxs.push(OutputIXSet.fromAtaIx(ataLp, createLP));
 
-    const authorizeLPToken = await authorizeMax(ctx.wallet.publicKey, ataLp);
+    const authorizeLPToken = await authorizeFullBalance(ctx.wallet.publicKey, ataLp, connection);
     outputIxs.push(OutputIXSet.fromAuthorizeIx(ataLp, 'max', authorizeLPToken));
     return outputIxs;
   }

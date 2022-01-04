@@ -84,7 +84,7 @@ export class CustomAction implements FlowActionResolver {
               <FormItem label={'Account ' + (j + 1)} validators={[new FieldRequire(), new FieldIsPubKey()]} validate={account.pubkey}>
                 <div style={{ display: 'flex', alignItems: 'baseline', float: 'left', width: '100%', height: '35px' }}>
                   <Input name="pubkey" value={account.pubkey} onChange={handleChange(account)} style={{ width: '340px' }} />
-                  <span style={{ fontWeight: '200' }}>&nbsp; writable &nbsp;</span>
+                  <span style={{ fontWeight: 200 }}>&nbsp; writable &nbsp;</span>
                   <Checkbox checked={account.isWritable} onChange={handleCheckboxChange(account, 'isWritable')} />
                 </div>
                 <div style={{ float: 'right', marginRight: '-50px', marginTop: '4px' }}>{<MinusCircleOutlined onClick={removeAccount(ctx.action.accounts, j)} />}</div>
