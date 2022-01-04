@@ -1,9 +1,7 @@
 import { Action, ActionContext, FlowActionResolver, OutputIXSet, UIAction, UIContext } from '../../models/flowAction';
-import { Button, Form, Input, Select } from 'antd';
+import { Checkbox, Form, Input, Select } from 'antd';
 import _ from 'lodash';
-import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons/lib';
 import React, { useEffect } from 'react';
-import { toPublicKey } from '../../utils/snowUtils';
 import * as flowActionUtil from '../../utils/flowActionUtil';
 import { PublicKey, TransactionInstruction } from '@solana/web3.js';
 import { TokenAccount } from '../../models';
@@ -12,14 +10,13 @@ import BufferLayout from 'buffer-layout';
 import * as Layout from '../../utils/layout';
 import { fromLamports, toLamports } from '../../utils/utils';
 import { programIds } from '../../utils/ids';
-import { authorizeMax, createAssociatedTokenAccountIfNotExist, getAssociatedTokenAddress } from '../../utils/tokens';
+import { authorizeFullBalance, createAssociatedTokenAccountIfNotExist, getAssociatedTokenAddress } from '../../utils/tokens';
 import { Token } from '@solana/spl-token';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { sendTransaction, useConnection } from '../../contexts/connection';
-import { notify } from '../../utils/notifications';
+import { useConnection } from '../../contexts/connection';
 import { TokenInput } from '../TokenInput';
-import * as actionUtil from '../../utils/flowActionUtil';
 import { FieldIsPubKey, FieldRequire, FormItem } from '../FormItem';
+import { useTokenName } from '../../hooks';
 
 export class PaymentAction implements FlowActionResolver {
   code = 101;
@@ -88,16 +85,6 @@ export class PaymentAction implements FlowActionResolver {
       updateState();
     }, []);
 
-    async function authorise() {
-      let approveIx = await createAuthorizeInstruction(walletCtx, uiAction);
-      let instructions: TransactionInstruction[] = [approveIx];
-      let txn = await sendTransaction(connection, walletCtx, instructions, []);
-      notify({
-        message: 'Sucess !',
-        type: 'success',
-        description: 'Transaction ' + txn,
-      });
-    }
     return (
       <span>
         <FormItem label="Amount" validators={[new FieldRequire('Amount is required.')]} validate={uiAction.amount}>
@@ -107,14 +94,12 @@ export class PaymentAction implements FlowActionResolver {
             <TokenInput token={uiAction.token} handleChange={updateState} showNativeSol={false} />
           </div>
         </FormItem>
-
         <FormItem label="Pay To" validators={[new FieldRequire('Recipient is required.'), new FieldIsPubKey()]} validate={uiAction.recipient.wallet}>
           <Input name="wallet" value={uiAction.recipient.wallet} onChange={handleChange(uiAction.recipient)} />
         </FormItem>
-
-        {/*<Button type="default" size="large" onClick={authorise}>
-        Authorise
-      </Button>*/}
+        <Form.Item label=" " className="blankLabel" wrapperCol={{ span: 20 }}>
+          <Checkbox checked={true} disabled /> <span style={{ color: 'grey' }}>Approve for Snowflake program to perform future transfers of your {useTokenName(uiAction.token.mint)} token.</span>
+        </Form.Item>
       </span>
     );
   };
@@ -137,15 +122,8 @@ export class PaymentAction implements FlowActionResolver {
     );
     outputIxs.push(OutputIXSet.fromAtaIx(recepientAta, createReceipientAta));
 
-    const authorizeSourceAta = await authorizeMax(ctx.wallet.publicKey, sourceAta);
+    const authorizeSourceAta = await authorizeFullBalance(ctx.wallet.publicKey, sourceAta, ctx.connectionConfig.connection);
     outputIxs.push(OutputIXSet.fromAuthorizeIx(sourceAta, 'max', authorizeSourceAta));
     return outputIxs;
   }
-}
-
-async function createAuthorizeInstruction(wallet, uiAction) {
-  const [pda, bump] = await PublicKey.findProgramAddress([wallet.publicKey.toBuffer()], new PublicKey(programIds().snowflake));
-  let maxAmount = Math.floor(9 * Math.pow(10, 12));
-  let approveIx = Token.createApproveInstruction(programIds().token, new PublicKey(uiAction.token.ata), pda, wallet.publicKey, [], maxAmount);
-  return approveIx;
 }

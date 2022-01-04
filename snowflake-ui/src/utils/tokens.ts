@@ -34,9 +34,13 @@ export async function getAssociatedTokenAddress(mint: string, owner: string) {
   return await Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, new PublicKey(mint), new PublicKey(owner));
 }
 
-export async function authorizeMax(owner: PublicKey, ata: PublicKey): Promise<TransactionInstruction[]> {
+export async function authorizeAmount(owner: PublicKey, ata: PublicKey, amount: number): Promise<TransactionInstruction[]> {
   const [pda, bump] = await PublicKey.findProgramAddress([owner.toBuffer()], new PublicKey(programIds().snowflake));
-  let maxAmount = Math.floor(9 * Math.pow(10, 12));
-  let approveIx = Token.createApproveInstruction(programIds().token, ata, pda, owner, [], maxAmount);
+  let approveIx = Token.createApproveInstruction(programIds().token, ata, pda, owner, [], amount);
   return [approveIx];
+}
+
+export async function authorizeFullBalance(owner: PublicKey, ata: PublicKey, connection: Connection): Promise<TransactionInstruction[]> {
+  let amount = (await connection.getTokenAccountBalance(ata)).value.amount;
+  return authorizeAmount(owner, ata, +amount);
 }

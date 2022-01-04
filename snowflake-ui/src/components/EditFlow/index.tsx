@@ -207,7 +207,9 @@ export const EditFlow = (props: {}) => {
         <Select style={{ width: '120px' }} value={uiFlow.remainingRuns} onChange={value => handleSelectChange(uiFlow, 'remainingRuns', value, updateState)}>
           <Option value={-999}>Forever</Option>
           {[...Array(100)].map((x, i) => (
-            <Option value={i}>{i} times</Option>
+            <Option key={i} value={i}>
+              {i} times
+            </Option>
           ))}
         </Select>
       </div>
