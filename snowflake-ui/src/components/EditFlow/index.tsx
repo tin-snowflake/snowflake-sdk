@@ -19,7 +19,7 @@ import { RecurringUIOption, RETRY_WINDOW, TriggerType } from '../../models/flow'
 import moment from 'moment';
 import { FieldRequire, FormItem } from '../FormItem';
 import { useFormValidator, validateForm } from '../FormValidator';
-import Cron from 'react-js-cron';
+import Cron from '../Cron';
 import { BLANK_TEMPLATE, FLOW_TEMPLATES } from '../../utils/flowTemplateUtil';
 import { programIds } from '../../utils/ids';
 import { toLamportsByDecimal } from '../../utils/utils';
