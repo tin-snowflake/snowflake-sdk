@@ -22,6 +22,9 @@
     "format:fix": "prettier --write \"**/*.+(js|jsx|ts|tsx|json|css|md)\""
   },
   "dependencies": {
+    "@orca-so/sdk": "^1.2.7",
+    "decimal.js": "^10.3.1",
+    "@solana/spl-token-swap": "^0.1.0",
     "@ant-design/icons": "^4.5.0",
     "@craco/craco": "^5.7.0",
     "@dbricks/dbricks-ts": "0.0.67",
@@ -32,7 +35,6 @@
     "@saberhq/stableswap-sdk": "^1.4.1",
     "@solana/spl-token": "^0.1.6",
     "@solana/spl-token-registry": "^0.2.285",
-    "@solana/spl-token-swap": "^0.1.0",
     "@solana/wallet-adapter-ant-design": "^0.1.0",
     "@solana/wallet-adapter-base": "^0.4.1",
     "@solana/wallet-adapter-react": "^0.6.0",

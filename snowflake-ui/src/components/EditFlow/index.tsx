@@ -331,41 +331,37 @@ export const EditFlow = (props: {}) => {
                           actionType.initNewAction(action);
                           updateState();
                         }}>
-                        <Option value={actionUtil.ACTION_TYPES.customAction.code}>
+                        <Option key={1} value={actionUtil.ACTION_TYPES.customAction.code}>
                           <img className="itemSelecIcon" src="/icons/eco/snowflake.svg" />
                           &nbsp; Custom Action
                         </Option>
-                        <Option value={actionUtil.ACTION_TYPES.paymentAction.code}>
+                        <Option key={2} value={actionUtil.ACTION_TYPES.paymentAction.code}>
                           <img className="itemSelecIcon" src="/icons/eco/snowflake.svg" />
                           &nbsp; Make a payment
                         </Option>
-                        <Option value={actionUtil.ACTION_TYPES.saberPoolWithdrawActio.code}>
+                        <Option key={3} value={actionUtil.ACTION_TYPES.saberPoolWithdrawActio.code}>
                           <img className="itemSelecIcon" src="/icons/eco/saber.svg" />
                           &nbsp; Saber pool withdrawal
                         </Option>
-                        <Option value={actionUtil.ACTION_TYPES.priceCheckAction.code}>
+                        <Option key={4} value={actionUtil.ACTION_TYPES.priceCheckAction.code}>
                           <img className="itemSelecIcon" src="/icons/eco/pyth.svg" />
                           &nbsp; Price check
                         </Option>
-                        <Option disabled value={actionUtil.ACTION_TYPES.blankAction.code}>
-                          <img className="itemSelecIcon" src="/icons/eco/saber.svg" />
-                          &nbsp; Saber swap
+                        <Option key={5} value={actionUtil.ACTION_TYPES.orcaSwapAction.code}>
+                          <img className="itemSelecIcon" src="/icons/eco/orca.svg" />
+                          &nbsp; Orca Swap
                         </Option>
-                        <Option disabled value={actionUtil.ACTION_TYPES.blankAction.code}>
+                        <Option key={6} disabled value={actionUtil.ACTION_TYPES.blankAction.code}>
                           <img className="itemSelecIcon" src="/icons/eco/serum.svg" />
                           &nbsp; Serum
                         </Option>
-                        <Option disabled value={actionUtil.ACTION_TYPES.blankAction.code}>
+                        <Option key={7} disabled value={actionUtil.ACTION_TYPES.blankAction.code}>
                           <img className="itemSelecIcon" src="/icons/eco/raydium.svg" />
                           &nbsp; Raydium
                         </Option>
-                        <Option disabled value={actionUtil.ACTION_TYPES.blankAction.code}>
+                        <Option key={8} disabled value={actionUtil.ACTION_TYPES.blankAction.code}>
                           <img className="itemSelecIcon" src="/icons/eco/solend.svg" />
                           &nbsp; Solend
-                        </Option>
-                        <Option disabled value={actionUtil.ACTION_TYPES.blankAction.code}>
-                          <img className="itemSelecIcon" src="/icons/eco/orca.svg" />
-                          &nbsp; Orca
                         </Option>
                       </Select>
                     </Form.Item>
