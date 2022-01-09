@@ -1,10 +1,15 @@
 import BufferLayout from 'buffer-layout';
 import * as Layout from '../../utils/layout';
 import { ENV } from '../../utils/web3';
-import { PublicKey, TransactionInstruction } from '@solana/web3.js';
-import { OrcaPoolConfig } from '@orca-so/sdk';
+import { PublicKey } from '@solana/web3.js';
+import { Network, ORCA_TOKEN_SWAP_ID, ORCA_TOKEN_SWAP_ID_DEVNET, OrcaPool, OrcaPoolConfig } from '@orca-so/sdk';
 import { OrcaPoolConfig as OrcaPoolConfigDevnet } from '@orca-so/sdk/dist/public/devnet/pools/config';
+import { ConnectionConfig } from '../../contexts/connection';
+import { OrcaPoolImpl } from '@orca-so/sdk/dist/model/orca/pool/orca-pool';
 
+import { orcaPoolConfigs } from '@orca-so/sdk/dist/constants';
+import { orcaDevnetPoolConfigs } from '@orca-so/sdk/dist/constants/devnet';
+import { getDevnetPool } from '@orca-so/sdk/dist/public/devnet';
 export type Pool = {
   pairKey: string;
   tokenASymbol: string;
@@ -13,23 +18,23 @@ export type Pool = {
 };
 
 class OrcaClient {
-  env: ENV;
-  orcaPools;
-  constructor(env: ENV) {
-    this.env = env;
+  connectionConfig: ConnectionConfig;
+  pools;
+  constructor(connectionConfig: ConnectionConfig) {
+    this.connectionConfig = connectionConfig;
   }
 
-  getOrcaPools(): Pool[] {
-    if (!this.orcaPools) {
-      let orcaPoolConfig = this.env == ENV.devnet ? OrcaPoolConfigDevnet : OrcaPoolConfig;
+  getPools(): Pool[] {
+    if (!this.pools) {
+      let orcaPoolConfig = this.connectionConfig.env == ENV.devnet ? OrcaPoolConfigDevnet : OrcaPoolConfig;
       let poolKeys = Object.keys(orcaPoolConfig).filter(x => !(parseInt(x) >= 0));
 
-      if (this.env == ENV.devnet) {
+      if (this.connectionConfig.env == ENV.devnet) {
         // orca has issues with some pools in devnet, only the ones specified below work
         poolKeys = poolKeys.filter(x => ['SOL_USDC', 'ORCA_SOL', 'ORCA_USDC'].indexOf(x) >= 0);
       }
 
-      this.orcaPools = poolKeys.map(x => {
+      this.pools = poolKeys.map(x => {
         var tokens = x.split('_');
         return {
           pairKey: x,
@@ -39,11 +44,15 @@ class OrcaClient {
         };
       });
     }
-    return this.orcaPools;
+    return this.pools;
   }
 
   orcaPoolByPoolMint(poolMint: string): Pool {
-    return this.orcaPools.filter(x => x.poolId == poolMint)[0];
+    return this.pools.filter(x => x.poolId == poolMint)[0];
+  }
+
+  orcaPoolByPairKey(pairkey: string): Pool {
+    return this.pools.filter(x => x.pairKey == pairkey)[0];
   }
 
   decodeSwapAction(action): { amountIn: number; poolMint: PublicKey } {
@@ -56,16 +65,33 @@ class OrcaClient {
     const poolMint = accounts[7].pubkey;
     return { amountIn: info.amountIn, poolMint: poolMint };
   }
+
+  getOrcaPool(poolMint: string): OrcaPool {
+    if (this.connectionConfig.env === ENV.devnet) {
+      return new OrcaPoolImpl(this.connectionConfig.connection, Network.DEVNET, orcaDevnetPoolConfigs[poolMint]);
+    }
+
+    return new OrcaPoolImpl(this.connectionConfig.connection, Network.MAINNET, orcaPoolConfigs[poolMint]);
+  }
+
+  getOrcaConfig(poolMint: string): OrcaConfig {
+    const poolConfig = this.connectionConfig.env === ENV.devnet ? orcaDevnetPoolConfigs[poolMint] : orcaPoolConfigs[poolMint];
+    const orcaTokenSwapId = this.connectionConfig.env === ENV.devnet ? ORCA_TOKEN_SWAP_ID_DEVNET : ORCA_TOKEN_SWAP_ID;
+    return {
+      orcaTokenSwapId: orcaTokenSwapId,
+      poolParams: poolConfig,
+    };
+  }
 }
 
-const clients = {
-  [ENV.localnet]: new OrcaClient(ENV.localnet),
-  [ENV.devnet]: new OrcaClient(ENV.devnet),
-  [ENV.mainnet]: new OrcaClient(ENV.mainnet),
+type OrcaConfig = {
+  poolParams: any;
+  orcaTokenSwapId: any;
 };
 
-export function getOrcaClient(env: ENV) {
-  return clients[env];
+export function getOrcaClient(connectionConfig: ConnectionConfig) {
+  let orcaClient = new OrcaClient(connectionConfig); // todo : impl some level of caching here
+  return orcaClient;
 }
 
 const layouts = {

@@ -33,21 +33,11 @@ export class OrcaSwapAction implements FlowActionResolver {
   async convertAction(ctx: ActionContext): Promise<UIAction> {
     let connection = ctx.connectionConfig.connection;
     let uiAction = flowActionUtil.cloneActionBase(ctx.action);
-    const orcaClient = getOrcaClient(ctx.connectionConfig.env);
+    const orcaClient = getOrcaClient(ctx.connectionConfig);
     const { amountIn, poolMint } = orcaClient.decodeSwapAction(ctx.action);
     uiAction.amountIn = amountIn;
     uiAction.selectedPoolId = poolMint.toString();
     return uiAction;
-  }
-
-  getOrcaConfig(swapPoolConfig: OrcaPoolConfig): OrcaConfig {
-    const devnetConfig = getDevnetPool(swapPoolConfig); //todo switch between devnet and mainnet
-    const poolConfig = orcaDevnetPoolConfigs[devnetConfig]; //todo switch between devnet and mainnet
-    const orcaTokenSwapId = ORCA_TOKEN_SWAP_ID_DEVNET;
-    return {
-      orcaTokenSwapId: orcaTokenSwapId,
-      poolParams: poolConfig,
-    };
   }
 
   async convertUIAction(ctx: ActionContext): Promise<Action> {
@@ -56,14 +46,13 @@ export class OrcaSwapAction implements FlowActionResolver {
 
     const orca = getOrca(connection, ctx.connectionConfig.env == ENV.devnet ? Network.DEVNET : Network.MAINNET); //
     const selectedPoolId = uiAction.selectedPoolId;
-    const orcaClient = getOrcaClient(ctx.connectionConfig.env);
-    const selectedPool = orcaClient.orcaPoolByPoolMint(selectedPoolId);
-    const orcaPool = orca.getPool(selectedPool.pairKey);
+    let orcaClient = getOrcaClient(ctx.connectionConfig);
+    const orcaPool = orcaClient.getOrcaPool(selectedPoolId);
     const inputToken = orcaPool.getTokenA();
     const amountIn = new Decimal(0.01);
     const quote = await orcaPool.getQuote(inputToken, amountIn);
     const minimumAmountOut = quote.getMinOutputAmount();
-    let orcaConfig = this.getOrcaConfig(selectedPoolId);
+    let orcaConfig = orcaClient.getOrcaConfig(selectedPoolId);
     const { inputPoolToken, outputPoolToken } = getTokens(orcaConfig.poolParams, inputToken.mint.toString());
     const amountInU64 = U64Utils.toTokenU64(amountIn, inputPoolToken, 'amountIn');
     const minimumAmountOutU64 = U64Utils.toTokenU64(minimumAmountOut, outputPoolToken, 'minimumAmountOut');
@@ -124,10 +113,10 @@ export class OrcaSwapAction implements FlowActionResolver {
         poolParams: poolConfig,
       };
     }*/
-    const orcaClient = getOrcaClient(connectionConfig.env);
+    const orcaClient = getOrcaClient(connectionConfig);
     const [pools, setPools] = useState([]);
     function initOrcaPools() {
-      const pools = orcaClient.getOrcaPools();
+      const pools = orcaClient.getPools();
       console.log(pools);
       setPools(pools);
     }
@@ -201,8 +190,3 @@ export class OrcaSwapAction implements FlowActionResolver {
     return outputIxs;
   }
 }
-
-type OrcaConfig = {
-  poolParams: any;
-  orcaTokenSwapId: any;
-};
