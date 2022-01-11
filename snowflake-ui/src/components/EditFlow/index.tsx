@@ -326,8 +326,11 @@ export const EditFlow = (props: {}) => {
                       <Select
                         value={action.actionCode}
                         onChange={async value => {
+                          Object.keys(action).forEach(key => delete action[key]);
+                          action.name = 'default';
                           action.actionCode = value;
                           const actionType = flowActionUtil.actionTypeFromCode(action.actionCode);
+
                           actionType.initNewAction(action);
                           updateState();
                         }}>

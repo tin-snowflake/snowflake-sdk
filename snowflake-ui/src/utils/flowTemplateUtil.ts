@@ -21,6 +21,7 @@ export enum TEMPLATE {
   recurringPayment = 'recurringPayment',
   sampleProgramConditionFlow = 'sampleProgramConditionFlow',
   oneOffScheduledCustomAction = 'oneOffScheduledCustomAction',
+  orcaDCA = 'orcaDCA',
 }
 
 export const FLOW_TEMPLATES = {
@@ -79,6 +80,21 @@ export const FLOW_TEMPLATES = {
               isWritable: false,
             },
           ],
+        },
+      ],
+    },
+    [TEMPLATE.orcaDCA]: {
+      name: 'Dollar average cost swap on Orca',
+      retryWindow: RETRY_WINDOW,
+      triggerType: TriggerType.Time,
+      cron: '0 8 * * *',
+      recurring: RecurringUIOption.Yes.toString(),
+      remainingRuns: 5,
+      actions: [
+        {
+          name: 'orca',
+          actionCode: ACTION_TYPES.orcaSwapAction.code,
+          amountIn: 1,
         },
       ],
     },

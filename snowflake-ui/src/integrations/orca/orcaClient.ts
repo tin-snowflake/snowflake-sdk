@@ -10,6 +10,7 @@ import { OrcaPoolImpl } from '@orca-so/sdk/dist/model/orca/pool/orca-pool';
 import { orcaPoolConfigs } from '@orca-so/sdk/dist/constants';
 import { orcaDevnetPoolConfigs } from '@orca-so/sdk/dist/constants/devnet';
 import { getDevnetPool } from '@orca-so/sdk/dist/public/devnet';
+import { OrcaPoolParams } from '@orca-so/sdk/dist/model/orca/pool/pool-types';
 export type Pool = {
   pairKey: string;
   tokenASymbol: string;
@@ -31,7 +32,7 @@ class OrcaClient {
 
       if (this.connectionConfig.env == ENV.devnet) {
         // orca has issues with some pools in devnet, only the ones specified below work
-        poolKeys = poolKeys.filter(x => ['SOL_USDC', 'ORCA_SOL', 'ORCA_USDC'].indexOf(x) >= 0);
+        poolKeys = poolKeys.filter(x => ['ORCA_SOL', 'ORCA_USDC'].indexOf(x) >= 0);
       }
 
       this.pools = poolKeys.map(x => {
@@ -39,8 +40,8 @@ class OrcaClient {
         return {
           pairKey: x,
           poolId: orcaPoolConfig[x],
-          tokenASymbol: tokens[0],
-          tokenBSymbol: tokens[1],
+          tokenASymbol: tokens[0] == 'SOL' ? 'WSOL' : tokens[0],
+          tokenBSymbol: tokens[1] == 'SOL' ? 'WSOL' : tokens[1],
         };
       });
     }
@@ -85,12 +86,13 @@ class OrcaClient {
 }
 
 type OrcaConfig = {
-  poolParams: any;
+  poolParams: OrcaPoolParams;
   orcaTokenSwapId: any;
 };
 
+let orcaClient: OrcaClient;
 export function getOrcaClient(connectionConfig: ConnectionConfig) {
-  let orcaClient = new OrcaClient(connectionConfig); // todo : impl some level of caching here
+  if (!orcaClient) orcaClient = new OrcaClient(connectionConfig);
   return orcaClient;
 }
 
