@@ -144,6 +144,7 @@ export class OrcaSwapAction implements FlowActionResolver {
             onChange={value => {
               handleSelectChange(action, 'selectedPoolId', value);
               setTokenInputOutput();
+              calculateExepectedAmount();
               updateState();
             }}>
             {pools.map(pool => (
