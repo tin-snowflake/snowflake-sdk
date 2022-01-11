@@ -4,13 +4,15 @@ import { CustomAction } from '../components/FlowActions/customAction';
 import { PaymentAction } from '../components/FlowActions/paymentAction';
 import { SaberPoolWithdrawAction } from '../components/FlowActions/saberPoolWithdrawAction';
 import { BlankAction } from '../components/FlowActions/blankAction';
-import { PriceCheckAction } from '../components/FlowActions/priceCheckAction'
+import { PriceCheckAction } from '../components/FlowActions/priceCheckAction';
+import { OrcaSwapAction } from '../components/FlowActions/orcaSwapAction';
 export const ACTION_TYPES = {
   customAction: new CustomAction(),
   paymentAction: new PaymentAction(),
   saberPoolWithdrawActio: new SaberPoolWithdrawAction(),
   blankAction: new BlankAction(),
   priceCheckAction: new PriceCheckAction(),
+  orcaSwapAction: new OrcaSwapAction(),
   /*customAction: {
     code: 100,
     component: customAction.CustomAction,

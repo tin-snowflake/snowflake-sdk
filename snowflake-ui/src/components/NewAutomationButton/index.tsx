@@ -71,8 +71,8 @@ export function NewAutomationButton({}) {
           <br />
           <Row gutter={16}>
             <Col span={12}>
-              <FlowTemplateItem templateId={TEMPLATE.recurringPayment} title="Limit Order on Orca [ In Dev ]" icon="orca">
-                Create limit orders on Orca. <br />
+              <FlowTemplateItem templateId={TEMPLATE.orcaDCA} title="DCA swap on Orca" icon="orca">
+                Recurring dollar cost average swap on Orca <br />
                 <br /> <br />
               </FlowTemplateItem>
             </Col>
