@@ -90,7 +90,7 @@ export function NewAutomationButton({}) {
           <Row gutter={16}>
             <Col span={12}>
               <FlowTemplateItem templateId={TEMPLATE.pythOracleTrigger} title="Pyth oracle price triggered automation" icon="pyth">
-                Sample swap action triggerred when Pyth oracle price condition met. <br />
+                Sample swap action triggerred when a Pyth oracle price condition met. <br />
                 <br />
               </FlowTemplateItem>
             </Col>
