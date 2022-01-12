@@ -19,6 +19,7 @@ import { ArrowUpOutlined } from '@ant-design/icons/lib';
 import { Link } from 'react-router-dom';
 import { TEMPLATE } from '../../utils/flowTemplateUtil';
 import { FlowTemplateItem } from '../FlowTemplateItem';
+import Search from 'antd/es/input/Search';
 
 export function NewAutomationButton({}) {
   const program = useAnchorProgram();
@@ -39,6 +40,7 @@ export function NewAutomationButton({}) {
         New Automation
       </Button>
       <Modal destroyOnClose={true} title="Select Template" maskClosable={false} visible={isModalVisible} onOk={() => {}} onCancel={handleCancel} width={900} footer={null}>
+        <Search placeholder="search template" style={{ width: 200, float: 'right', marginTop: '-10px' }} /> <br />
         <br />
         <span className="flowTemplateSelect">
           <Row gutter={16}>
@@ -48,13 +50,13 @@ export function NewAutomationButton({}) {
               </FlowTemplateItem>
             </Col>
             <Col span={12}>
-              <FlowTemplateItem templateId={TEMPLATE.oneOffScheduledCustomAction} title="Sample time triggered automation" icon="snowflake">
+              <FlowTemplateItem templateId={TEMPLATE.oneOffScheduledCustomAction} title="Sample time triggered automation" icon="time">
                 A sample automation that is triggered at a specific time in the future and invoking a simple program.
               </FlowTemplateItem>
             </Col>
           </Row>
           <br />
-          <br />
+
           <Row gutter={16}>
             <Col span={12}>
               <FlowTemplateItem templateId={TEMPLATE.sampleProgramConditionFlow} title="Sample program triggered automation" icon="snowflake">
@@ -68,20 +70,36 @@ export function NewAutomationButton({}) {
             </Col>
           </Row>
           <br />
-          <br />
+
           <Row gutter={16}>
             <Col span={12}>
-              <FlowTemplateItem templateId={TEMPLATE.orcaDCA} title="DCA swap on Orca" icon="orca">
+              <FlowTemplateItem templateId={TEMPLATE.orcaDCA} title="Dollar cost average swap on Orca" icon="orca">
                 Recurring dollar cost average swap on Orca <br />
-                <br /> <br />
+                <br />
               </FlowTemplateItem>
             </Col>
             <Col span={12}>
+              <FlowTemplateItem disabled={true} templateId={TEMPLATE.sampleProgramConditionFlow} title="Liquidation Protection [ In Dev ]" icon="solend">
+                Protect your position on Solend <br />
+                <br />
+              </FlowTemplateItem>
+            </Col>
+          </Row>
+          <br />
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <FlowTemplateItem templateId={TEMPLATE.pythOracleTrigger} title="Pyth oracle price triggered automation" icon="pyth">
+                Sample swap action triggerred when Pyth oracle price condition met. <br />
+                <br />
+              </FlowTemplateItem>
+            </Col>
+            {/* <Col span={12}>
               <FlowTemplateItem templateId={TEMPLATE.sampleProgramConditionFlow} title="Liquidation Protection [ In Dev ]" icon="solend">
                 Protect your position on Solend <br />
                 <br /> <br />
               </FlowTemplateItem>
-            </Col>
+            </Col>*/}
           </Row>
         </span>
         <br />

@@ -22,6 +22,7 @@ export enum TEMPLATE {
   sampleProgramConditionFlow = 'sampleProgramConditionFlow',
   oneOffScheduledCustomAction = 'oneOffScheduledCustomAction',
   orcaDCA = 'orcaDCA',
+  pythOracleTrigger = 'pythOracleTrigger',
 }
 
 export const FLOW_TEMPLATES = {
@@ -84,7 +85,7 @@ export const FLOW_TEMPLATES = {
       ],
     },
     [TEMPLATE.orcaDCA]: {
-      name: 'Dollar average cost swap on Orca',
+      name: 'Dollar cost average swap on Orca',
       retryWindow: RETRY_WINDOW,
       triggerType: TriggerType.Time,
       cron: '0 8 * * *',
@@ -94,7 +95,29 @@ export const FLOW_TEMPLATES = {
         {
           name: 'orca',
           actionCode: ACTION_TYPES.orcaSwapAction.code,
-          amountIn: 1,
+          amountIn: 10,
+        },
+      ],
+    },
+    [TEMPLATE.pythOracleTrigger]: {
+      name: 'Sample Pyth oracle price condition triggerred automation',
+      retryWindow: RETRY_WINDOW,
+      triggerType: TriggerType.ProgramCondition,
+      cron: defaultCron,
+      recurring: RecurringUIOption.No,
+      remainingRuns: 1,
+      actions: [
+        {
+          name: 'pyth',
+          actionCode: ACTION_TYPES.priceCheckAction.code,
+          priceAccount: 'A1WttWF7X3Rg6ZRpB2YQUFHCRh1kiXV8sKKLV3S9neJV',
+          condition: 1,
+          targetPrice: 6.5,
+        },
+        {
+          name: 'orca',
+          actionCode: ACTION_TYPES.orcaSwapAction.code,
+          amountIn: 10,
         },
       ],
     },

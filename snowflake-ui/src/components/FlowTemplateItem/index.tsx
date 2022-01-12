@@ -5,15 +5,23 @@ import { Link } from 'react-router-dom';
 import { TEMPLATE } from '../../utils/flowTemplateUtil';
 import Meta from 'antd/es/card/Meta';
 export function FlowTemplateItem(props) {
-  const { templateId, title, icon } = props;
+  const { templateId, title, icon, disabled } = props;
 
   return (
     <span className="flowTemplateItem">
-      <Link key={templateId} to={'/editflow?template=' + templateId}>
+      {disabled && (
         <Card>
           <Meta avatar={<img className="itemSelecIcon" src={'/icons/eco/' + icon + '.svg'} />} title={title} description={props.children} />
         </Card>
-      </Link>
+      )}
+
+      {!disabled && (
+        <Link key={templateId} to={'/editflow?template=' + templateId}>
+          <Card className="templateCardEnabled">
+            <Meta avatar={<img className="itemSelecIcon" src={'/icons/eco/' + icon + '.svg'} />} title={title} description={props.children} />
+          </Card>
+        </Link>
+      )}
     </span>
   );
 }
