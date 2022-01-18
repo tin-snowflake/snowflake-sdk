@@ -17,7 +17,7 @@ import { ExclamationCircleOutlined } from '@ant-design/icons/lib';
 import { FlowLiveStatus } from '../FlowLiveStatus';
 import '../../utils/prettycron.js';
 import { programIds } from '../../utils/ids';
-import {MEMO_PROGRAM_ID} from '../../utils/ids'
+import { MEMO_PROGRAM_ID } from '../../utils/ids';
 
 export const FlowDetail = ({}) => {
   const program = useAnchorProgram();
@@ -57,7 +57,6 @@ export const FlowDetail = ({}) => {
   }
 
   useEffect(() => {
-    console.log('*** calling use effect ... ');
     init();
     const listenerId = connectionConfig.connection.onAccountChange(new PublicKey(flowKey), async () => {
       console.log('on account change trigger ...');
@@ -155,13 +154,15 @@ export const FlowDetail = ({}) => {
   async function updateExecutionHistory() {
     setLoadingHistory(false);
     let signatures = await connectionConfig.connection.getConfirmedSignaturesForAddress2(new PublicKey(flowKey));
-    let executions = signatures.filter(s => s.memo && s.memo.includes('snf_exec')).map(s => ({
-      key: s.signature,
-      txn_trigger: s.memo.endsWith('exec_manual') ? 'Manual' : s.memo.endsWith('exec_auto') ? 'Auto' : 'Error',
-      txn_signature: s.signature,
-      txn_time: s.blockTime,
-      txn_status: s.err ? 'error' : 'success',
-    }));
+    let executions = signatures
+      .filter(s => s.memo && s.memo.includes('snf_exec'))
+      .map(s => ({
+        key: s.signature,
+        txn_trigger: s.memo.endsWith('exec_manual') ? 'Manual' : s.memo.endsWith('exec_auto') ? 'Auto' : 'Error',
+        txn_signature: s.signature,
+        txn_time: s.blockTime,
+        txn_status: s.err ? 'error' : 'success',
+      }));
     setFlowExecutionData(executions);
     setLoadingHistory(true);
   }
@@ -199,7 +200,7 @@ export const FlowDetail = ({}) => {
       accounts: accounts,
       remainingAccounts: remainAccountMetas,
     });
-    
+
     const memoIx = new TransactionInstruction({
       keys: [],
       data: Buffer.from('snf_exec_manual', 'utf-8'),
@@ -262,16 +263,16 @@ export const FlowDetail = ({}) => {
           </div>
         }
         extra={[
-          <Link to={'/editflow/' + flowKey}>
+          <Link key="edit" to={'/editflow/' + flowKey}>
             <Button size="large">Edit</Button>
           </Link>,
-          <Button size="large" onClick={() => confirmDelete()}>
+          <Button key="delete" size="large" onClick={() => confirmDelete()}>
             Delete
           </Button>,
-          <SensitiveButton size="large" onClick={() => simulateFlow()}>
+          <SensitiveButton key="validate" size="large" onClick={() => simulateFlow()}>
             Validate
           </SensitiveButton>,
-          <SensitiveButton size="large" onClick={() => executeFlow()}>
+          <SensitiveButton key="runnow" size="large" onClick={() => executeFlow()}>
             Run Now
           </SensitiveButton>,
         ]}></PageHeader>

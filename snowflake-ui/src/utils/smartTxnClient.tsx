@@ -47,9 +47,9 @@ export class SmartTxnClient {
     const status = (await connection.simulateTransaction(txn)).value;
     const content = (
       <>
-        {status.logs.map(log => (
-          <div>{log}</div>
-        ))}
+        {status.logs.map(function (log, i) {
+          return <div key={i}>{log}</div>;
+        })}
       </>
     );
 

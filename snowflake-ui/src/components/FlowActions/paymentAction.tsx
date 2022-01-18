@@ -27,7 +27,6 @@ export class PaymentAction implements FlowActionResolver {
     let uiAction = flowActionUtil.cloneActionBase(action);
     uiAction.token = { mint: '', ata: action.accounts[0].pubkey.toString() };
     let senderAtaAccount = await connection.getAccountInfo(new PublicKey(uiAction.token.ata));
-    console.log('senderAtaAccount', senderAtaAccount);
     let senderAtaInfo: TokenAccount = TokenAccountParser(uiAction.token.ata, senderAtaAccount);
     uiAction.token.mint = senderAtaInfo.info.mint.toString();
 
