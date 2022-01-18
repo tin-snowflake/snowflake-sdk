@@ -85,7 +85,7 @@ export class OrcaSwapAction implements FlowActionResolver {
     const [pools, setPools] = useState([]);
     function initOrcaPools() {
       const pools = orcaClient.getPools();
-      console.log(pools);
+      // console.log(pools);
       setPools(pools);
     }
 
@@ -116,6 +116,7 @@ export class OrcaSwapAction implements FlowActionResolver {
     }
 
     async function calculateExepectedAmount() {
+      if (isNaN(uiAction.amountIn)) return;
       const orcaPool = orcaClient.getOrcaPool(uiAction.selectedPoolId);
       const inputToken = orcaPool.getTokenA();
       const amountIn = OrcaU64.fromDecimal(new Decimal(+uiAction.amountIn), inputToken.scale);
@@ -162,7 +163,7 @@ export class OrcaSwapAction implements FlowActionResolver {
                   name="amountIn"
                   value={uiAction.amountIn}
                   onChange={handleInputChange(uiAction, () => {
-                    uiAction.expectedAmount = 'calculating ...';
+                    uiAction.expectedAmount = uiAction.amountIn ? 'calculating ...' : 0;
                     updateState();
                   })}
                 />

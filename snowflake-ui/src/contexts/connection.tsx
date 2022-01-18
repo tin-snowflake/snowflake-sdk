@@ -88,7 +88,7 @@ export function ConnectionProvider({ children = undefined as any }) {
           (item.symbol as any) = 'WSOL';
         }
       });
-      console.log('token list', list);
+
       list.push({
         chainId: 103,
         address: SOL_MINT.toString(),

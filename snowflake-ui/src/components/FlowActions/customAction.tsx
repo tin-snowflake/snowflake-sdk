@@ -80,7 +80,7 @@ export class CustomAction implements FlowActionResolver {
         </FormItem>
         {ctx.action.accounts.map(function (account, j) {
           return (
-            <span>
+            <span key={j}>
               <FormItem label={'Account ' + (j + 1)} validators={[new FieldRequire(), new FieldIsPubKey()]} validate={account.pubkey}>
                 <div style={{ display: 'flex', alignItems: 'baseline', float: 'left', width: '100%', height: '35px' }}>
                   <Input name="pubkey" value={account.pubkey} onChange={handleChange(account)} style={{ width: '340px' }} />

@@ -15,7 +15,7 @@ export function FormItem(props) {
   useEffect(() => {
     // register validator
     form[key] = { validators, validatingValue };
-    console.log('props change', { form, touch });
+    // console.log('props change', { form, touch });
     if (touch) validate();
     if (!touch) {
       touch = true;
