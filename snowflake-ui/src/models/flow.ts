@@ -1,4 +1,19 @@
-export interface Flow {}
+import BN from 'bn.js';
+import { Action } from './flowAction';
+import { PublicKey } from '@solana/web3.js';
+
+export interface Flow {
+  name: string;
+  nextExecutionTime: BN;
+  lastScheduledExecution: BN;
+  userUtcOffset: BN;
+  actions: [Action];
+  recurring: boolean;
+  retryWindow: BN;
+  remainingRuns: number;
+  flowOwner: PublicKey;
+  triggerType: number;
+}
 
 export interface UIFlow {
   state: State;

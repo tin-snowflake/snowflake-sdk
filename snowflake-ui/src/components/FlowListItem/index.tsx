@@ -4,13 +4,16 @@ import { Space } from 'antd';
 import { MdCircle, MdOutlineBook, MdSchedule } from 'react-icons/all';
 import * as snowUtil from '../../utils/snowUtils';
 import moment from 'moment';
+import { Flow, TriggerType } from '../../models/flow';
 
 export const FlowListItem = ({ flowInfo }) => {
-  const flow = flowInfo.account;
+  const flow: Flow = flowInfo.account;
 
   function pendingExecution() {
-    return moment().unix() < flow.nextExecutionTime;
+    if (flow.triggerType === TriggerType.None) return false;
+    else return flow.remainingRuns > 0;
   }
+
   return (
     <Link to={'/flowDetail/' + flowInfo.publicKey}>
       <div className="card">
@@ -37,7 +40,7 @@ export const FlowListItem = ({ flowInfo }) => {
                 <label>Next Execution</label> &nbsp;&nbsp;
                 <div className="iconAndText">
                   <MdCircle style={{ color: pendingExecution() ? 'lightgreen' : 'grey' }}></MdCircle>
-                  {pendingExecution() ? snowUtil.formatUnixTimeStamp(flow.nextExecutionTime) : 'None'}
+                  {pendingExecution() ? (flow.triggerType === TriggerType.Time ? snowUtil.formatUnixTimeStamp(flow.nextExecutionTime) : 'Awaiting Condition') : 'None'}
                 </div>
               </div>
             </Space>

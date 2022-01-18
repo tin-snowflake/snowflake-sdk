@@ -64,15 +64,15 @@ export async function convertFlow(flow, connection: ConnectionConfig, wallet: Wa
 }
 
 export async function convertUIFlow(uiFlow, connection: ConnectionConfig, wallet: WalletContextState): Promise<Flow> {
-  let flow = _.cloneDeep(uiFlow);
+  let flow: Flow = _.cloneDeep(uiFlow);
 
   // convert next execution time to unix timestamp
-  flow.nextExecutionTime = flow.nextExecutionTime ? new BN(flow.nextExecutionTime.unix()) : new BN(0);
+  flow.nextExecutionTime = flow.nextExecutionTime ? new BN(uiFlow.nextExecutionTime.unix()) : new BN(0);
 
-  flow.recurring = flow.recurring == RecurringUIOption.Yes ? true : false;
-  flow.retryWindow = new BN(flow.retryWindow);
+  flow.recurring = uiFlow.recurring == RecurringUIOption.Yes ? true : false;
+  flow.retryWindow = new BN(uiFlow.retryWindow);
   // convert last execution time just so anchor is not failing, we're not going to save last execution time
-  flow.lastScheduledExecution = flow.lastScheduledExecution ? new BN(flow.lastScheduledExecution.unix()) : new BN(0);
+  flow.lastScheduledExecution = flow.lastScheduledExecution ? new BN(uiFlow.lastScheduledExecution.unix()) : new BN(0);
 
   flow.userUtcOffset = new BN(new Date().getTimezoneOffset() * 60);
 
