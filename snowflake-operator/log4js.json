@@ -2,7 +2,10 @@
     "appenders": { 
         "operator": { 
             "type": "file", 
-            "filename": "logs/snow-operator.log"
+            "filename": "logs/snow-operator.log",
+            "maxLogSize": 10485760,
+            "compress": true
+
         }
     },
     "categories": { 

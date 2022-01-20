@@ -18,7 +18,7 @@ npm run deploy-lambda
 # 5. Run the operator locally
 npm start
 
-# 6. Setup Snow Operator on AWS EC2 (Ubuntu)
+# 6. Setup Snow Operator on a new AWS EC2 (Ubuntu)
 1. Configure EC2 environment variables:
 export ANCHOR_WALLET="/home/ubuntu/.config/solana/id.json"
 export ANCHOR_PROVIDER_URL="https://api.devnet.solana.com"
@@ -38,9 +38,16 @@ Unzip it to snow-operator directory
 cd snow-operator
 npm install
 
-5. Start the app
+# 7. Start and Stop the app
+1. Start the app
 nohup node snow-operator.js &
 echo $! > node-instance.pid
 
-6. Stop the app:
+2. Stop the app:
 kill `cat node-instance.pid`
+rm node-instance.pid
+
+# 8. Update the app
+1. Stop the app
+2. sftp to the EC2, upload any changes
+3. Start the app
