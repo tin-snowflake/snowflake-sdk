@@ -22,12 +22,10 @@
     "format:fix": "prettier --write \"**/*.+(js|jsx|ts|tsx|json|css|md)\""
   },
   "dependencies": {
-    "@orca-so/sdk": "^1.2.7",
-    "decimal.js": "^10.3.1",
-    "@solana/spl-token-swap": "^0.1.0",
     "@ant-design/icons": "^4.5.0",
     "@craco/craco": "^5.7.0",
     "@dbricks/dbricks-ts": "0.0.67",
+    "@orca-so/sdk": "^1.2.7",
     "@project-serum/anchor": "^0.16.2",
     "@project-serum/serum": "^0.13.34",
     "@project-serum/swap": "^0.1.0-alpha.32",
@@ -35,6 +33,7 @@
     "@saberhq/stableswap-sdk": "^1.4.1",
     "@solana/spl-token": "^0.1.6",
     "@solana/spl-token-registry": "^0.2.285",
+    "@solana/spl-token-swap": "^0.1.0",
     "@solana/wallet-adapter-ant-design": "^0.1.0",
     "@solana/wallet-adapter-base": "^0.4.1",
     "@solana/wallet-adapter-react": "^0.6.0",
@@ -50,6 +49,7 @@
     "buffer-layout": "^1.2.0",
     "craco-less": "^1.17.0",
     "cron-converter": "^1.0.1",
+    "decimal.js": "^10.3.1",
     "deep-equal": "^2.0.5",
     "eventemitter3": "^4.0.7",
     "jazzicon": "^1.5.0",
@@ -63,6 +63,7 @@
     "react-loader-spinner": "^4.0.0",
     "react-router-dom": "^5.2.0",
     "react-scripts": "3.4.3",
+    "react-use-intercom": "^1.4.1",
     "typescript": "^4.4.2"
   },
   "devDependencies": {

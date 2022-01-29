@@ -13,6 +13,7 @@ export const HomeView = () => {
       <PageHeader ghost={false} title="Your Automations" extra={[<NewAutomationButton />]}></PageHeader>
 
       {walletCtx.publicKey && <FlowList owner={walletCtx.publicKey} />}
+      {!walletCtx.publicKey && 'Connect your wallet to continue.'}
     </div>
   );
 };

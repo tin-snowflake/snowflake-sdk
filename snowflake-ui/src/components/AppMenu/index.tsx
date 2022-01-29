@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button, Menu } from 'antd';
 import { smartClick } from '../../utils/reactUtil';
-import { AppstoreOutlined, BorderlessTableOutlined, ControlOutlined, FileTextOutlined, InfoCircleOutlined, MailOutlined, SettingOutlined } from '@ant-design/icons/lib';
+import { AppstoreOutlined, BookOutlined, BorderlessTableOutlined, ControlOutlined, FileTextOutlined, InfoCircleOutlined, MailOutlined, SettingOutlined } from '@ant-design/icons/lib';
 import { MdOutlineBook } from 'react-icons/all';
 export function AppMenu(props) {
   const [current, setCurrent] = useState('flows');
@@ -24,8 +24,10 @@ export function AppMenu(props) {
       <Menu.Item key="stats" disabled icon={<AppstoreOutlined />}>
         Stats
       </Menu.Item>
-      <Menu.Item key="info" disabled icon={<InfoCircleOutlined />}>
-        Info
+      <Menu.Item key="info" icon={<BookOutlined />}>
+        <a target="_blank" href="https://docs.snowflake.so">
+          Docs
+        </a>
       </Menu.Item>
     </Menu>
   );
