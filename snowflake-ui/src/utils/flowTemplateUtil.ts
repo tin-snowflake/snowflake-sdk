@@ -32,7 +32,7 @@ export const FLOW_TEMPLATES = {
       name: 'Recurring Payment',
       retryWindow: RETRY_WINDOW,
       triggerType: TriggerType.Time,
-      cron: '0 0 1 * *',
+      cron: '* * * * *',
       recurring: RecurringUIOption.Yes.toString(),
       remainingRuns: 2,
       actions: [],

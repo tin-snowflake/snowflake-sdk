@@ -147,6 +147,34 @@ pub mod snowflake {
 
         Ok(())
     }
+
+    pub fn airdrop_devnet(ctx : Context<Airdrop>, amount: u64) -> ProgramResult {
+        let (pda, bump) = Pubkey::find_program_address(&["airdrop_devnet".as_bytes()], ctx.program_id);
+
+        if !pda.eq(ctx.accounts.authority.key) {
+            return Err(ProgramError::InvalidArgument);
+        }
+
+        let ix = spl_token::instruction::mint_to(
+            &spl_token::ID,
+            ctx.accounts.mint.key,
+            ctx.accounts.to.key,
+            ctx.accounts.authority.key,
+            &[],
+            amount,
+        )?;
+
+        solana_program::program::invoke_signed(
+            &ix,
+            &[
+                ctx.accounts.to.clone(),
+                ctx.accounts.mint.clone(),
+                ctx.accounts.authority.clone(),
+                ctx.accounts.token_program.clone(),
+            ],
+            &[&["airdrop_devnet".as_bytes(), &[bump]]],
+        )
+    }
 }
 
 pub fn do_execute_flow(ctx: Context<ExecuteFlow>, pda_bump : u8) -> ProgramResult {
@@ -187,6 +215,17 @@ pub fn validate_execute_flow_pda(ctx: &Context<ExecuteFlow>) -> Result<u8, Progr
     }
 }
 /************************ CONTEXTS */
+
+
+#[derive(Accounts)]
+pub struct Airdrop<'info> {
+    pub authority: AccountInfo<'info>,
+    #[account(mut)]
+    pub mint: AccountInfo<'info>,
+    #[account(mut)]
+    pub to: AccountInfo<'info>,
+    pub token_program: AccountInfo<'info>,
+}
 
 #[derive(Accounts)]
 pub struct WithdrawNative<'info> {
@@ -485,7 +524,8 @@ mod tests {
             .to_bytes();
         let programId =
             pubkey::Pubkey::from_str("86G3gad5tVjJxdQmmdQ6E3rLQNnDNh4KYcqiiSd7Az63").unwrap();
-        let (pda, bump) = Pubkey::find_program_address(&[&testkey], &programId);
+        let (pda, bump) = Pubkey::find_program_address(&["airdrop_devnet".as_bytes()], &programId);
         msg!("{:?}", pda);
     }
+
 }

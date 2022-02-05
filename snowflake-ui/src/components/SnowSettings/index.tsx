@@ -22,17 +22,21 @@ import { TokenListWithBalances } from '../TokenListWithBalances';
 import { programIds } from '../../utils/ids';
 import { fromLamportsDecimals, toLamports, toLamportsByDecimal } from '../../utils/utils';
 import { SnowDepositButton } from '../SnowDepositButton';
-import { FormValidatorProvider } from '../FormValidator';
+import { FormValidatorProvider, validateForm } from '../FormValidator';
 import { SnowWithdrawButton } from '../SnowWithdrawButton';
+import BN from 'bn.js';
+import { createAssociatedTokenAccountIfNotExist } from '../../utils/tokens';
+import { useDevnetAirdropAction } from '../../hooks/useDevnetAirdropAction';
 
 export const SnowSettings = ({}) => {
   const program = useAnchorProgram();
   const connectionConfig = useConnectionConfig();
   const walletCtx = useWallet();
-
+  const devnetAirdropAction: () => Promise<any> = useDevnetAirdropAction();
   const [solBalance, setSolBalance] = useState(0);
   const [pda, setPda] = useState(undefined);
   let [balanceRefresh, setBalanceRefresh] = useState(+new Date());
+
   async function init() {
     if (!walletCtx.publicKey) return;
     const [pda, bump] = await PublicKey.findProgramAddress([walletCtx.publicKey.toBuffer()], new PublicKey(programIds().snowflake));
@@ -65,7 +69,7 @@ export const SnowSettings = ({}) => {
                 </Card>
 
                 <Card
-                  title="Snowflake Balance"
+                  title="Your Snowflake Balance"
                   size="small"
                   extra={
                     <span>
@@ -80,16 +84,22 @@ export const SnowSettings = ({}) => {
                   }>
                   {pda && <TokenListWithBalances owner={pda} balanceRefresh={balanceRefresh} />}
                 </Card>
-                {/* <Card title="Others" size="small">
-                  <div className="labelLayout">
-                    <div>
-                      <label style={{ width: '400px' }}>Your Snowflake Address :</label> {pda && pda.toString()}
-                      <br />
-                    </div>
-                  </div>
-                  <br />
-                  <br />
-                </Card>*/}
+                <Card
+                  title="Your Wallet"
+                  size="small"
+                  extra={
+                    <span>
+                      <SensitiveButton
+                        onClick={async () => {
+                          await devnetAirdropAction();
+                          setBalanceRefresh(+new Date());
+                        }}>
+                        Airdrop USDC (devnet)
+                      </SensitiveButton>
+                    </span>
+                  }>
+                  {<TokenListWithBalances owner={walletCtx.publicKey} balanceRefresh={balanceRefresh} />}
+                </Card>
               </Form>
 
               <br />
