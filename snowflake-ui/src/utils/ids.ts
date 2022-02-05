@@ -1,4 +1,5 @@
 import { PublicKey } from '@solana/web3.js';
+import { ENV as ChainID } from '@solana/spl-token-registry/dist/main/lib/tokenlist';
 
 export const PROGRAM_IDS = [
   {
@@ -45,3 +46,19 @@ export const RENT_PROGRAM_ID = new PublicKey('SysvarRent111111111111111111111111
 export const CLOCK_PROGRAM_ID = new PublicKey('SysvarC1ock11111111111111111111111111111111');
 export const ASSOCIATED_TOKEN_PROGRAM_ID = new PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL');
 export const PRICE_CHECKER_PROGRAM_ID = new PublicKey('8BVA9L8pTTPxcrP7AS9M9957Qy8WUBSLmgh37vUvUdRe');
+export const DEVNET_USDC_TOKEN = new PublicKey('65sjMDWT2fe8sYfwcso9fTHo9AZsh3Q2Ed28jEf5g11V');
+
+export const EXTRA_DEVNET_TOKENS = [
+  {
+    chainId: ChainID.Devnet,
+    address: DEVNET_USDC_TOKEN.toString(),
+    symbol: 'USDC',
+    name: 'USDC Snowflake',
+    decimals: 9,
+    logoURI: 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v/logo.png',
+    tags: [],
+    extensions: {
+      coingeckoId: 'solana',
+    },
+  },
+];

@@ -9,7 +9,7 @@ import { MintParser, TokenAccountParser } from '../../contexts/accounts';
 import BufferLayout from 'buffer-layout';
 import * as Layout from '../../utils/layout';
 import { fromLamports, toLamports } from '../../utils/utils';
-import { programIds } from '../../utils/ids';
+import { DEVNET_USDC_TOKEN, programIds } from '../../utils/ids';
 import { authorizeFullBalance, createAssociatedTokenAccountIfNotExist, getAssociatedTokenAddress } from '../../utils/tokens';
 import { Token } from '@solana/spl-token';
 import { useWallet } from '@solana/wallet-adapter-react';
@@ -105,7 +105,7 @@ export class PaymentAction implements FlowActionResolver {
 
   initNewAction(action) {
     if (!action.recipient) action.recipient = {};
-    if (!action.token) action.token = { mint: 'So11111111111111111111111111111111111111112' };
+    if (!action.token) action.token = { mint: DEVNET_USDC_TOKEN.toString() };
   }
 
   async outputInstructions(ctx: ActionContext): Promise<OutputIXSet[]> {

@@ -13,6 +13,7 @@ import { Test } from './components/Test';
 import { EditFlowWrapper } from './components/EditFlowWrapper';
 import { SnowSettings } from './components/SnowSettings';
 import { GlobalView } from './components/GlobalView';
+import { OnboardUserDevenet } from './components/OnboardUserDevnet';
 
 export function Routes() {
   const wallets = useMemo(
@@ -52,6 +53,7 @@ export function Routes() {
                   <Route exact path="/faucet" children={<FaucetView />} />
                 </Switch>
               </AppLayout>
+              <OnboardUserDevenet />
             </MarketProvider>
           </AccountsProvider>
         </WalletProvider>

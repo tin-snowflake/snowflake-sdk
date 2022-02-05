@@ -3,7 +3,7 @@ import { Keypair, clusterApiUrl, Connection, PublicKey, Transaction, Transaction
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { notify } from './../utils/notifications';
 import { ExplorerLink } from '../components/ExplorerLink';
-import { setProgramIds, SOL_MINT, WRAPPED_SOL_MINT } from '../utils/ids';
+import { EXTRA_DEVNET_TOKENS, setProgramIds, SOL_MINT, WRAPPED_SOL_MINT } from '../utils/ids';
 import { cache, getMultipleAccounts, MintParser } from './accounts';
 import { TokenListProvider, ENV as ChainID, TokenInfo } from '@solana/spl-token-registry';
 import { WalletAdapter } from '@solana/wallet-adapter-base';
@@ -90,7 +90,7 @@ export function ConnectionProvider({ children = undefined as any }) {
       });
 
       list.push({
-        chainId: 103,
+        chainId: ChainID.Devnet,
         address: SOL_MINT.toString(),
         symbol: 'SOL',
         name: 'Native SOL',
@@ -101,6 +101,9 @@ export function ConnectionProvider({ children = undefined as any }) {
           coingeckoId: 'solana',
         },
       });
+
+      list.push(...EXTRA_DEVNET_TOKENS);
+
       const knownMints = list.reduce((map, item) => {
         map.set(item.address, item);
         return map;
