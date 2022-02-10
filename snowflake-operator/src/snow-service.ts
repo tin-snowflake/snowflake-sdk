@@ -1,4 +1,4 @@
-import { PublicKey, SystemProgram, TransactionInstruction, Transaction } from "@solana/web3.js";
+import { PublicKey, SystemProgram, TransactionInstruction, Transaction, Keypair } from "@solana/web3.js";
 import {Provider, Program, ProgramAccount, setProvider } from "@project-serum/anchor";
 import log4js from 'log4js';
 
@@ -6,8 +6,10 @@ log4js.configure('log4js.json');
 const logger = log4js.getLogger("Operator");
 
 const MEMO_PROGRAM_ID = new PublicKey('Memo1UhkJRfHyvLMcVucJwxXeuD728EqVDDwQDxFMNo');
-const SNOW_PROGRAM_ID = '86G3gad5tVjJxdQmmdQ6E3rLQNnDNh4KYcqiiSd7Az63';
+// const SNOW_PROGRAM_ID = '86G3gad5tVjJxdQmmdQ6E3rLQNnDNh4KYcqiiSd7Az63';
+const SNOW_PROGRAM_ID = '3K4NPJKUJLbgGfxTJumtxv3U3HeJbS3nVjwy8CqFj6F2';
 const SNOW_IDL = 'idl/snowflake.json';
+const SNF_APP_SETTINGS = new PublicKey('BFHUu5FLD32mX2KtvDgzfPYNfANqjKmbUG3ow1wFPwj6');
 
 const TRIGGER_TYPE_TIME = 2;
 const TRIGGER_TYPE_PROGRAM = 3;
@@ -76,7 +78,8 @@ export default class SnowService {
         flow: flowAddress,
         caller: operatorWalletKey,
         pda: pda,
-        systemProgram: SystemProgram.programId
+        systemProgram: SystemProgram.programId,
+        appSettings: SNF_APP_SETTINGS,
       };
 
       let remainAccountMetas = flow.account.actions.reduce(
@@ -152,7 +155,8 @@ export default class SnowService {
         flow: flowAddress,
         caller: operatorWalletKey,
         pda: pda,
-        systemProgram: SystemProgram.programId
+        systemProgram: SystemProgram.programId,
+        appSettings: SNF_APP_SETTINGS,
       };
 
       const ix = await this.program.instruction.markTimedFlowAsError({
@@ -187,4 +191,5 @@ export default class SnowService {
     
     return connection.sendRawTransaction(signedTransaction.serialize())
   }
+
 }

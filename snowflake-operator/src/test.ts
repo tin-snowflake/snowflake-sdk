@@ -9,17 +9,6 @@ async function main() {
   //   await snowService.markTimedFlowAsError(flow);
   // }
  
-  let flows = await snowService.listFlowsToBeExecuted();
-  console.log('Flows: ', flows);
-  
-  for (let flow of flows) {
-    if (flow.publicKey.toBase58().endsWith('fYbhaQAjgw')) {
-      console.log('Executing flow: ', flow.account.name);
-      
-      await snowService.excecuteFlow(flow);
-    }
-    
-  } 
 }
 
 main().then(() => console.log('Success'));
