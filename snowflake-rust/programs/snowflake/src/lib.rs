@@ -21,6 +21,9 @@ const TIMED_FLOW_ERROR: i64 = -1;
 const OPERATOR_TIME_SLOT: i64 = 20;
 const SNF_APP_SETTINGS_KEY: &str = "BFHUu5FLD32mX2KtvDgzfPYNfANqjKmbUG3ow1wFPwj6";
 
+const PAY_FEE_FROM_ACCOUNT: u8 = 1;
+const PAY_FEE_FROM_FLOW: u8 = 2;
+
 // declare_id!("86G3gad5tVjJxdQmmdQ6E3rLQNnDNh4KYcqiiSd7Az63");
 declare_id!("3K4NPJKUJLbgGfxTJumtxv3U3HeJbS3nVjwy8CqFj6F2");
 
@@ -369,14 +372,21 @@ pub struct RegisterOperator<'info> {
 pub struct Flow {
     pub flow_owner: Pubkey,
     pub trigger_type: u8,
+    pub pay_fee_from: u8,
     pub recurring: bool,
     pub remaining_runs: i16,
+    pub schedule_end_date: i64,
     pub next_execution_time: i64,
     pub retry_window: i64,
     pub last_scheduled_execution: i64,
     pub user_utc_offset: i64,
+    pub expiry_date: i64,
+    pub expire_on_complete: bool,
+    pub client_app_id: Pubkey,
+    pub external_id: String,
     pub cron: String,
     pub name: String,
+    pub extra: String,
     pub actions: Vec<Action>,
 }
 
@@ -390,6 +400,13 @@ impl Flow {
         self.name = client_flow.name;
         self.actions = client_flow.actions;
         self.user_utc_offset = client_flow.user_utc_offset;
+        self.pay_fee_from = client_flow.pay_fee_from;
+        self.client_app_id = client_flow.client_app_id;
+        self.external_id = client_flow.external_id;
+        self.schedule_end_date = 0;
+        self.expiry_date = 0;
+        self.expire_on_complete = false;
+        self.extra = String::from("");
 
         if self.trigger_type == TRIGGER_TYPE_TIME {
             if self.retry_window < 1 {
@@ -476,6 +493,7 @@ pub struct Action {
     instruction: Vec<u8>,
     program: Pubkey,
     accounts: Vec<TargetAccountSpec>,
+    extra: String
 }
 
 impl Action {

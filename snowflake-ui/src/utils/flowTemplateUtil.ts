@@ -122,4 +122,7 @@ export const FLOW_TEMPLATES = {
       ],
     },
   },
+  [ENV.localnet]: {
+    [TEMPLATE.blank]: BLANK_TEMPLATE,
+  },
 };
