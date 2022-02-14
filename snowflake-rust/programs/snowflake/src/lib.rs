@@ -6,7 +6,6 @@ use anchor_lang::solana_program::instruction::Instruction;
 use cron::Crontab;
 use crate::cron::Tm;
 use anchor_lang::solana_program::program::invoke_signed;
-use solana_program::system_program;
 
 const TRIGGER_TYPE_NONE: u8 = 1;
 const TRIGGER_TYPE_TIME: u8 = 2;
@@ -21,7 +20,6 @@ const TIMED_FLOW_ERROR: i64 = -1;
 const OPERATOR_TIME_SLOT: i64 = 20;
 const SNF_APP_SETTINGS_KEY: &str = "BFHUu5FLD32mX2KtvDgzfPYNfANqjKmbUG3ow1wFPwj6";
 
-const PAY_FEE_FROM_ACCOUNT: u8 = 1;
 const PAY_FEE_FROM_FLOW: u8 = 2;
 
 // declare_id!("86G3gad5tVjJxdQmmdQ6E3rLQNnDNh4KYcqiiSd7Az63");
@@ -575,16 +573,23 @@ fn charge_fee(ctx: &Context<ExecuteFlow>, pda_bump: u8) -> ProgramResult {
     let pda = &ctx.accounts.pda;
     let caller = &ctx.accounts.caller;
     let flow = &ctx.accounts.flow;
-    let ix = solana_program::system_instruction::transfer(
-        &pda.key,
-        &caller.key,
-        fee,
-    );
-    invoke_signed(
-        &ix,
-        &[caller.to_account_info(), pda.to_account_info()],
-        &[&[&flow.flow_owner.to_bytes(), &[pda_bump]]],
-    )?;
+
+    if flow.pay_fee_from == PAY_FEE_FROM_FLOW {
+        let flow_account = flow.to_account_info();
+        **flow_account.try_borrow_mut_lamports()? -= fee;
+        **caller.try_borrow_mut_lamports()? += fee;
+    } else {
+        let ix = solana_program::system_instruction::transfer(
+            &pda.key,
+            &caller.key,
+            fee,
+        );
+        invoke_signed(
+            &ix,
+            &[caller.to_account_info(), pda.to_account_info()],
+            &[&[&flow.flow_owner.to_bytes(), &[pda_bump]]],
+        )?;
+    }
     Ok(())
 }
 

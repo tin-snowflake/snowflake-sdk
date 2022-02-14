@@ -5,7 +5,7 @@ async function main() {
   // await snowService.initAppSettingsAccount();
   // await snowService.checkOperator();
   await snowService.retriveAppSettingsAccount();
-  // await snowService.registerOperator("2m3hGPuvpmjwVt6gD8juQ1VckmDcdKWoqmeu7F9afpnc");
+  // await snowService.registerOperator("GSm63hkFKvpyPFtWCzR5wwD9NjxRjACDg7Tk3HTvdsHh");
 
 }
 

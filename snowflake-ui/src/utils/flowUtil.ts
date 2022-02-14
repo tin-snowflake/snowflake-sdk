@@ -121,7 +121,7 @@ export function getStatus(uiFlow: UIFlow | any): STATUS {
     else return STATUS.TOO_OLD;
   } else {
     // PROGRAM TRIGGER
-    if (uiFlow.remainingRuns == 0) return STATUS.COMPLETED;
+    if (uiFlow.remainingRuns == 0 && uiFlow.lastScheduledExecution) return STATUS.COMPLETED;
     else return STATUS.MONITORING_EXECUTION;
   }
 
