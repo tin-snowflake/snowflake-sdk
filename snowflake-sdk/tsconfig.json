@@ -9,10 +9,12 @@
       "node_modules/@types"
     ],
     "types": [
-      "node"
+      "node", "@types/jest"
     ],
     "esModuleInterop": true,
-    "inlineSourceMap": true
+    "inlineSourceMap": true,
+    "strictPropertyInitialization" : false,
+    "resolveJsonModule": true
   },
   "include": ["src"]
 }
