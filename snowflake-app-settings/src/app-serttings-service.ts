@@ -88,7 +88,11 @@ export default class AppSettingsService {
     console.log("transaction signature: ", tx);
   }
 
-
+  async retriveFlowAccount(flowKey: String) {
+    let flowPubKey = new PublicKey(flowKey);
+    const flow = await this.program.account.flow.fetch(flowPubKey);
+    console.log("Flow Details: ", flow);
+  }
 
 
   async sendInstruction(ix: TransactionInstruction, signers: Keypair[]): Promise<string> {

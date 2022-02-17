@@ -371,6 +371,7 @@ pub struct Flow {
     pub flow_owner: Pubkey,
     pub trigger_type: u8,
     pub pay_fee_from: u8,
+    pub dedicated_operator: Pubkey,
     pub recurring: bool,
     pub remaining_runs: i16,
     pub schedule_end_date: i64,
@@ -380,6 +381,9 @@ pub struct Flow {
     pub user_utc_offset: i64,
     pub expiry_date: i64,
     pub expire_on_complete: bool,
+    pub created_date: i64,
+    pub last_rent_charged: i64,
+    pub last_updated_date: i64,
     pub client_app_id: Pubkey,
     pub external_id: String,
     pub cron: String,
@@ -693,19 +697,19 @@ mod tests {
         let checkop2 = app_settings.can_operator_excecute_flow(now, &flow1, &operator2);
         println! ("Op 1 - {}, Op 2 - {}, Op 3 - {}", checkop0, checkop1, checkop2);
 
-        now += 5;
+        now += OPERATOR_TIME_SLOT;
         let checkop0 = app_settings.can_operator_excecute_flow(now, &flow1, &operator0);
         let checkop1 = app_settings.can_operator_excecute_flow(now, &flow1, &operator1);
         let checkop2 = app_settings.can_operator_excecute_flow(now, &flow1, &operator2);
         println! ("Op 1 - {}, Op 2 - {}, Op 3 - {}", checkop0, checkop1, checkop2);
 
-        now += 5;
+        now += OPERATOR_TIME_SLOT;
         let checkop0 = app_settings.can_operator_excecute_flow(now, &flow1, &operator0);
         let checkop1 = app_settings.can_operator_excecute_flow(now, &flow1, &operator1);
         let checkop2 = app_settings.can_operator_excecute_flow(now, &flow1, &operator2);
         println! ("Op 1 - {}, Op 2 - {}, Op 3 - {}", checkop0, checkop1, checkop2);
 
-        now += 5;
+        now += OPERATOR_TIME_SLOT;
         let checkop0 = app_settings.can_operator_excecute_flow(now, &flow1, &operator0);
         let checkop1 = app_settings.can_operator_excecute_flow(now, &flow1, &operator1);
         let checkop2 = app_settings.can_operator_excecute_flow(now, &flow1, &operator2);
