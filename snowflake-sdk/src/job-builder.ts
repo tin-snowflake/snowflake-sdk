@@ -37,7 +37,7 @@ export class JobBuilder {
     this.job.recurring = true;
     this.job.cron = cron;
     this.job.remainingRuns = numberOfExecutions;
-    this.job.userTimezoneOffset =
+    this.job.userUtcOffset =
       userTimezoneOffset == undefined
         ? new Date().getTimezoneOffset() * 60
         : userTimezoneOffset;

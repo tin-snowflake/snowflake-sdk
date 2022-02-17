@@ -91,6 +91,11 @@
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "appSettings",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": []
@@ -117,6 +122,11 @@
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "appSettings",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": []
@@ -141,6 +151,11 @@
         },
         {
           "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "appSettings",
           "isMut": false,
           "isSigner": false
         }
@@ -210,6 +225,48 @@
       ]
     },
     {
+      "name": "initAppSettings",
+      "accounts": [
+        {
+          "name": "appSettings",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "snfFoundation",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "registerOperator",
+      "accounts": [
+        {
+          "name": "appSettings",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "caller",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "operator",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "airdropDevnet",
       "accounts": [
         {
@@ -256,12 +313,24 @@
             "type": "u8"
           },
           {
+            "name": "payFeeFrom",
+            "type": "u8"
+          },
+          {
+            "name": "dedicatedOperator",
+            "type": "publicKey"
+          },
+          {
             "name": "recurring",
             "type": "bool"
           },
           {
             "name": "remainingRuns",
             "type": "i16"
+          },
+          {
+            "name": "scheduleEndDate",
+            "type": "i64"
           },
           {
             "name": "nextExecutionTime",
@@ -280,11 +349,43 @@
             "type": "i64"
           },
           {
+            "name": "expiryDate",
+            "type": "i64"
+          },
+          {
+            "name": "expireOnComplete",
+            "type": "bool"
+          },
+          {
+            "name": "createdDate",
+            "type": "i64"
+          },
+          {
+            "name": "lastRentCharged",
+            "type": "i64"
+          },
+          {
+            "name": "lastUpdatedDate",
+            "type": "i64"
+          },
+          {
+            "name": "clientAppId",
+            "type": "publicKey"
+          },
+          {
+            "name": "externalId",
+            "type": "string"
+          },
+          {
             "name": "cron",
             "type": "string"
           },
           {
             "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "extra",
             "type": "string"
           },
           {
@@ -294,6 +395,32 @@
                 "defined": "Action"
               }
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "AppSettings",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "snfFoundation",
+            "type": "publicKey"
+          },
+          {
+            "name": "operators",
+            "type": {
+              "vec": "publicKey"
+            }
+          },
+          {
+            "name": "operatorToCheckIndex",
+            "type": "i32"
+          },
+          {
+            "name": "lastCheckTime",
+            "type": "i64"
           }
         ]
       }
@@ -328,6 +455,10 @@
                 "defined": "TargetAccountSpec"
               }
             }
+          },
+          {
+            "name": "extra",
+            "type": "string"
           }
         ]
       }
@@ -361,6 +492,6 @@
     }
   ],
   "metadata": {
-    "address": "86G3gad5tVjJxdQmmdQ6E3rLQNnDNh4KYcqiiSd7Az63"
+    "address": "3K4NPJKUJLbgGfxTJumtxv3U3HeJbS3nVjwy8CqFj6F2"
   }
 }

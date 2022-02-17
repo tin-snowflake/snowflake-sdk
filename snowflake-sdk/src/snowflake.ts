@@ -5,7 +5,7 @@ import { Job } from "./model";
 import { InstructionBuilder } from "./instruction-builder";
 import { TransactionSender } from "./transaction-sender";
 
-const SNOW_PROGRAM_ID = "86G3gad5tVjJxdQmmdQ6E3rLQNnDNh4KYcqiiSd7Az63";
+export const SNOW_PROGRAM_ID = "3K4NPJKUJLbgGfxTJumtxv3U3HeJbS3nVjwy8CqFj6F2";
 
 export default class Snowflake {
   program: Program;
