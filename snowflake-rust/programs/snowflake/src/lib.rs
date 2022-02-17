@@ -308,7 +308,7 @@ pub struct Withdraw<'info> {
 
 #[derive(Accounts)]
 pub struct CreateFlow<'info> {
-    #[account(init, payer = flow_owner, space = 4992)]
+    #[account(init, payer = flow_owner, space = 4994)]
     flow: Account<'info, Flow>,
     #[account(signer)]
     pub flow_owner: AccountInfo<'info>,

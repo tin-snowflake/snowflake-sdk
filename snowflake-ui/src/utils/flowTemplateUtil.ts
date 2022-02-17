@@ -16,6 +16,30 @@ export const BLANK_TEMPLATE = {
   actions: [],
 };
 
+export const SAMPLE_PROGRAM_CONDITION_TEMPLATE = {
+  name: 'A sample program condition flow',
+  retryWindow: RETRY_WINDOW,
+  triggerType: TriggerType.ProgramCondition,
+  cron: defaultCron,
+  recurring: RecurringUIOption.No,
+  remainingRuns: 2,
+  actions: [
+    {
+      name: 'custom',
+      actionCode: ACTION_TYPES.customAction.code,
+      instruction: '74b89fceb3e0b22a',
+      program: 'ETwBdF9X2eABzmKmpT3ZFYyUtmve7UWWgzbERAyd4gAC',
+      accounts: [
+        {
+          pubkey: '5jo4Lh2Z9FGQ87sDhUBwZjNZdL15MwdeT5WUXKfwFSZY',
+          isSigner: false,
+          isWritable: false,
+        },
+      ],
+    },
+  ],
+};
+
 export enum TEMPLATE {
   blank = 'blank',
   recurringPayment = 'recurringPayment',
@@ -37,29 +61,7 @@ export const FLOW_TEMPLATES = {
       remainingRuns: 2,
       actions: [],
     },
-    [TEMPLATE.sampleProgramConditionFlow]: {
-      name: 'A sample program condition flow',
-      retryWindow: RETRY_WINDOW,
-      triggerType: TriggerType.ProgramCondition,
-      cron: defaultCron,
-      recurring: RecurringUIOption.No,
-      remainingRuns: 2,
-      actions: [
-        {
-          name: 'custom',
-          actionCode: ACTION_TYPES.customAction.code,
-          instruction: '74b89fceb3e0b22a',
-          program: 'ETwBdF9X2eABzmKmpT3ZFYyUtmve7UWWgzbERAyd4gAC',
-          accounts: [
-            {
-              pubkey: '5jo4Lh2Z9FGQ87sDhUBwZjNZdL15MwdeT5WUXKfwFSZY',
-              isSigner: false,
-              isWritable: false,
-            },
-          ],
-        },
-      ],
-    },
+    [TEMPLATE.sampleProgramConditionFlow]: SAMPLE_PROGRAM_CONDITION_TEMPLATE,
     [TEMPLATE.oneOffScheduledCustomAction]: {
       name: 'A once-off time scheduled automation',
       retryWindow: RETRY_WINDOW,
@@ -124,5 +126,6 @@ export const FLOW_TEMPLATES = {
   },
   [ENV.localnet]: {
     [TEMPLATE.blank]: BLANK_TEMPLATE,
+    [TEMPLATE.sampleProgramConditionFlow]: SAMPLE_PROGRAM_CONDITION_TEMPLATE,
   },
 };

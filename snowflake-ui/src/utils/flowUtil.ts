@@ -23,7 +23,7 @@ function flowOwnedAccountsFilter(publicKey: PublicKey) {
 }
 
 let dataSizeFilter = {
-  dataSize: 4992,
+  dataSize: 4994,
 };
 
 export async function fetchFlowsByOwner(program: Program, publicKey: PublicKey) {
@@ -81,14 +81,14 @@ export async function convertUIFlow(uiFlow, connection: ConnectionConfig, wallet
   flow.expiryDate = new BN(0);
   flow.expireOnComplete = false;
   flow.clientAppId = SNOWFLAKE_PROGRAM_ID;
-  flow.externalId = "";
-  flow.extra = "";
+  flow.externalId = '';
+  flow.extra = '';
 
   for (const [i, action] of flow.actions.entries()) {
     const actionType = flowActionUtil.actionTypeFromCode(action.actionCode);
     const actionContext: ActionContext = { action: action, connectionConfig: connection, wallet: wallet };
     flow.actions[i] = await actionType.convertUIAction(actionContext);
-    flow.actions[i].extra = "";
+    flow.actions[i].extra = '';
   }
 
   // the flow that we send to the cluster doesn't need owner
