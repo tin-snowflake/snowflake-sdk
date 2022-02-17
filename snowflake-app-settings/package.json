@@ -1,0 +1,10 @@
+{
+    "scripts": {
+    },
+    "dependencies": {
+        "@project-serum/anchor": "^0.17.0"
+    },
+    "devDependencies": {
+        "@types/node": "^16.11.10"
+    }
+}

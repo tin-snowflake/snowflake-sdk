@@ -17,7 +17,13 @@ const DEFAULT_RETRY_WINDOW: i64 = 300;
 const TIMED_FLOW_COMPLETE: i64 = 0;
 const TIMED_FLOW_ERROR: i64 = -1;
 
-declare_id!("86G3gad5tVjJxdQmmdQ6E3rLQNnDNh4KYcqiiSd7Az63");
+const OPERATOR_TIME_SLOT: i64 = 20;
+const SNF_APP_SETTINGS_KEY: &str = "BFHUu5FLD32mX2KtvDgzfPYNfANqjKmbUG3ow1wFPwj6";
+
+const PAY_FEE_FROM_FLOW: u8 = 2;
+
+// declare_id!("86G3gad5tVjJxdQmmdQ6E3rLQNnDNh4KYcqiiSd7Az63");
+declare_id!("3K4NPJKUJLbgGfxTJumtxv3U3HeJbS3nVjwy8CqFj6F2");
 
 #[program]
 pub mod snowflake {
@@ -25,6 +31,7 @@ pub mod snowflake {
     use spl_token::solana_program::program::invoke_signed;
     use anchor_lang::solana_program;
     use spl_token::instruction;
+    use anchor_lang::__private::bytemuck::__core::str::FromStr;
 
     pub fn create_flow(ctx: Context<CreateFlow>, client_flow: Flow) -> ProgramResult {
         let flow = &mut ctx.accounts.flow;
@@ -69,16 +76,29 @@ pub mod snowflake {
         Ok(())
     }
 
-    pub fn execute_flow(ctx: Context<ExecuteFlow>) -> ProgramResult {
+    pub fn execute_flow<'info>(ctx: Context<'_,'_,'_, 'info, ExecuteFlow<'info>>) -> ProgramResult {
         let pda_bump = validate_execute_flow_pda(&ctx)?;
+
         do_execute_flow(ctx, pda_bump)
     }
 
-    pub fn execute_scheduled_flow(ctx: Context<ExecuteFlow>) -> ProgramResult {
+    pub fn execute_scheduled_flow<'info>(ctx: Context<'_,'_,'_, 'info, ExecuteFlow<'info>>) -> ProgramResult {
         let pda_bump = validate_execute_flow_pda(&ctx)?;
-        charge_fee(&ctx, pda_bump);
+        charge_fee(&ctx, pda_bump);        
+
+        let operator = &ctx.accounts.caller;
+        let app_settings = &ctx.accounts.app_settings;
         let flow = &mut ctx.accounts.flow;
         let now = Clock::get()?.unix_timestamp;
+
+        let sfn_app_settings_key = Pubkey::from_str(SNF_APP_SETTINGS_KEY).unwrap();
+        if app_settings.key() != sfn_app_settings_key {
+            return Err(ProgramError::Custom(4));
+        }
+        
+        if !app_settings.can_operator_excecute_flow(now, &flow.key(), operator.key) {
+            return Err(ProgramError::Custom(3));
+        }
 
         if !flow.is_due_for_execute(now) {
             return Err(ProgramError::Custom(1));
@@ -148,6 +168,37 @@ pub mod snowflake {
         Ok(())
     }
 
+    pub fn init_app_settings(ctx: Context<InitAppSettings>) -> ProgramResult {
+        let app_settings = &mut ctx.accounts.app_settings;
+        app_settings.snf_foundation = ctx.accounts.snf_foundation.key();
+        app_settings.operators = Vec::new();
+        app_settings.operator_to_check_index = -1;
+        Ok(())
+    }
+
+    pub fn register_operator(ctx: Context<RegisterOperator>) -> ProgramResult {
+        let app_settings = &mut ctx.accounts.app_settings;
+        let caller = &ctx.accounts.caller;
+        let operator = &ctx.accounts.operator;
+
+        //Only SNF Foundation can register new operator
+        if app_settings.snf_foundation != *caller.key {
+            return Err(ProgramError::IllegalOwner);
+        }
+
+        //If key is already in the list - don't add
+        if app_settings.is_operator_registered(operator.key) {
+            return Err(ProgramError::Custom(1));
+        }
+       
+        app_settings.operators.push(*operator.key);
+        if app_settings.operator_to_check_index == -1 {
+            app_settings.operator_to_check_index = 0;
+        }
+
+        Ok(())
+    }
+    
     pub fn airdrop_devnet(ctx : Context<Airdrop>, amount: u64) -> ProgramResult {
         let (pda, bump) = Pubkey::find_program_address(&["airdrop_devnet".as_bytes()], ctx.program_id);
 
@@ -177,7 +228,7 @@ pub mod snowflake {
     }
 }
 
-pub fn do_execute_flow(ctx: Context<ExecuteFlow>, pda_bump : u8) -> ProgramResult {
+pub fn do_execute_flow<'info>(ctx: Context<'_,'_,'_, 'info,ExecuteFlow<'info>>, pda_bump : u8) -> ProgramResult {
     let flow = &ctx.accounts.flow;
     let pda = &ctx.accounts.pda.key();
 
@@ -195,7 +246,7 @@ pub fn do_execute_flow(ctx: Context<ExecuteFlow>, pda_bump : u8) -> ProgramResul
             accounts: metas,
             data: action.instruction.clone(),
         };
-
+      
         invoke_signed(
             &ix,
             ctx.remaining_accounts,
@@ -214,6 +265,7 @@ pub fn validate_execute_flow_pda(ctx: &Context<ExecuteFlow>) -> Result<u8, Progr
         Err(ProgramError::InvalidArgument)
     }
 }
+
 /************************ CONTEXTS */
 
 
@@ -256,7 +308,7 @@ pub struct Withdraw<'info> {
 
 #[derive(Accounts)]
 pub struct CreateFlow<'info> {
-    #[account(init, payer = flow_owner, space = 4992)]
+    #[account(init, payer = flow_owner, space = 4994)]
     flow: Account<'info, Flow>,
     #[account(signer)]
     pub flow_owner: AccountInfo<'info>,
@@ -288,6 +340,27 @@ pub struct ExecuteFlow<'info> {
     #[account(signer,mut)]
     pub caller: AccountInfo<'info>,
     pub system_program: AccountInfo<'info>,
+    #[account()]
+    pub app_settings: Account<'info, AppSettings>,
+
+}
+
+#[derive(Accounts)]
+pub struct InitAppSettings<'info> {
+    #[account(init, payer = snf_foundation, space = 1000)]
+    app_settings: Account<'info, AppSettings>,
+    #[account(signer)]
+    pub snf_foundation: AccountInfo<'info>,
+    pub system_program: AccountInfo<'info>,
+}
+
+#[derive(Accounts)]
+pub struct RegisterOperator<'info> {
+    #[account(mut)]
+    app_settings: Account<'info, AppSettings>,
+    #[account(signer)]
+    pub caller: AccountInfo<'info>,
+    pub operator: AccountInfo<'info>,
 }
 
 
@@ -297,14 +370,25 @@ pub struct ExecuteFlow<'info> {
 pub struct Flow {
     pub flow_owner: Pubkey,
     pub trigger_type: u8,
+    pub pay_fee_from: u8,
+    pub dedicated_operator: Pubkey,
     pub recurring: bool,
     pub remaining_runs: i16,
+    pub schedule_end_date: i64,
     pub next_execution_time: i64,
     pub retry_window: i64,
     pub last_scheduled_execution: i64,
     pub user_utc_offset: i64,
+    pub expiry_date: i64,
+    pub expire_on_complete: bool,
+    pub created_date: i64,
+    pub last_rent_charged: i64,
+    pub last_updated_date: i64,
+    pub client_app_id: Pubkey,
+    pub external_id: String,
     pub cron: String,
     pub name: String,
+    pub extra: String,
     pub actions: Vec<Action>,
 }
 
@@ -318,6 +402,13 @@ impl Flow {
         self.name = client_flow.name;
         self.actions = client_flow.actions;
         self.user_utc_offset = client_flow.user_utc_offset;
+        self.pay_fee_from = client_flow.pay_fee_from;
+        self.client_app_id = client_flow.client_app_id;
+        self.external_id = client_flow.external_id;
+        self.schedule_end_date = 0;
+        self.expiry_date = 0;
+        self.expire_on_complete = false;
+        self.extra = String::from("");
 
         if self.trigger_type == TRIGGER_TYPE_TIME {
             if self.retry_window < 1 {
@@ -404,6 +495,7 @@ pub struct Action {
     instruction: Vec<u8>,
     program: Pubkey,
     accounts: Vec<TargetAccountSpec>,
+    extra: String
 }
 
 impl Action {
@@ -434,6 +526,43 @@ impl From<&TargetAccountSpec> for AccountMeta {
     }
 }
 
+#[account]
+#[derive(Debug)]
+pub struct AppSettings {
+    pub snf_foundation: Pubkey,
+    pub operators: Vec<Pubkey>,
+    pub operator_to_check_index: i32,
+    pub last_check_time: i64,
+
+}
+
+impl AppSettings {
+  
+    fn is_operator_registered(&self, operator: &Pubkey) -> bool {
+        for key in &self.operators {
+            if key == operator {
+                return true;
+            }
+        }
+        false
+    }
+
+    fn can_operator_excecute_flow(&self, now: i64, flow_key: &Pubkey, operator_key: &Pubkey) -> bool {
+        if !self.is_operator_registered(operator_key) {
+            return false;
+        }
+
+        let flow_id = flow_key.to_bytes()[0] as usize;
+        let slot = ((now % 60) / OPERATOR_TIME_SLOT) as usize;
+
+        let n = self.operators.len();
+        let operator_index = ((flow_id % n) + slot) % n;
+        let operator_in_charge = self.operators.get(operator_index).unwrap();
+
+        operator_in_charge == operator_key
+    }
+}
+
 /************************ HELPER METHODS */
 
 fn calculate_next_execution_time(_cron: &str, utc_offset: i64) -> i64 {
@@ -448,16 +577,23 @@ fn charge_fee(ctx: &Context<ExecuteFlow>, pda_bump: u8) -> ProgramResult {
     let pda = &ctx.accounts.pda;
     let caller = &ctx.accounts.caller;
     let flow = &ctx.accounts.flow;
-    let ix = solana_program::system_instruction::transfer(
-        &pda.key,
-        &caller.key,
-        fee,
-    );
-    invoke_signed(
-        &ix,
-        &[caller.to_account_info(), pda.to_account_info()],
-        &[&[&flow.flow_owner.to_bytes(), &[pda_bump]]],
-    )?;
+
+    if flow.pay_fee_from == PAY_FEE_FROM_FLOW {
+        let flow_account = flow.to_account_info();
+        **flow_account.try_borrow_mut_lamports()? -= fee;
+        **caller.try_borrow_mut_lamports()? += fee;
+    } else {
+        let ix = solana_program::system_instruction::transfer(
+            &pda.key,
+            &caller.key,
+            fee,
+        );
+        invoke_signed(
+            &ix,
+            &[caller.to_account_info(), pda.to_account_info()],
+            &[&[&flow.flow_owner.to_bytes(), &[pda_bump]]],
+        )?;
+    }
     Ok(())
 }
 
@@ -526,6 +662,58 @@ mod tests {
             pubkey::Pubkey::from_str("86G3gad5tVjJxdQmmdQ6E3rLQNnDNh4KYcqiiSd7Az63").unwrap();
         let (pda, bump) = Pubkey::find_program_address(&["airdrop_devnet".as_bytes()], &programId);
         msg!("{:?}", pda);
+    }
+
+    #[test]
+    fn test_app_settings() {
+        let mut keys :Vec<Pubkey> = Vec::new();
+
+        let operator0 = pubkey::Pubkey::from_str("EpmRY1vzTajbur4hkipMi3MbvjbJHKzqEAAqXj12ccZQ").unwrap();
+        keys.push(operator0);
+
+        let operator1 = pubkey::Pubkey::from_str("86G3gad5tVjJxdQmmdQ6E3rLQNnDNh4KYcqiiSd7Az63").unwrap();
+        keys.push(operator1);
+
+        let operator2 = pubkey::Pubkey::from_str("AbugGcRTG2rhAqvE6U4t5qH1ftedcKgEa19BjHbFGCMG").unwrap();
+        keys.push(operator2);
+
+        let app_settings = AppSettings {
+            snf_foundation: pubkey::Pubkey::from_str("86G3gad5tVjJxdQmmdQ6E3rLQNnDNh4KYcqiiSd7Az63").unwrap(),
+            operators: keys,
+            operator_to_check_index: 0,
+            last_check_time: 0,
+        };
+
+        assert_eq!(app_settings.is_operator_registered(&operator0), true);
+
+        let non_registered_operator = pubkey::Pubkey::from_str("9dt6a11nz8EXg7HBo7tqcSqguwBAUDoHvR7nGZPvuu6X").unwrap();
+        assert_eq!(app_settings.is_operator_registered(&non_registered_operator), false);
+
+        let mut now: i64 = 12121323343;
+
+        let flow1 = pubkey::Pubkey::from_str("9dt6a11nz8EXg7HBo7tqcSqguwBAUDoHvR7nGZPvuu6X").unwrap();
+        let checkop0 = app_settings.can_operator_excecute_flow(now, &flow1, &operator0);
+        let checkop1 = app_settings.can_operator_excecute_flow(now, &flow1, &operator1);
+        let checkop2 = app_settings.can_operator_excecute_flow(now, &flow1, &operator2);
+        println! ("Op 1 - {}, Op 2 - {}, Op 3 - {}", checkop0, checkop1, checkop2);
+
+        now += OPERATOR_TIME_SLOT;
+        let checkop0 = app_settings.can_operator_excecute_flow(now, &flow1, &operator0);
+        let checkop1 = app_settings.can_operator_excecute_flow(now, &flow1, &operator1);
+        let checkop2 = app_settings.can_operator_excecute_flow(now, &flow1, &operator2);
+        println! ("Op 1 - {}, Op 2 - {}, Op 3 - {}", checkop0, checkop1, checkop2);
+
+        now += OPERATOR_TIME_SLOT;
+        let checkop0 = app_settings.can_operator_excecute_flow(now, &flow1, &operator0);
+        let checkop1 = app_settings.can_operator_excecute_flow(now, &flow1, &operator1);
+        let checkop2 = app_settings.can_operator_excecute_flow(now, &flow1, &operator2);
+        println! ("Op 1 - {}, Op 2 - {}, Op 3 - {}", checkop0, checkop1, checkop2);
+
+        now += OPERATOR_TIME_SLOT;
+        let checkop0 = app_settings.can_operator_excecute_flow(now, &flow1, &operator0);
+        let checkop1 = app_settings.can_operator_excecute_flow(now, &flow1, &operator1);
+        let checkop2 = app_settings.can_operator_excecute_flow(now, &flow1, &operator2);
+        println! ("Op 1 - {}, Op 2 - {}, Op 3 - {}", checkop0, checkop1, checkop2);
     }
 
 }

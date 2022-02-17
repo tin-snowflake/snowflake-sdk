@@ -13,6 +13,13 @@ export interface Flow {
   remainingRuns: number;
   flowOwner: PublicKey;
   triggerType: number;
+  payFeeFrom: number;
+  scheduleEndDate: BN;
+  expiryDate: BN;
+  expireOnComplete: boolean;
+  clientAppId: PublicKey;
+  externalId: string;
+  extra: string;
 }
 
 export interface UIFlow {
