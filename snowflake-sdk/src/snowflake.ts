@@ -1,7 +1,7 @@
-import { Connection, PublicKey, TransactionSignature } from "@solana/web3.js";
-import { Idl, Program, Provider, Wallet } from "@project-serum/anchor";
+import { PublicKey, TransactionSignature } from "@solana/web3.js";
+import { Idl, Program, Provider } from "@project-serum/anchor";
 import programIdl from "./idl/snowflake.json";
-import { Job, SerializableJob } from "./model";
+import { Job } from "./model";
 import { InstructionBuilder } from "./instruction-builder";
 import { TransactionSender } from "./transaction-sender";
 import Finder from "./finder";

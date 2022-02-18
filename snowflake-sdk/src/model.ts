@@ -57,11 +57,11 @@ export class Job {
   toSerializableJob(): SerializableJob {
     const serJob = _.cloneDeepWith(
       this,
-      function customizer(v, k: any, o: any): any {
-        if (!k) return;
-        if (o.isBNType(k)) return new BN(o[k]);
-        if (o[k] instanceof PublicKey) return o[k];
-        if (k === "instructions") return [];
+      function customizer(value, key: any, obj: any): any {
+        if (!key) return;
+        if (obj.isBNType(key)) return new BN(obj[key]);
+        if (obj[key] instanceof PublicKey) return obj[key];
+        if (key === "instructions") return [];
       }
     );
     serJob.actions = [];
@@ -81,13 +81,13 @@ export function toJob(serJob: SerializableJob, jobPubKey: PublicKey): Job {
   const template = new Job();
   const job: Job = _.cloneDeepWith(
     serJob,
-    function customizer(v, k: any, o: any): any {
-      if (!k) return;
-      if (template.isBNType(k)) {
-        return (o[k] as BN).toNumber();
+    function customizer(value, key: any, obj: any): any {
+      if (!key) return;
+      if (template.isBNType(key)) {
+        return (obj[key] as BN).toNumber();
       }
-      if (o[k] instanceof PublicKey) return o[k];
-      if (k === "actions") return [];
+      if (obj[key] instanceof PublicKey) return obj[key];
+      if (key === "actions") return [];
     }
   );
   job.instructions = [];
