@@ -15,14 +15,14 @@ test("create job", async function () {
     .build();
 
   const txId = await snowflake.createJob(job);
-
   console.log("create job txn signature ", txId);
 
   const fetchedJob = await snowflake.fetch(job.pubKey);
 
   console.log(fetchedJob);
 
-  expect(job.name).toBe("hello world");
-  expect(job.triggerType).toBe(TriggerType.Time);
-  expect(job.recurring).toBe(false);
+  expect(fetchedJob.name).toBe("hello world");
+  expect(fetchedJob.triggerType).toBe(TriggerType.Time);
+  expect(fetchedJob.recurring).toBe(false);
+  expect(fetchedJob.pubKey).toBeDefined();
 });
