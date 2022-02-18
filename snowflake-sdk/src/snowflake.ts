@@ -5,8 +5,7 @@ import { Job } from "./model";
 import { InstructionBuilder } from "./instruction-builder";
 import { TransactionSender } from "./transaction-sender";
 import Finder from "./finder";
-
-export const SNOW_PROGRAM_ID = "3K4NPJKUJLbgGfxTJumtxv3U3HeJbS3nVjwy8CqFj6F2";
+import { SNOWFLAKE_PROGRAM_ID } from "./program-id";
 
 export default class Snowflake {
   program: Program;
@@ -18,7 +17,7 @@ export default class Snowflake {
     this.provider = provider;
     this.program = new Program(
       programIdl as Idl,
-      SNOW_PROGRAM_ID,
+      SNOWFLAKE_PROGRAM_ID,
       this.provider
     );
     this.instructionBuilder = new InstructionBuilder(this.program);
