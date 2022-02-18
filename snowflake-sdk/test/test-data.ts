@@ -19,5 +19,9 @@ export const instructions = [
 export function tomorrow(): UnixTimeStamp {
   let tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
-  return +tomorrow / 1000;
+  return Math.floor(+tomorrow / 1000);
+}
+
+export function rightNow(): UnixTimeStamp {
+  return +new Date() / 1000;
 }

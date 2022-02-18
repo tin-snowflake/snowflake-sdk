@@ -305,7 +305,7 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "flowOwner",
+            "name": "owner",
             "type": "publicKey"
           },
           {
