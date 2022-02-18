@@ -35,7 +35,7 @@ pub mod snowflake {
 
     pub fn create_flow(ctx: Context<CreateFlow>, client_flow: Flow) -> ProgramResult {
         let flow = &mut ctx.accounts.flow;
-        flow.flow_owner = ctx.accounts.flow_owner.key();
+        flow.owner = ctx.accounts.flow_owner.key();
 
         flow.apply_flow_data(client_flow);
         
@@ -50,7 +50,7 @@ pub mod snowflake {
         let flow = &mut ctx.accounts.flow;
         let caller = &ctx.accounts.caller;
 
-        if flow.flow_owner != *caller.key {
+        if flow.owner != *caller.key {
             return Err(ProgramError::IllegalOwner);
         }
 
@@ -67,7 +67,7 @@ pub mod snowflake {
         let flow = &mut ctx.accounts.flow;
         let caller = &ctx.accounts.caller;
 
-        if flow.flow_owner != *caller.key {
+        if flow.owner != *caller.key {
             return Err(ProgramError::IllegalOwner);
         }
 
@@ -250,7 +250,7 @@ pub fn do_execute_flow<'info>(ctx: Context<'_,'_,'_, 'info,ExecuteFlow<'info>>, 
         invoke_signed(
             &ix,
             ctx.remaining_accounts,
-            &[&[&flow.flow_owner.to_bytes(), &[pda_bump]]],
+            &[&[&flow.owner.to_bytes(), &[pda_bump]]],
         )?;
     }
     Ok(())
@@ -258,7 +258,7 @@ pub fn do_execute_flow<'info>(ctx: Context<'_,'_,'_, 'info,ExecuteFlow<'info>>, 
 
 pub fn validate_execute_flow_pda(ctx: &Context<ExecuteFlow>) -> Result<u8, ProgramError> {
     let flow = &ctx.accounts.flow;
-    let (pda, bump) = Pubkey::find_program_address(&[&flow.flow_owner.to_bytes()], ctx.program_id);
+    let (pda, bump) = Pubkey::find_program_address(&[&flow.owner.to_bytes()], ctx.program_id);
     if pda.eq(&ctx.accounts.pda.key()) {
         Ok(bump)
     } else {
@@ -266,8 +266,7 @@ pub fn validate_execute_flow_pda(ctx: &Context<ExecuteFlow>) -> Result<u8, Progr
     }
 }
 
-/************************ CONTEXTS */
-
+/* CONTEXTS */
 
 #[derive(Accounts)]
 pub struct Airdrop<'info> {
@@ -364,11 +363,11 @@ pub struct RegisterOperator<'info> {
 }
 
 
-/************************ DATA MODEL */
+/* DATA MODEL */
 #[account]
 #[derive(Debug)]
 pub struct Flow {
-    pub flow_owner: Pubkey,
+    pub owner: Pubkey,
     pub trigger_type: u8,
     pub pay_fee_from: u8,
     pub dedicated_operator: Pubkey,
@@ -510,9 +509,7 @@ impl Action {
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
 pub struct TargetAccountSpec {
     pub pubkey: Pubkey,
-    /// True if an Instruction requires a Transaction signature matching `pubkey`.
     pub is_signer: bool,
-    /// True if the `pubkey` can be loaded as a read-write account.
     pub is_writable: bool,
 }
 
@@ -563,7 +560,7 @@ impl AppSettings {
     }
 }
 
-/************************ HELPER METHODS */
+/* HELPER METHODS */
 
 fn calculate_next_execution_time(_cron: &str, utc_offset: i64) -> i64 {
     let now = Clock::get().unwrap().unix_timestamp - utc_offset;
@@ -591,41 +588,11 @@ fn charge_fee(ctx: &Context<ExecuteFlow>, pda_bump: u8) -> ProgramResult {
         invoke_signed(
             &ix,
             &[caller.to_account_info(), pda.to_account_info()],
-            &[&[&flow.flow_owner.to_bytes(), &[pda_bump]]],
+            &[&[&flow.owner.to_bytes(), &[pda_bump]]],
         )?;
     }
     Ok(())
 }
-
-fn charge_txn_fee() {
-
-}
-
-// fn decode_hex(input_str: &str) -> Result<Vec<u8>, ParseIntError> {
-//     let s: String = input_str.chars().filter(|c| !c.is_whitespace()).collect();
-//     (0..s.len())
-//         .step_by(2)
-//         .map(|i| u8::from_str_radix(&s[i..i + 2], 16))
-//         .collect()
-// }
-
-// fn encode_hex(bytes: &[u8]) -> String {
-//     let mut s = String::with_capacity(bytes.len() * 2);
-//     for &b in bytes {
-//         write!(&mut s, "{:02x}", b).unwrap();
-//     }
-//     s
-// }
-
-// fn to_account_metas(account_infos: &[AccountInfo]) -> Vec<AccountMeta> {
-//     account_infos
-//         .iter()
-//         .map(|acc| match acc.is_writable {
-//             false => AccountMeta::new_readonly(*acc.key, acc.is_signer),
-//             true => AccountMeta::new(*acc.key, acc.is_signer),
-//         })
-//         .collect()
-// }
 
 #[cfg(test)]
 mod tests {
@@ -633,26 +600,6 @@ mod tests {
     use anchor_lang::__private::bytemuck::__core::str::FromStr;
     use spl_token::solana_program::pubkey;
 
-    // #[test]
-    // fn test_decode_hex_with_spaces() {
-    //     let input = "09 0A0B  0C";
-    //     let decoded = decode_hex(input).expect("Decoding failed");
-    //     assert_eq!(decoded, vec![9, 10, 11, 12]);
-    // }
-
-    // #[test]
-    // fn test_decode_hex_without_spaces() {
-    //     let input = "090a0B0c";
-    //     let decoded = decode_hex(input).expect("Decoding failed");
-    //     assert_eq!(decoded, vec![9, 10, 11, 12]);
-    // }
-
-    // #[test]
-    // fn test_encode_hex() {
-    //     let bytes = &[9, 10, 11, 12];
-    //     let hex_output = encode_hex(bytes);
-    //     assert_eq!(hex_output, "090a0b0c");
-    // }
     #[test]
     fn test_seed() {
         let testkey = pubkey::Pubkey::from_str("EpmRY1vzTajbur4hkipMi3MbvjbJHKzqEAAqXj12ccZQ")

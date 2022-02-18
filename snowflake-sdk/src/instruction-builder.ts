@@ -27,12 +27,12 @@ export class InstructionBuilder {
     return { instructions: [createIx], signers: [newFlowKeyPair] };
   }
 
-  buildUpdateJobInstruction(jobkey: PublicKey, job: Job) {
+  buildUpdateJobInstruction(job: Job) {
     const serializableJob = job.toSerializableJob();
     let updateContext: any = {
       accounts: {
-        flow: jobkey,
-        caller: this.program.provider.wallet,
+        flow: job.pubKey,
+        caller: this.program.provider.wallet.publicKey,
       },
       signers: [],
     };
