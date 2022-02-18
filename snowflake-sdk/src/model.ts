@@ -73,6 +73,24 @@ export class Job {
     delete serJob.jobId;
     return serJob;
   }
+
+  validateForCreate() {
+    if (this.pubKey)
+      throw new Error(
+        "Can't create new job with an existing pubkey. Remove pubKey attribute and try again."
+      );
+  }
+
+  validateForUpdate() {
+    if (!this.pubKey)
+      throw new Error("Can't update job without an existing pubkey.");
+  }
+
+  static fromJobJson(jobJson: any): Job {
+    const job: Job = new Job();
+    Object.assign(job, jobJson);
+    return job;
+  }
 }
 
 export type SerializableJob = any;
@@ -97,7 +115,8 @@ export function toJob(serJob: SerializableJob, jobPubKey: PublicKey): Job {
   }
   delete (job as any).actions;
   job.pubKey = jobPubKey;
-  return job;
+
+  return Job.fromJobJson(job);
 }
 
 export class SerializableAction {

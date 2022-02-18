@@ -27,6 +27,7 @@ export default class Snowflake {
   }
 
   async createJob(job: Job): Promise<TransactionSignature> {
+    job.validateForCreate();
     const { instructions, signers } =
       this.instructionBuilder.buildCreateJobInstruction(job);
     const tx = await this.transactionSender.sendWithWallet({
@@ -35,6 +36,18 @@ export default class Snowflake {
     });
 
     job.pubKey = signers[0].publicKey;
+    return tx;
+  }
+
+  async updateJob(job: Job): Promise<TransactionSignature> {
+    job.validateForUpdate();
+    const { instructions, signers } =
+      this.instructionBuilder.buildUpdateJobInstruction(job);
+    const tx = await this.transactionSender.sendWithWallet({
+      instructions,
+      signers,
+    });
+
     return tx;
   }
 
