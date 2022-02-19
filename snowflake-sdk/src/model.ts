@@ -7,7 +7,7 @@ import {
 } from "@solana/web3.js";
 import { Buffer } from "buffer";
 import _ from "lodash";
-import { SNOW_PROGRAM_ID } from "./snowflake";
+import { SNOWFLAKE_PROGRAM_ID } from "./program-id";
 
 export type UnixTimeStamp = number;
 export type UTCOffset = number;
@@ -35,7 +35,7 @@ export class Job {
   triggerType: TriggerType = TriggerType.None;
   cron: string = "";
   expireOnComplete: boolean = false;
-  clientAppId: PublicKey = new PublicKey(SNOW_PROGRAM_ID);
+  clientAppId: PublicKey = new PublicKey(SNOWFLAKE_PROGRAM_ID);
   dedicatedOperator: PublicKey;
   nextExecutionTime: UnixTimeStamp = 0;
   lastScheduledExecution: UnixTimeStamp = 0;

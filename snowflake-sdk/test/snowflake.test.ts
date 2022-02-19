@@ -22,6 +22,7 @@ test("create job", async function () {
   console.log(fetchedJob);
 
   expect(fetchedJob.name).toBe("hello world");
+
   expect(fetchedJob.triggerType).toBe(TriggerType.Time);
   expect(fetchedJob.recurring).toBe(false);
   expect(fetchedJob.pubKey).toBeDefined();
