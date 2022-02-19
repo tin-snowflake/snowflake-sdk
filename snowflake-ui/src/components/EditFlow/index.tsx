@@ -23,6 +23,8 @@ import Cron from '../Cron';
 import { BLANK_TEMPLATE, FLOW_TEMPLATES } from '../../utils/flowTemplateUtil';
 import { programIds } from '../../utils/ids';
 import { toLamportsByDecimal } from '../../utils/utils';
+import BN from 'bn.js';
+import { DEFAULT_FLOW_SIZE } from '../../utils/flowUtil';
 
 export const EditFlow = (props: {}) => {
   const program = useAnchorProgram();
@@ -147,7 +149,7 @@ export const EditFlow = (props: {}) => {
       };
       /* if (instructions.length > 0) createContext.instructions = instructions;
       tx = await program.instruction.createFlow(flow, createContext);*/
-      const createIx = await program.instruction.createFlow(flow, createContext);
+      const createIx = await program.instruction.createFlow(DEFAULT_FLOW_SIZE, flow, createContext);
       const ixs = [...instructions, createIx];
       await new SmartTxnClient(connectionConfig, ixs, [newFlowKeyPair], walletCtx).send();
     } else {

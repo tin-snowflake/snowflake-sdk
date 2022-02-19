@@ -33,7 +33,7 @@ pub mod snowflake {
     use spl_token::instruction;
     use anchor_lang::__private::bytemuck::__core::str::FromStr;
 
-    pub fn create_flow(ctx: Context<CreateFlow>, client_flow: Flow) -> ProgramResult {
+    pub fn create_flow(ctx: Context<CreateFlow>, account_size : u32, client_flow: Flow) -> ProgramResult {
         let flow = &mut ctx.accounts.flow;
         flow.owner = ctx.accounts.flow_owner.key();
 
@@ -117,7 +117,7 @@ pub mod snowflake {
             return Err(ProgramError::Custom(2));
         }
 
-        charge_txn_fee();
+        // charge_txn_fee();
         flow.next_execution_time = TIMED_FLOW_ERROR;
 
         Ok(())
@@ -306,8 +306,9 @@ pub struct Withdraw<'info> {
 }
 
 #[derive(Accounts)]
+#[instruction(account_size : u32, client_flow: Flow)]
 pub struct CreateFlow<'info> {
-    #[account(init, payer = flow_owner, space = 4994)]
+    #[account(init, payer = flow_owner, space = account_size as usize)]
     flow: Account<'info, Flow>,
     #[account(signer)]
     pub flow_owner: AccountInfo<'info>,

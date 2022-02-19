@@ -22,8 +22,9 @@ function flowOwnedAccountsFilter(publicKey: PublicKey) {
   return filter;
 }
 
+export const DEFAULT_FLOW_SIZE = 4994;
 let dataSizeFilter = {
-  dataSize: 4994,
+  dataSize: DEFAULT_FLOW_SIZE,
 };
 
 export async function fetchFlowsByOwner(program: Program, publicKey: PublicKey) {
