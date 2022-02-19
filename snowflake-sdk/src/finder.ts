@@ -1,6 +1,6 @@
 import { Program } from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
-import { Job, SerializableJob, toJob } from "./model";
+import { Job, SerializableJob } from "./model";
 
 export default class Finder {
   program: Program;
@@ -12,6 +12,6 @@ export default class Finder {
     let serJob: SerializableJob = await this.program.account.flow.fetch(
       jobPubKey
     );
-    return toJob(serJob, jobPubKey);
+    return Job.fromSerializableJob(serJob, jobPubKey);
   }
 }

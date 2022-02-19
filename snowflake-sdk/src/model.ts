@@ -91,33 +91,36 @@ export class Job {
     Object.assign(job, jobJson);
     return job;
   }
+
+  static fromSerializableJob(
+    serJob: SerializableJob,
+    jobPubKey: PublicKey
+  ): Job {
+    const template = new Job();
+    const job: Job = _.cloneDeepWith(
+      serJob,
+      function customizer(value, key: any, obj: any): any {
+        if (!key) return;
+        if (template.isBNType(key)) {
+          return (obj[key] as BN).toNumber();
+        }
+        if (obj[key] instanceof PublicKey) return obj[key];
+        if (key === "actions") return [];
+      }
+    );
+    job.instructions = [];
+    for (let action of serJob.actions) {
+      const instruction = SerializableAction.toInstruction(action);
+      job.instructions.push(instruction);
+    }
+    delete (job as any).actions;
+    job.pubKey = jobPubKey;
+
+    return Job.fromJobJson(job);
+  }
 }
 
 export type SerializableJob = any;
-
-export function toJob(serJob: SerializableJob, jobPubKey: PublicKey): Job {
-  const template = new Job();
-  const job: Job = _.cloneDeepWith(
-    serJob,
-    function customizer(value, key: any, obj: any): any {
-      if (!key) return;
-      if (template.isBNType(key)) {
-        return (obj[key] as BN).toNumber();
-      }
-      if (obj[key] instanceof PublicKey) return obj[key];
-      if (key === "actions") return [];
-    }
-  );
-  job.instructions = [];
-  for (let action of serJob.actions) {
-    const instruction = SerializableAction.toInstruction(action);
-    job.instructions.push(instruction);
-  }
-  delete (job as any).actions;
-  job.pubKey = jobPubKey;
-
-  return Job.fromJobJson(job);
-}
 
 export class SerializableAction {
   program: PublicKey;
