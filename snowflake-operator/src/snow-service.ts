@@ -33,7 +33,7 @@ export default class SnowService {
   async listFlowsToBeExecuted(): Promise<Array<ProgramAccount>> {
     let results: Array<ProgramAccount> = [];
     let dataSizeFilter = {
-      dataSize: 4992,
+      dataSize: 4994,
     };
 
     try {
@@ -114,7 +114,7 @@ export default class SnowService {
   async listExpiredFlows(): Promise<Array<ProgramAccount>> {
     let results: Array<ProgramAccount> = [];
     let dataSizeFilter = {
-      dataSize: 4992,
+      dataSize: 4994,
     };
 
     try {
