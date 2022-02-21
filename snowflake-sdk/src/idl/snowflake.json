@@ -23,6 +23,10 @@
       ],
       "args": [
         {
+          "name": "accountSize",
+          "type": "u32"
+        },
+        {
           "name": "clientFlow",
           "type": {
             "defined": "Flow"
@@ -317,7 +321,7 @@
             "type": "u8"
           },
           {
-            "name": "dedicatedOperator",
+            "name": "clientAppId",
             "type": "publicKey"
           },
           {
@@ -369,7 +373,7 @@
             "type": "i64"
           },
           {
-            "name": "clientAppId",
+            "name": "dedicatedOperator",
             "type": "publicKey"
           },
           {
@@ -490,8 +494,5 @@
       "name": "InvalidJobTargetAccounts",
       "msg": "The accounts specified for the job target program is not valid."
     }
-  ],
-  "metadata": {
-    "address": "3K4NPJKUJLbgGfxTJumtxv3U3HeJbS3nVjwy8CqFj6F2"
-  }
+  ]
 }

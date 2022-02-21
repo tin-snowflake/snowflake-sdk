@@ -8,6 +8,7 @@ import {
 import { Buffer } from "buffer";
 import _ from "lodash";
 import { SNOWFLAKE_PROGRAM_ID } from "./program-id";
+import { CUSTOM_ACTION_CODE, RETRY_WINDOW } from "./config";
 
 export type UnixTimeStamp = number;
 export type UTCOffset = number;
@@ -17,9 +18,6 @@ export enum TriggerType {
   Time = 2,
   ProgramCondition = 3,
 }
-
-export const RETRY_WINDOW = 300;
-export const CUSTOM_ACTION_CODE = 100;
 
 const NON_BN_FIELDS = ["remainingRuns", "triggerType"];
 

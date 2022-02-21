@@ -531,7 +531,6 @@ pub struct AppSettings {
     pub operators: Vec<Pubkey>,
     pub operator_to_check_index: i32,
     pub last_check_time: i64,
-
 }
 
 impl AppSettings {
