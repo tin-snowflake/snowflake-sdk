@@ -6,7 +6,7 @@ import { TriggerType } from "../src/model";
 import { clusterApiUrl } from "@solana/web3.js";
 
 test("create job", async function () {
-  const provider = Provider.local();
+  const provider = Provider.local(clusterApiUrl("devnet"));
   const snowflake = new Snowflake(provider);
 
   const job = new JobBuilder()

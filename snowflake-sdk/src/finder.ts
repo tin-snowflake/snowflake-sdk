@@ -18,9 +18,6 @@ export default class Finder {
   async findByJobOwner(owner: PublicKey): Promise<Job[]> {
     let serJobs: SerializableJob = await this.program.account.flow.all([
       {
-        dataSize: 1800,
-      },
-      {
         memcmp: {
           offset: 8, // Discriminator
           bytes: owner.toBase58(),
