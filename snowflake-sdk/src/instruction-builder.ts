@@ -45,4 +45,17 @@ export class InstructionBuilder {
     );
     return { instructions: [updateIx], signers: [] };
   }
+
+  buildDeleteJobInstruction(jobPubKey: PublicKey) {
+    let deleteContext: any = {
+      accounts: {
+        flow: jobPubKey,
+        caller: this.program.provider.wallet.publicKey,
+      },
+      signers: [],
+    };
+
+    const deleteIx = this.program.instruction.deleteFlow(deleteContext);
+    return { instructions: [deleteIx], signers: [] };
+  }
 }

@@ -38,6 +38,17 @@ export default class Snowflake {
     return tx;
   }
 
+  async deleteJob(jobPubKey: PublicKey): Promise<TransactionSignature> {
+    const { instructions, signers } =
+      this.instructionBuilder.buildDeleteJobInstruction(jobPubKey);
+    const tx = await this.transactionSender.sendWithWallet({
+      instructions,
+      signers,
+    });
+
+    return tx;
+  }
+
   async updateJob(job: Job): Promise<TransactionSignature> {
     job.validateForUpdate();
     const { instructions, signers } =
