@@ -368,7 +368,7 @@ pub struct RegisterOperator<'info> {
 #[account]
 #[derive(Debug)]
 pub struct Flow {
-    pub owner: Pubkey,
+    pub owner: Pubkey, 
     pub trigger_type: u8,
     pub pay_fee_from: u8,
     pub client_app_id: Pubkey,

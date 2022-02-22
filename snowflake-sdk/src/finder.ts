@@ -1,5 +1,5 @@
 import { Program } from "@project-serum/anchor";
-import { PublicKey } from "@solana/web3.js";
+import { AccountInfo, PublicKey } from "@solana/web3.js";
 import { Job, SerializableJob } from "./model";
 
 export default class Finder {
@@ -13,5 +13,20 @@ export default class Finder {
       jobPubKey
     );
     return Job.fromSerializableJob(serJob, jobPubKey);
+  }
+
+  async findByJobOwner(owner: PublicKey): Promise<Job[]> {
+    let serJobs: SerializableJob = await this.program.account.flow.all([
+      {
+        dataSize: 1800,
+      },
+      {
+        memcmp: {
+          offset: 8, // Discriminator
+          bytes: owner.toBase58(),
+        },
+      },
+    ]);
+    return serJobs;
   }
 }

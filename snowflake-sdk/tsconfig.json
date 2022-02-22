@@ -5,16 +5,12 @@
     "outDir": "./dist",
     "strict": true,
     "baseUrl": "./",
-    "typeRoots": [
-      "node_modules/@types"
-    ],
-    "types": [
-      "node", "@types/jest"
-    ],
+    "typeRoots": ["node_modules/@types"],
+    "types": ["node", "@types/jest", "jest"],
     "esModuleInterop": true,
     "inlineSourceMap": true,
-    "strictPropertyInitialization" : false,
+    "strictPropertyInitialization": false,
     "resolveJsonModule": true
   },
-  "include": ["src"]
+  "include": ["src", "test"]
 }

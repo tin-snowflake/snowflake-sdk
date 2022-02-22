@@ -3,6 +3,7 @@ import Snowflake from "../src/snowflake";
 import { Provider } from "@project-serum/anchor";
 import { instructions, tomorrow } from "./test-data";
 import { TriggerType } from "../src/model";
+import { clusterApiUrl } from "@solana/web3.js";
 
 test("create job", async function () {
   const provider = Provider.local();
@@ -18,8 +19,12 @@ test("create job", async function () {
   console.log("create job txn signature ", txId);
 
   const fetchedJob = await snowflake.fetch(job.pubKey);
-
   console.log(fetchedJob);
+
+  const owner = provider.wallet.publicKey;
+  const fetchedByOwnerJobs = await snowflake.fetchByOwner(owner);
+
+  console.log(fetchedByOwnerJobs);
 
   expect(fetchedJob.name).toBe("hello world");
 
