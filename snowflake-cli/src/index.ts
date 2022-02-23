@@ -1,9 +1,5 @@
 import inquirer from "inquirer";
-
-enum ExitCode {
-  OK = 0,
-  Error = 1,
-}
+import { ExitCode } from "./utils";
 
 async function main(): Promise<ExitCode> {
   console.log("hello world");
