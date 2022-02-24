@@ -3,11 +3,21 @@ import Snowflake from "../src/snowflake";
 import { Provider } from "@project-serum/anchor";
 import { instructions, tomorrow } from "./test-data";
 import { TriggerType } from "../src/model";
-import { clusterApiUrl } from "@solana/web3.js";
+import { clusterApiUrl, PublicKey } from "@solana/web3.js";
+
+let provider: Provider;
+let snowflake: Snowflake;
+let owner: PublicKey;
+
+beforeAll(() => {
+  const API_URL = clusterApiUrl("devnet");
+  provider = Provider.local(API_URL);
+  snowflake = new Snowflake(provider);
+  owner = provider.wallet.publicKey;
+});
 
 test("create job", async function () {
-  const provider = Provider.local(clusterApiUrl("devnet"));
-  const snowflake = new Snowflake(provider);
+  const beforeFetchByOwnerJobs = await snowflake.fetchByOwner(owner);
 
   const job = new JobBuilder()
     .jobName("hello world")
@@ -19,24 +29,24 @@ test("create job", async function () {
   console.log("create job txn signature ", txId);
 
   const fetchedJob = await snowflake.fetch(job.pubKey);
+
   console.log(fetchedJob);
 
-  const owner = provider.wallet.publicKey;
-  const fetchedByOwnerJobs = await snowflake.fetchByOwner(owner);
-
-  console.log(fetchedByOwnerJobs);
-
   expect(fetchedJob.name).toBe("hello world");
-
   expect(fetchedJob.triggerType).toBe(TriggerType.Time);
   expect(fetchedJob.recurring).toBe(false);
   expect(fetchedJob.pubKey).toBeDefined();
+  expect(fetchedJob);
+
+  const afterFetchedByOwnerJobs = await snowflake.fetchByOwner(owner);
+
+  expect(afterFetchedByOwnerJobs.length > 0).toBeTruthy();
+  expect(afterFetchedByOwnerJobs.length).toBe(
+    beforeFetchByOwnerJobs.length + 1
+  );
 });
 
 test("update job", async function () {
-  const provider = Provider.local();
-  const snowflake = new Snowflake(provider);
-
   const job = new JobBuilder()
     .jobName("hello world")
     .jobInstructions(instructions)
@@ -63,4 +73,32 @@ test("update job", async function () {
   expect(fetchedJob.name).toBe("hello world 2");
   expect(fetchedJob.triggerType).toBe(TriggerType.Time);
   expect(fetchedJob.recurring).toBe(true);
+});
+
+test("delete job", async function () {
+  const job = new JobBuilder()
+    .jobName("hello world")
+    .jobInstructions(instructions)
+    .scheduleOnce(tomorrow())
+    .build();
+
+  await snowflake.createJob(job);
+
+  // Before delete
+  let beforeDeleteFetchJobsByOwner = await snowflake.fetchByOwner(owner);
+  expect(beforeDeleteFetchJobsByOwner.length > 0).toBeTruthy();
+
+  // After delete
+  await snowflake.deleteJob(job.pubKey);
+  let fetchJob = await snowflake.fetch(job.pubKey).catch((err) => {
+    expect(err).toBeDefined();
+    expect(err.message).toBe(`Account does not exist ${job.pubKey.toString()}`);
+  });
+
+  expect(fetchJob).toBeUndefined();
+
+  let afterDeleteFetchJobsByOwner = await snowflake.fetchByOwner(owner);
+  expect(afterDeleteFetchJobsByOwner.length).toBe(
+    beforeDeleteFetchJobsByOwner.length - 1
+  );
 });
