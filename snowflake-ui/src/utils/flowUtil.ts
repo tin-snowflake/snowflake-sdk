@@ -72,16 +72,15 @@ export async function convertUIFlow(uiFlow, connection: ConnectionConfig, wallet
   flow.nextExecutionTime = flow.nextExecutionTime ? new BN(uiFlow.nextExecutionTime.unix()) : new BN(0);
 
   flow.recurring = uiFlow.recurring == RecurringUIOption.Yes ? true : false;
-  flow.retryWindow = new BN(uiFlow.retryWindow);
+  flow.retryWindow = uiFlow.retryWindow;
   // convert last execution time just so anchor is not failing, we're not going to save last execution time
   flow.lastScheduledExecution = flow.lastScheduledExecution ? new BN(uiFlow.lastScheduledExecution.unix()) : new BN(0);
 
-  flow.userUtcOffset = new BN(new Date().getTimezoneOffset() * 60);
+  flow.userUtcOffset = new Date().getTimezoneOffset() * 60;
   flow.payFeeFrom = 0;
   flow.scheduleEndDate = new BN(0);
   flow.expiryDate = new BN(0);
   flow.expireOnComplete = false;
-  flow.clientAppId = SNOWFLAKE_PROGRAM_ID;
   flow.externalId = '';
   flow.extra = '';
 
@@ -93,7 +92,7 @@ export async function convertUIFlow(uiFlow, connection: ConnectionConfig, wallet
   }
 
   // the flow that we send to the cluster doesn't need owner
-  delete flow.flowOwner;
+  delete flow.owner;
   return flow;
 }
 

@@ -12,17 +12,16 @@ const TRIGGER_TYPE_TIME: u8 = 2;
 const TRIGGER_TYPE_PROGRAM: u8 = 3;
 
 const RECURRING_FOREVER:i16 = -999;
-const DEFAULT_RETRY_WINDOW: i64 = 300;
+const DEFAULT_RETRY_WINDOW: u32 = 300;
 
 const TIMED_FLOW_COMPLETE: i64 = 0;
 const TIMED_FLOW_ERROR: i64 = -1;
 
 const OPERATOR_TIME_SLOT: i64 = 20;
-const SNF_APP_SETTINGS_KEY: &str = "BFHUu5FLD32mX2KtvDgzfPYNfANqjKmbUG3ow1wFPwj6";
+const SNF_PROGRAM_SETTINGS_KEY: &str = "4zngo1n4BQQU8MHi2xopBppaT29Fv6jRLZ5NwvtdXpMG";
 
 const PAY_FEE_FROM_FLOW: u8 = 2;
 
-// declare_id!("86G3gad5tVjJxdQmmdQ6E3rLQNnDNh4KYcqiiSd7Az63");
 declare_id!("3K4NPJKUJLbgGfxTJumtxv3U3HeJbS3nVjwy8CqFj6F2");
 
 #[program]
@@ -31,11 +30,10 @@ pub mod snowflake {
     use spl_token::solana_program::program::invoke_signed;
     use anchor_lang::solana_program;
     use spl_token::instruction;
-    use anchor_lang::__private::bytemuck::__core::str::FromStr;
 
     pub fn create_flow(ctx: Context<CreateFlow>, account_size : u32, client_flow: Flow) -> ProgramResult {
         let flow = &mut ctx.accounts.flow;
-        flow.owner = ctx.accounts.flow_owner.key();
+        flow.owner = ctx.accounts.owner.key();
 
         flow.apply_flow_data(client_flow);
         
@@ -48,11 +46,6 @@ pub mod snowflake {
 
     pub fn update_flow(ctx: Context<UpdateFlow>, client_flow: Flow) -> ProgramResult {
         let flow = &mut ctx.accounts.flow;
-        let caller = &ctx.accounts.caller;
-
-        if flow.owner != *caller.key {
-            return Err(ProgramError::IllegalOwner);
-        }
 
         flow.apply_flow_data(client_flow);
 
@@ -65,11 +58,6 @@ pub mod snowflake {
 
     pub fn delete_flow(ctx: Context<DeleteFlow>) -> ProgramResult {
         let flow = &mut ctx.accounts.flow;
-        let caller = &ctx.accounts.caller;
-
-        if flow.owner != *caller.key {
-            return Err(ProgramError::IllegalOwner);
-        }
 
         flow.empty_flow_data();
 
@@ -77,26 +65,21 @@ pub mod snowflake {
     }
 
     pub fn execute_flow<'info>(ctx: Context<'_,'_,'_, 'info, ExecuteFlow<'info>>) -> ProgramResult {
-        let pda_bump = validate_execute_flow_pda(&ctx)?;
+        let pda_bump = *ctx.bumps.get("pda").unwrap();
 
         do_execute_flow(ctx, pda_bump)
     }
 
     pub fn execute_scheduled_flow<'info>(ctx: Context<'_,'_,'_, 'info, ExecuteFlow<'info>>) -> ProgramResult {
-        let pda_bump = validate_execute_flow_pda(&ctx)?;
-        charge_fee(&ctx, pda_bump);        
+        let pda_bump = *ctx.bumps.get("pda").unwrap();
+        charge_fee(&ctx, pda_bump)?;        
 
         let operator = &ctx.accounts.caller;
-        let app_settings = &ctx.accounts.app_settings;
+        let program_settings = &ctx.accounts.program_settings;
         let flow = &mut ctx.accounts.flow;
         let now = Clock::get()?.unix_timestamp;
-
-        let sfn_app_settings_key = Pubkey::from_str(SNF_APP_SETTINGS_KEY).unwrap();
-        if app_settings.key() != sfn_app_settings_key {
-            return Err(ProgramError::Custom(4));
-        }
-        
-        if !app_settings.can_operator_excecute_flow(now, &flow.key(), operator.key) {
+       
+        if !program_settings.can_operator_excecute_flow(now, &flow.key(), operator.key) {
             return Err(ProgramError::Custom(3));
         }
 
@@ -125,30 +108,32 @@ pub mod snowflake {
 
     pub fn withdraw_native(ctx: Context<WithdrawNative>, amount: u64) -> ProgramResult {
         let caller = &ctx.accounts.caller;
-        let (pda, bump) = Pubkey::find_program_address(&[&caller.key().to_bytes()], ctx.program_id);
+        let pda = &ctx.accounts.pda;
+        let pda_bump = *ctx.bumps.get("pda").unwrap();
 
         let ix = solana_program::system_instruction::transfer(
-            &pda,
-       &caller.key(),
+            &pda.key(),
+            &caller.key(),
             amount,
         );
         invoke_signed(
             &ix,
             &[caller.to_account_info(), ctx.accounts.pda.to_account_info()],
-            &[&[&caller.key().to_bytes(), &[bump]]],
+            &[&[&caller.key().to_bytes(), &[pda_bump]]],
         )?;
         Ok(())
     }
 
     pub fn withdraw(ctx: Context<Withdraw>, amount: u64) -> ProgramResult {
         let caller = &ctx.accounts.caller;
-        let (pda, bump) = Pubkey::find_program_address(&[&caller.key().to_bytes()], ctx.program_id);
+        let pda = &ctx.accounts.pda;
+        let pda_bump = *ctx.bumps.get("pda").unwrap();
 
         let ix_result: Result<Instruction, ProgramError>  = instruction::transfer(
             ctx.accounts.token_program.key,
             ctx.accounts.source_ata.key,
             ctx.accounts.destination_ata.key,
-            &pda,
+            &pda.key(),
             &[],
             amount,
         );
@@ -162,70 +147,37 @@ pub mod snowflake {
                 caller.to_account_info(),
                 ctx.accounts.pda.to_account_info()
             ],
-            &[&[&caller.key().to_bytes(), &[bump]]],
-        );
+            &[&[&caller.key().to_bytes(), &[pda_bump]]],
+        )?;
 
         Ok(())
     }
 
-    pub fn init_app_settings(ctx: Context<InitAppSettings>) -> ProgramResult {
-        let app_settings = &mut ctx.accounts.app_settings;
-        app_settings.snf_foundation = ctx.accounts.snf_foundation.key();
-        app_settings.operators = Vec::new();
-        app_settings.operator_to_check_index = -1;
+    pub fn init_program_settings(ctx: Context<InitProgramSettings>) -> ProgramResult {
+        let program_settings = &mut ctx.accounts.program_settings;
+        program_settings.snf_foundation = ctx.accounts.snf_foundation.key();
+        program_settings.operators = Vec::new();
+        program_settings.operator_to_check_index = -1;
         Ok(())
     }
 
     pub fn register_operator(ctx: Context<RegisterOperator>) -> ProgramResult {
-        let app_settings = &mut ctx.accounts.app_settings;
-        let caller = &ctx.accounts.caller;
+        let program_settings = &mut ctx.accounts.program_settings;
         let operator = &ctx.accounts.operator;
 
-        //Only SNF Foundation can register new operator
-        if app_settings.snf_foundation != *caller.key {
-            return Err(ProgramError::IllegalOwner);
-        }
-
         //If key is already in the list - don't add
-        if app_settings.is_operator_registered(operator.key) {
+        if program_settings.is_operator_registered(operator.key) {
             return Err(ProgramError::Custom(1));
         }
        
-        app_settings.operators.push(*operator.key);
-        if app_settings.operator_to_check_index == -1 {
-            app_settings.operator_to_check_index = 0;
+        program_settings.operators.push(*operator.key);
+        if program_settings.operator_to_check_index == -1 {
+            program_settings.operator_to_check_index = 0;
         }
 
         Ok(())
     }
     
-    pub fn airdrop_devnet(ctx : Context<Airdrop>, amount: u64) -> ProgramResult {
-        let (pda, bump) = Pubkey::find_program_address(&["airdrop_devnet".as_bytes()], ctx.program_id);
-
-        if !pda.eq(ctx.accounts.authority.key) {
-            return Err(ProgramError::InvalidArgument);
-        }
-
-        let ix = spl_token::instruction::mint_to(
-            &spl_token::ID,
-            ctx.accounts.mint.key,
-            ctx.accounts.to.key,
-            ctx.accounts.authority.key,
-            &[],
-            amount,
-        )?;
-
-        solana_program::program::invoke_signed(
-            &ix,
-            &[
-                ctx.accounts.to.clone(),
-                ctx.accounts.mint.clone(),
-                ctx.accounts.authority.clone(),
-                ctx.accounts.token_program.clone(),
-            ],
-            &[&["airdrop_devnet".as_bytes(), &[bump]]],
-        )
-    }
 }
 
 pub fn do_execute_flow<'info>(ctx: Context<'_,'_,'_, 'info,ExecuteFlow<'info>>, pda_bump : u8) -> ProgramResult {
@@ -269,98 +221,75 @@ pub fn validate_execute_flow_pda(ctx: &Context<ExecuteFlow>) -> Result<u8, Progr
 /* CONTEXTS */
 
 #[derive(Accounts)]
-pub struct Airdrop<'info> {
-    pub authority: AccountInfo<'info>,
-    #[account(mut)]
-    pub mint: AccountInfo<'info>,
-    #[account(mut)]
-    pub to: AccountInfo<'info>,
-    pub token_program: AccountInfo<'info>,
-}
-
-#[derive(Accounts)]
 pub struct WithdrawNative<'info> {
-    #[account(signer,mut)]
-    pub caller: AccountInfo<'info>,
-
-    #[account(mut)]
+    pub caller: Signer<'info>,
+    #[account(seeds = [&caller.key().to_bytes()], bump)]
     pub pda: AccountInfo<'info>,
-
-    pub system_program: AccountInfo<'info>,
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
 pub struct Withdraw<'info> {
-    #[account(signer)]
-    pub caller: AccountInfo<'info>,
-
+    pub caller: Signer<'info>,
+    #[account(seeds = [&caller.key().to_bytes()], bump)]
     pub pda: AccountInfo<'info>,
-
     #[account(mut)]
-    pub destination_ata: AccountInfo<'info>,
-
+    pub destination_ata: UncheckedAccount<'info>,
     #[account(mut)]
-    pub source_ata: AccountInfo<'info>,
-
-    token_program : AccountInfo<'info>
+    pub source_ata: UncheckedAccount<'info>,
+    token_program : UncheckedAccount<'info>
 }
 
 #[derive(Accounts)]
 #[instruction(account_size : u32, client_flow: Flow)]
 pub struct CreateFlow<'info> {
-    #[account(init, payer = flow_owner, space = account_size as usize)]
+    #[account(init, payer = owner, space = account_size as usize)]
     flow: Account<'info, Flow>,
-    #[account(signer)]
-    pub flow_owner: AccountInfo<'info>,
-    pub system_program: AccountInfo<'info>,
+    pub owner: Signer<'info>,
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
 pub struct UpdateFlow<'info> {
-    #[account(mut)]
+    #[account(mut, has_one = owner)]
     flow: Account<'info, Flow>,
-    #[account(signer)]
-    pub caller: AccountInfo<'info>,
+    pub owner: Signer<'info>,
 }
 
 #[derive(Accounts)]
 pub struct DeleteFlow<'info> {
-    #[account(mut, close=caller)]
+    #[account(mut, has_one = owner, close=owner)]
     flow: Account<'info, Flow>,
-    #[account(signer)]
-    pub caller: AccountInfo<'info>,
+    pub owner: Signer<'info>,
 }
 
 #[derive(Accounts)]
 pub struct ExecuteFlow<'info> {
     #[account(mut)]
     flow: Account<'info, Flow>,
-    #[account(mut)]
+    #[account(mut, seeds = [&flow.owner.to_bytes()], bump)]
     pub pda: AccountInfo<'info>,
-    #[account(signer,mut)]
-    pub caller: AccountInfo<'info>,
-    pub system_program: AccountInfo<'info>,
-    #[account()]
-    pub app_settings: Account<'info, AppSettings>,
+    pub caller: Signer<'info>,
+    pub system_program: Program<'info, System>,
+    #[account(address = SNF_PROGRAM_SETTINGS_KEY.parse::<Pubkey>().unwrap())]
+    pub program_settings: Account<'info, ProgramSettings>,
 
 }
 
 #[derive(Accounts)]
-pub struct InitAppSettings<'info> {
+pub struct InitProgramSettings<'info> {
     #[account(init, payer = snf_foundation, space = 1000)]
-    app_settings: Account<'info, AppSettings>,
-    #[account(signer)]
-    pub snf_foundation: AccountInfo<'info>,
-    pub system_program: AccountInfo<'info>,
+    program_settings: Account<'info, ProgramSettings>,
+    pub snf_foundation: Signer<'info>,
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
 pub struct RegisterOperator<'info> {
-    #[account(mut)]
-    app_settings: Account<'info, AppSettings>,
-    #[account(signer)]
-    pub caller: AccountInfo<'info>,
-    pub operator: AccountInfo<'info>,
+    #[account(mut, has_one = snf_foundation)]
+    program_settings: Account<'info, ProgramSettings>,
+    pub snf_foundation: Signer<'info>,
+    pub operator: UncheckedAccount<'info>,
 }
 
 
@@ -370,21 +299,21 @@ pub struct RegisterOperator<'info> {
 pub struct Flow {
     pub owner: Pubkey, 
     pub trigger_type: u8,
-    pub pay_fee_from: u8,
-    pub client_app_id: Pubkey,
+    pub next_execution_time: i64,
+    pub retry_window: u32,
     pub recurring: bool,
     pub remaining_runs: i16,
-    pub schedule_end_date: i64,
-    pub next_execution_time: i64,
-    pub retry_window: i64,
-    pub last_scheduled_execution: i64,
-    pub user_utc_offset: i64,
+    pub dedicated_operator: Pubkey,
+    pub client_app_id: u32,
     pub expiry_date: i64,
     pub expire_on_complete: bool,
+    pub schedule_end_date: i64,
+    pub pay_fee_from: u8,
+    pub user_utc_offset: i32,
+    pub last_scheduled_execution: i64,
     pub created_date: i64,
     pub last_rent_charged: i64,
     pub last_updated_date: i64,
-    pub dedicated_operator: Pubkey,
     pub external_id: String,
     pub cron: String,
     pub name: String,
@@ -417,7 +346,7 @@ impl Flow {
 
             if self.recurring {
                 if self.has_remaining_runs() {
-                    self.next_execution_time = calculate_next_execution_time(&self.cron, self.user_utc_offset);
+                    self.next_execution_time = calculate_next_execution_time(&self.cron, self.user_utc_offset as i64);
                 }
             } else {
                 self.next_execution_time = client_flow.next_execution_time;
@@ -462,7 +391,7 @@ impl Flow {
         if self.trigger_type == TRIGGER_TYPE_TIME {
             return self.next_execution_time > 0 
                     && self.next_execution_time < now 
-                    && now - self.next_execution_time < self.retry_window;
+                    && now - self.next_execution_time < self.retry_window as i64;
         }
 
         false
@@ -471,7 +400,7 @@ impl Flow {
     fn is_schedule_expired(&self, now: i64) -> bool {
         return self.trigger_type == TRIGGER_TYPE_TIME 
             && self.next_execution_time > 0
-            && now - self.next_execution_time > self.retry_window;
+            && now - self.next_execution_time > self.retry_window as i64;
     }
 
     fn update_after_schedule_run(&mut self, now: i64) {
@@ -482,7 +411,7 @@ impl Flow {
 
         if self.trigger_type == TRIGGER_TYPE_TIME {
             self.next_execution_time = 
-                if self.has_remaining_runs() {calculate_next_execution_time(&self.cron, self.user_utc_offset)}
+                if self.has_remaining_runs() {calculate_next_execution_time(&self.cron, self.user_utc_offset as i64)}
                 else {TIMED_FLOW_COMPLETE};
         }
     }
@@ -526,14 +455,14 @@ impl From<&TargetAccountSpec> for AccountMeta {
 
 #[account]
 #[derive(Debug)]
-pub struct AppSettings {
+pub struct ProgramSettings {
     pub snf_foundation: Pubkey,
     pub operators: Vec<Pubkey>,
     pub operator_to_check_index: i32,
     pub last_check_time: i64,
 }
 
-impl AppSettings {
+impl ProgramSettings {
   
     fn is_operator_registered(&self, operator: &Pubkey) -> bool {
         for key in &self.operators {
@@ -601,18 +530,7 @@ mod tests {
     use spl_token::solana_program::pubkey;
 
     #[test]
-    fn test_seed() {
-        let testkey = pubkey::Pubkey::from_str("EpmRY1vzTajbur4hkipMi3MbvjbJHKzqEAAqXj12ccZQ")
-            .unwrap()
-            .to_bytes();
-        let programId =
-            pubkey::Pubkey::from_str("86G3gad5tVjJxdQmmdQ6E3rLQNnDNh4KYcqiiSd7Az63").unwrap();
-        let (pda, bump) = Pubkey::find_program_address(&["airdrop_devnet".as_bytes()], &programId);
-        msg!("{:?}", pda);
-    }
-
-    #[test]
-    fn test_app_settings() {
+    fn test_program_settings() {
         let mut keys :Vec<Pubkey> = Vec::new();
 
         let operator0 = pubkey::Pubkey::from_str("EpmRY1vzTajbur4hkipMi3MbvjbJHKzqEAAqXj12ccZQ").unwrap();
@@ -624,42 +542,42 @@ mod tests {
         let operator2 = pubkey::Pubkey::from_str("AbugGcRTG2rhAqvE6U4t5qH1ftedcKgEa19BjHbFGCMG").unwrap();
         keys.push(operator2);
 
-        let app_settings = AppSettings {
+        let program_settings = ProgramSettings {
             snf_foundation: pubkey::Pubkey::from_str("86G3gad5tVjJxdQmmdQ6E3rLQNnDNh4KYcqiiSd7Az63").unwrap(),
             operators: keys,
             operator_to_check_index: 0,
             last_check_time: 0,
         };
 
-        assert_eq!(app_settings.is_operator_registered(&operator0), true);
+        assert_eq!(program_settings.is_operator_registered(&operator0), true);
 
         let non_registered_operator = pubkey::Pubkey::from_str("9dt6a11nz8EXg7HBo7tqcSqguwBAUDoHvR7nGZPvuu6X").unwrap();
-        assert_eq!(app_settings.is_operator_registered(&non_registered_operator), false);
+        assert_eq!(program_settings.is_operator_registered(&non_registered_operator), false);
 
         let mut now: i64 = 12121323343;
 
         let flow1 = pubkey::Pubkey::from_str("9dt6a11nz8EXg7HBo7tqcSqguwBAUDoHvR7nGZPvuu6X").unwrap();
-        let checkop0 = app_settings.can_operator_excecute_flow(now, &flow1, &operator0);
-        let checkop1 = app_settings.can_operator_excecute_flow(now, &flow1, &operator1);
-        let checkop2 = app_settings.can_operator_excecute_flow(now, &flow1, &operator2);
+        let checkop0 = program_settings.can_operator_excecute_flow(now, &flow1, &operator0);
+        let checkop1 = program_settings.can_operator_excecute_flow(now, &flow1, &operator1);
+        let checkop2 = program_settings.can_operator_excecute_flow(now, &flow1, &operator2);
         println! ("Op 1 - {}, Op 2 - {}, Op 3 - {}", checkop0, checkop1, checkop2);
 
         now += OPERATOR_TIME_SLOT;
-        let checkop0 = app_settings.can_operator_excecute_flow(now, &flow1, &operator0);
-        let checkop1 = app_settings.can_operator_excecute_flow(now, &flow1, &operator1);
-        let checkop2 = app_settings.can_operator_excecute_flow(now, &flow1, &operator2);
+        let checkop0 = program_settings.can_operator_excecute_flow(now, &flow1, &operator0);
+        let checkop1 = program_settings.can_operator_excecute_flow(now, &flow1, &operator1);
+        let checkop2 = program_settings.can_operator_excecute_flow(now, &flow1, &operator2);
         println! ("Op 1 - {}, Op 2 - {}, Op 3 - {}", checkop0, checkop1, checkop2);
 
         now += OPERATOR_TIME_SLOT;
-        let checkop0 = app_settings.can_operator_excecute_flow(now, &flow1, &operator0);
-        let checkop1 = app_settings.can_operator_excecute_flow(now, &flow1, &operator1);
-        let checkop2 = app_settings.can_operator_excecute_flow(now, &flow1, &operator2);
+        let checkop0 = program_settings.can_operator_excecute_flow(now, &flow1, &operator0);
+        let checkop1 = program_settings.can_operator_excecute_flow(now, &flow1, &operator1);
+        let checkop2 = program_settings.can_operator_excecute_flow(now, &flow1, &operator2);
         println! ("Op 1 - {}, Op 2 - {}, Op 3 - {}", checkop0, checkop1, checkop2);
 
         now += OPERATOR_TIME_SLOT;
-        let checkop0 = app_settings.can_operator_excecute_flow(now, &flow1, &operator0);
-        let checkop1 = app_settings.can_operator_excecute_flow(now, &flow1, &operator1);
-        let checkop2 = app_settings.can_operator_excecute_flow(now, &flow1, &operator2);
+        let checkop0 = program_settings.can_operator_excecute_flow(now, &flow1, &operator0);
+        let checkop1 = program_settings.can_operator_excecute_flow(now, &flow1, &operator1);
+        let checkop2 = program_settings.can_operator_excecute_flow(now, &flow1, &operator2);
         println! ("Op 1 - {}, Op 2 - {}, Op 3 - {}", checkop0, checkop1, checkop2);
     }
 

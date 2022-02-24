@@ -142,7 +142,7 @@ export const EditFlow = (props: {}) => {
       let createContext: any = {
         accounts: {
           flow: newFlowKeyPair.publicKey,
-          flowOwner: walletCtx.publicKey,
+          owner: walletCtx.publicKey,
           systemProgram: SystemProgram.programId,
         },
         signers: [newFlowKeyPair], // to be removed, singers no longer needs to be declared here since we're not using anchor for sending txn
@@ -158,7 +158,7 @@ export const EditFlow = (props: {}) => {
       let updateContext: any = {
         accounts: {
           flow: new PublicKey(flowKey),
-          caller: walletCtx.publicKey,
+          owner: walletCtx.publicKey,
         },
         signers: [],
       };

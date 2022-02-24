@@ -17,7 +17,7 @@ import { ExclamationCircleOutlined } from '@ant-design/icons/lib';
 import { FlowLiveStatus } from '../FlowLiveStatus';
 import '../../utils/prettycron.js';
 import { programIds } from '../../utils/ids';
-import { MEMO_PROGRAM_ID, SNF_APP_SETTINGS_ID } from '../../utils/ids';
+import { MEMO_PROGRAM_ID, SNF_PROGRAM_SETTINGS_ID } from '../../utils/ids';
 
 export const FlowDetail = ({}) => {
   const program = useAnchorProgram();
@@ -181,7 +181,7 @@ export const FlowDetail = ({}) => {
       caller: walletCtx.publicKey,
       pda: pda,
       systemProgram: SystemProgram.programId,
-      appSettings: SNF_APP_SETTINGS_ID,
+      programSettings: SNF_PROGRAM_SETTINGS_ID,
     };
 
     let remainAccountMetas: AccountMeta[] = flow.actions.reduce((result, current) => result.concat(current.accounts), []);
@@ -222,7 +222,7 @@ export const FlowDetail = ({}) => {
     let deleteContext: any = {
       accounts: {
         flow: new PublicKey(flowKey),
-        caller: walletCtx.publicKey,
+        owner: walletCtx.publicKey,
       },
     };
 

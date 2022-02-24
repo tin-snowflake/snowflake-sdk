@@ -6,18 +6,17 @@ export interface Flow {
   name: string;
   nextExecutionTime: BN;
   lastScheduledExecution: BN;
-  userUtcOffset: BN;
+  userUtcOffset: number;
   actions: [Action];
   recurring: boolean;
-  retryWindow: BN;
+  retryWindow: number;
   remainingRuns: number;
-  flowOwner: PublicKey;
+  owner: PublicKey;
   triggerType: number;
   payFeeFrom: number;
   scheduleEndDate: BN;
   expiryDate: BN;
   expireOnComplete: boolean;
-  clientAppId: PublicKey;
   externalId: string;
   extra: string;
 }

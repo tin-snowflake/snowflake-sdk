@@ -6,10 +6,9 @@ log4js.configure('log4js.json');
 const logger = log4js.getLogger("Operator");
 
 const MEMO_PROGRAM_ID = new PublicKey('Memo1UhkJRfHyvLMcVucJwxXeuD728EqVDDwQDxFMNo');
-// const SNOW_PROGRAM_ID = '86G3gad5tVjJxdQmmdQ6E3rLQNnDNh4KYcqiiSd7Az63';
 const SNOW_PROGRAM_ID = '3K4NPJKUJLbgGfxTJumtxv3U3HeJbS3nVjwy8CqFj6F2';
 const SNOW_IDL = 'idl/snowflake.json';
-const SNF_APP_SETTINGS = new PublicKey('BFHUu5FLD32mX2KtvDgzfPYNfANqjKmbUG3ow1wFPwj6');
+const SNF_PROGRAM_SETTINGS = new PublicKey('4zngo1n4BQQU8MHi2xopBppaT29Fv6jRLZ5NwvtdXpMG');
 
 const TRIGGER_TYPE_TIME = 2;
 const TRIGGER_TYPE_PROGRAM = 3;
@@ -60,7 +59,7 @@ export default class SnowService {
 
     if (flowAccount.triggerType == TRIGGER_TYPE_TIME) {
       let nextExecutionTime = flowAccount.nextExecutionTime.toNumber();
-      let retryWindow = flowAccount.retryWindow.toNumber();
+      let retryWindow = flowAccount.retryWindow;
       let now = Math.floor(Date.now() / 1000);
       return nextExecutionTime > 0 && nextExecutionTime < now && now - nextExecutionTime < retryWindow;
     }
@@ -72,14 +71,14 @@ export default class SnowService {
     try {
       const flowAddress = flow.publicKey;
       const operatorWalletKey = this.program.provider.wallet.publicKey;
-      const [pda, bump] = await PublicKey.findProgramAddress([flow.account.flowOwner.toBuffer()], this.program.programId);
+      const [pda, bump] = await PublicKey.findProgramAddress([flow.account.owner.toBuffer()], this.program.programId);
       
       let accounts = { 
         flow: flowAddress,
         caller: operatorWalletKey,
         pda: pda,
         systemProgram: SystemProgram.programId,
-        appSettings: SNF_APP_SETTINGS,
+        programSettings: SNF_PROGRAM_SETTINGS,
       };
 
       let remainAccountMetas = flow.account.actions.reduce(
@@ -137,7 +136,7 @@ export default class SnowService {
 
     if (flowAccount.triggerType == TRIGGER_TYPE_TIME) {
       let nextExecutionTime = flowAccount.nextExecutionTime.toNumber();
-      let retryWindow = flowAccount.retryWindow.toNumber();
+      let retryWindow = flowAccount.retryWindow;
       let now = Math.floor(Date.now() / 1000);
       return nextExecutionTime > 0 && now - nextExecutionTime > retryWindow;
     }
@@ -149,14 +148,14 @@ export default class SnowService {
     try {
       const flowAddress = flow.publicKey;
       const operatorWalletKey = this.program.provider.wallet.publicKey;
-      const [pda, bump] = await PublicKey.findProgramAddress([flow.account.flowOwner.toBuffer()], this.program.programId);
+      const [pda, bump] = await PublicKey.findProgramAddress([flow.account.owner.toBuffer()], this.program.programId);
       
       let accounts = { 
         flow: flowAddress,
         caller: operatorWalletKey,
         pda: pda,
         systemProgram: SystemProgram.programId,
-        appSettings: SNF_APP_SETTINGS,
+        programSettings: SNF_PROGRAM_SETTINGS,
       };
 
       const ix = await this.program.instruction.markTimedFlowAsError({

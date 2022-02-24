@@ -87,17 +87,7 @@ export const SnowSettings = ({}) => {
                 <Card
                   title="Your Wallet"
                   size="small"
-                  extra={
-                    <span>
-                      <SensitiveButton
-                        onClick={async () => {
-                          await devnetAirdropAction();
-                          setBalanceRefresh(+new Date());
-                        }}>
-                        Airdrop USDC (devnet)
-                      </SensitiveButton>
-                    </span>
-                  }>
+                 >
                   {<TokenListWithBalances owner={walletCtx.publicKey} balanceRefresh={balanceRefresh} />}
                 </Card>
               </Form>

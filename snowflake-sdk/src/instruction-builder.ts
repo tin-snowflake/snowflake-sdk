@@ -16,7 +16,7 @@ export class InstructionBuilder {
     let createContext: any = {
       accounts: {
         flow: newFlowKeyPair.publicKey,
-        flowOwner: this.program.provider.wallet.publicKey,
+        owner: this.program.provider.wallet.publicKey,
         systemProgram: SystemProgram.programId,
       },
     };
@@ -34,7 +34,7 @@ export class InstructionBuilder {
     let updateContext: any = {
       accounts: {
         flow: job.pubKey,
-        caller: this.program.provider.wallet.publicKey,
+        owner: this.program.provider.wallet.publicKey,
       },
       signers: [],
     };

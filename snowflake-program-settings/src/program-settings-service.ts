@@ -3,17 +3,17 @@ import {Provider, Program, ProgramAccount, setProvider } from "@project-serum/an
 
 const SNOW_PROGRAM_ID = '3K4NPJKUJLbgGfxTJumtxv3U3HeJbS3nVjwy8CqFj6F2';
 const SNOW_IDL = 'idl/snowflake.json';
-const SNF_APP_SETTINGS = new PublicKey('BFHUu5FLD32mX2KtvDgzfPYNfANqjKmbUG3ow1wFPwj6');
+const SNF_PROGRAM_SETTINGS = new PublicKey('4zngo1n4BQQU8MHi2xopBppaT29Fv6jRLZ5NwvtdXpMG');
 
-export default class AppSettingsService {
-  static instance(): AppSettingsService {
+export default class ProgramSettingsService {
+  static instance(): ProgramSettingsService {
     setProvider(Provider.env());
 
     const programId = new PublicKey(SNOW_PROGRAM_ID);
     const idl = JSON.parse(require('fs').readFileSync(SNOW_IDL, 'utf8'));
     const program = new Program(idl, programId);
 
-    return new AppSettingsService(program);
+    return new ProgramSettingsService(program);
   }
 
   constructor(
@@ -21,15 +21,15 @@ export default class AppSettingsService {
   ) { }
 
 
-  async initAppSettingsAccount() {
+  async initProgramSettingsAccount() {
     let secretKey =  Buffer.from(JSON.parse(require("fs").readFileSync('key.json', {encoding: "utf-8",})));
     let appSettingKeyPair = Keypair.fromSecretKey(secretKey);
     console.log("App setting key: ", appSettingKeyPair.publicKey.toBase58());
      
-    const ix = await this.program.instruction.initAppSettings(
+    const ix = await this.program.instruction.initProgramSettings(
       {
         accounts: {
-          appSettings: appSettingKeyPair.publicKey,
+          programSettings: appSettingKeyPair.publicKey,
           snfFoundation: this.program.provider.wallet.publicKey,
           systemProgram: SystemProgram.programId
         },
@@ -41,16 +41,16 @@ export default class AppSettingsService {
     console.log("transaction signature: ", tx);
   }
 
-  async retriveAppSettingsAccount() {
-    const appSettings = await this.program.account.appSettings.fetch(SNF_APP_SETTINGS);
+  async retriveProgramSettingsAccount() {
+    const programSettings = await this.program.account.programSettings.fetch(SNF_PROGRAM_SETTINGS);
     console.log("App Settings Account");
-    console.log("SNF Foundation Key: ", appSettings.snfFoundation.toBase58());
+    console.log("SNF Foundation Key: ", programSettings.snfFoundation.toBase58());
     console.log("Operators: ");
-    for (let o of appSettings.operators) {
+    for (let o of programSettings.operators) {
       console.log(o.toBase58());
     }
-    console.log("Operator to check index: ", appSettings.operatorToCheckIndex);
-    console.log("Last Check: ", appSettings.lastCheckTime.toNumber());   
+    console.log("Operator to check index: ", programSettings.operatorToCheckIndex);
+    console.log("Last Check: ", programSettings.lastCheckTime.toNumber());   
   }
 
   async registerOperator(operatorKey: string) {
@@ -59,8 +59,8 @@ export default class AppSettingsService {
     const ix = await this.program.instruction.registerOperator(
       {
         accounts: {
-          appSettings: SNF_APP_SETTINGS,
-          caller: this.program.provider.wallet.publicKey,
+          programSettings: SNF_PROGRAM_SETTINGS,
+          snfFoundation: this.program.provider.wallet.publicKey,
           operator: operator
         },
         signers: [],
@@ -72,12 +72,12 @@ export default class AppSettingsService {
   }
 
   async checkOperator() {
-    let appSettings = new PublicKey("69UVTJVEyhKQvCC6wGzddH4zmNUs7nEQrryRoP7umZGL");
+    let programSettings = new PublicKey("69UVTJVEyhKQvCC6wGzddH4zmNUs7nEQrryRoP7umZGL");
     
     const ix = await this.program.instruction.checkOperator(
       {
         accounts: {
-          appSettings: appSettings,
+          programSettings: programSettings,
           caller: this.program.provider.wallet.publicKey,
         },
         signers: [],

@@ -14,21 +14,22 @@ export function useDevnetAirdropAction(): () => Promise<any> {
   const connectionConfig = useConnectionConfig();
   const walletCtx = useWallet();
   const airdropAction = async () => {
-    const usdcTestMint = DEVNET_USDC_TOKEN;
-    const ixs = [];
-    const [userUSDCAssociatedTestAccount, createUserUSDCAssociatedTestAccount] = await createAssociatedTokenAccountIfNotExist(walletCtx.publicKey, walletCtx.publicKey, usdcTestMint, connectionConfig.connection);
-    ixs.push(...createUserUSDCAssociatedTestAccount);
-    ixs.push(
-      program.instruction.airdropDevnet(new BN(toLamportsByDecimal(500, 9)), {
-        accounts: {
-          authority: new PublicKey('DNTjShSiQ52SRTJEZMKurnQAgKTS5rWxWsxoUeM6D1FV'),
-          mint: usdcTestMint,
-          to: userUSDCAssociatedTestAccount,
-          tokenProgram: new PublicKey(programIds().token),
-        },
-      })
-    );
-    await new SmartTxnClient(connectionConfig, ixs, [], walletCtx).send();
+    // No longer use - remove before mainnet
+    // const usdcTestMint = DEVNET_USDC_TOKEN;
+    // const ixs = [];
+    // const [userUSDCAssociatedTestAccount, createUserUSDCAssociatedTestAccount] = await createAssociatedTokenAccountIfNotExist(walletCtx.publicKey, walletCtx.publicKey, usdcTestMint, connectionConfig.connection);
+    // ixs.push(...createUserUSDCAssociatedTestAccount);
+    // ixs.push(
+    //   program.instruction.airdropDevnet(new BN(toLamportsByDecimal(500, 9)), {
+    //     accounts: {
+    //       authority: new PublicKey('DNTjShSiQ52SRTJEZMKurnQAgKTS5rWxWsxoUeM6D1FV'),
+    //       mint: usdcTestMint,
+    //       to: userUSDCAssociatedTestAccount,
+    //       tokenProgram: new PublicKey(programIds().token),
+    //     },
+    //   })
+    // );
+    // await new SmartTxnClient(connectionConfig, ixs, [], walletCtx).send();
   };
 
   return airdropAction;
