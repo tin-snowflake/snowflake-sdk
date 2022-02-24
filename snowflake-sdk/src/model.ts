@@ -9,6 +9,7 @@ import { Buffer } from "buffer";
 import _ from "lodash";
 import { SNOWFLAKE_PROGRAM_ID } from "./program-id";
 import { CUSTOM_ACTION_CODE, RETRY_WINDOW } from "./config";
+import { ErrorMessage } from "./error";
 
 export type UnixTimeStamp = number;
 export type UTCOffset = number;
@@ -72,16 +73,21 @@ export class Job {
     return serJob;
   }
 
+  isCronWeekday(): boolean {
+    const [, , , , weekday] = this.cron.split(" ");
+    return !!weekday && weekday !== "*";
+  }
+
   validateForCreate() {
-    if (this.pubKey)
-      throw new Error(
-        "Can't create new job with an existing pubkey. Remove pubKey attribute and try again."
-      );
+    if (this.isCronWeekday())
+      throw new Error(ErrorMessage.CreateJobWithWeekdayCron);
+    if (this.pubKey) throw new Error(ErrorMessage.CreateJobWithExistingPubkey);
   }
 
   validateForUpdate() {
-    if (!this.pubKey)
-      throw new Error("Can't update job without an existing pubkey.");
+    if (this.isCronWeekday())
+      throw new Error(ErrorMessage.UpdateJobWithWeekdayCron);
+    if (!this.pubKey) throw new Error(ErrorMessage.UpdateJobWithExistingPubkey);
   }
 
   static fromJobJson(jobJson: any): Job {

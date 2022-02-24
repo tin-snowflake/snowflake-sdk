@@ -1,3 +1,4 @@
+import { ErrorMessage } from "../src/error";
 import { JobBuilder } from "../src/job-builder";
 import { instructions, rightNow, tomorrow } from "./test-data";
 
@@ -23,4 +24,20 @@ test("build recurring scheduled job", async function () {
   expect(job.recurring).toBe(true);
   expect(job.remainingRuns).toBe(2);
   expect(job.name).toBe("hello world");
+});
+
+test("build cron weekday job", () => {
+  const job = new JobBuilder()
+    .jobName("hello world")
+    .jobInstructions(instructions)
+    .scheduleCron("0 * * * 2", 2)
+    .build();
+
+  expect(() => job.validateForCreate()).toThrowError(
+    ErrorMessage.CreateJobWithWeekdayCron
+  );
+
+  expect(() => job.validateForUpdate()).toThrowError(
+    ErrorMessage.UpdateJobWithWeekdayCron
+  );
 });
