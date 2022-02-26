@@ -1,4 +1,4 @@
-solana config set --url https://api.devnet.solana.com
+anchorsolana config set --url https://api.devnet.solana.com
 solana config set --url https://api.testnet.solana.com
 solana config set --url http://localhost:8899
 

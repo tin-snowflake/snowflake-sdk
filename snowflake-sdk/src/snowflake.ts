@@ -65,7 +65,11 @@ export default class Snowflake {
     return await this.finder.findByJobPubKey(jobPubKey);
   }
 
-  async fetchByOwner(owner: PublicKey): Promise<Job[]> {
+  async findByOwner(owner: PublicKey): Promise<Job[]> {
     return await this.finder.findByJobOwner(owner);
+  }
+
+  async findGlobal(): Promise<Job[]> {
+    return await this.finder.findAll();
   }
 }

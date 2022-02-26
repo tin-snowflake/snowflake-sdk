@@ -10,7 +10,7 @@ import { ActionContext } from '../models/flowAction';
 import { ConnectionConfig } from '../contexts/connection';
 import { WalletContextState } from '@solana/wallet-adapter-react';
 import BN from 'bn.js';
-import { SNOWFLAKE_PROGRAM_ID } from './ids';
+import { CustomAnchorClient } from './customAnchorClient';
 
 function flowOwnedAccountsFilter(publicKey: PublicKey) {
   let filter = {
@@ -29,12 +29,18 @@ let dataSizeFilter = {
 
 export async function fetchFlowsByOwner(program: Program, publicKey: PublicKey) {
   let ownerFilter = flowOwnedAccountsFilter(publicKey);
-  console.log('ownerFilter = ', ownerFilter);
-  return program.account.flow.all([dataSizeFilter, ownerFilter]);
+
+  // return program.account.flow.all([dataSizeFilter, ownerFilter]);
+
+  const customAnchorClient = new CustomAnchorClient(program.account.flow);
+  return customAnchorClient.queryAllIgnoreBadData([dataSizeFilter, ownerFilter]);
 }
 
 export async function fetchGlobalFlows(program: Program) {
-  return program.account.flow.all([dataSizeFilter]);
+  // return program.account.flow.all([dataSizeFilter]);
+
+  const customAnchorClient = new CustomAnchorClient(program.account.flow);
+  return customAnchorClient.queryAllIgnoreBadData([dataSizeFilter]);
 }
 
 export const templateAction = { name: 'basic_action', actionCode: actionUtil.ACTION_TYPES.customAction.code, accounts: [{ isSigner: false, isWritable: false }] };

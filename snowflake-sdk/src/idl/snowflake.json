@@ -1,5 +1,5 @@
 {
-  "version": "0.0.0",
+  "version": "0.1.0",
   "name": "snowflake",
   "instructions": [
     {
@@ -11,8 +11,8 @@
           "isSigner": true
         },
         {
-          "name": "flowOwner",
-          "isMut": false,
+          "name": "owner",
+          "isMut": true,
           "isSigner": true
         },
         {
@@ -43,7 +43,7 @@
           "isSigner": false
         },
         {
-          "name": "caller",
+          "name": "owner",
           "isMut": false,
           "isSigner": true
         }
@@ -66,7 +66,7 @@
           "isSigner": false
         },
         {
-          "name": "caller",
+          "name": "owner",
           "isMut": false,
           "isSigner": true
         }
@@ -83,12 +83,12 @@
         },
         {
           "name": "pda",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
           "name": "caller",
-          "isMut": true,
+          "isMut": false,
           "isSigner": true
         },
         {
@@ -97,7 +97,7 @@
           "isSigner": false
         },
         {
-          "name": "appSettings",
+          "name": "programSettings",
           "isMut": false,
           "isSigner": false
         }
@@ -114,12 +114,12 @@
         },
         {
           "name": "pda",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
           "name": "caller",
-          "isMut": true,
+          "isMut": false,
           "isSigner": true
         },
         {
@@ -128,7 +128,7 @@
           "isSigner": false
         },
         {
-          "name": "appSettings",
+          "name": "programSettings",
           "isMut": false,
           "isSigner": false
         }
@@ -145,12 +145,12 @@
         },
         {
           "name": "pda",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
           "name": "caller",
-          "isMut": true,
+          "isMut": false,
           "isSigner": true
         },
         {
@@ -159,7 +159,7 @@
           "isSigner": false
         },
         {
-          "name": "appSettings",
+          "name": "programSettings",
           "isMut": false,
           "isSigner": false
         }
@@ -171,12 +171,12 @@
       "accounts": [
         {
           "name": "caller",
-          "isMut": true,
+          "isMut": false,
           "isSigner": true
         },
         {
           "name": "pda",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -229,16 +229,16 @@
       ]
     },
     {
-      "name": "initAppSettings",
+      "name": "initProgramSettings",
       "accounts": [
         {
-          "name": "appSettings",
+          "name": "programSettings",
           "isMut": true,
           "isSigner": true
         },
         {
           "name": "snfFoundation",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true
         },
         {
@@ -253,12 +253,12 @@
       "name": "registerOperator",
       "accounts": [
         {
-          "name": "appSettings",
+          "name": "programSettings",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "caller",
+          "name": "snfFoundation",
           "isMut": false,
           "isSigner": true
         },
@@ -269,37 +269,6 @@
         }
       ],
       "args": []
-    },
-    {
-      "name": "airdropDevnet",
-      "accounts": [
-        {
-          "name": "authority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "mint",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "to",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "amount",
-          "type": "u64"
-        }
-      ]
     }
   ],
   "accounts": [
@@ -317,12 +286,12 @@
             "type": "u8"
           },
           {
-            "name": "payFeeFrom",
-            "type": "u8"
+            "name": "nextExecutionTime",
+            "type": "i64"
           },
           {
-            "name": "clientAppId",
-            "type": "publicKey"
+            "name": "retryWindow",
+            "type": "u32"
           },
           {
             "name": "recurring",
@@ -333,24 +302,12 @@
             "type": "i16"
           },
           {
-            "name": "scheduleEndDate",
-            "type": "i64"
+            "name": "dedicatedOperator",
+            "type": "publicKey"
           },
           {
-            "name": "nextExecutionTime",
-            "type": "i64"
-          },
-          {
-            "name": "retryWindow",
-            "type": "i64"
-          },
-          {
-            "name": "lastScheduledExecution",
-            "type": "i64"
-          },
-          {
-            "name": "userUtcOffset",
-            "type": "i64"
+            "name": "clientAppId",
+            "type": "u32"
           },
           {
             "name": "expiryDate",
@@ -359,6 +316,22 @@
           {
             "name": "expireOnComplete",
             "type": "bool"
+          },
+          {
+            "name": "scheduleEndDate",
+            "type": "i64"
+          },
+          {
+            "name": "payFeeFrom",
+            "type": "u8"
+          },
+          {
+            "name": "userUtcOffset",
+            "type": "i32"
+          },
+          {
+            "name": "lastScheduledExecution",
+            "type": "i64"
           },
           {
             "name": "createdDate",
@@ -371,10 +344,6 @@
           {
             "name": "lastUpdatedDate",
             "type": "i64"
-          },
-          {
-            "name": "dedicatedOperator",
-            "type": "publicKey"
           },
           {
             "name": "externalId",
@@ -404,7 +373,7 @@
       }
     },
     {
-      "name": "AppSettings",
+      "name": "ProgramSettings",
       "type": {
         "kind": "struct",
         "fields": [
@@ -486,13 +455,51 @@
           }
         ]
       }
+    },
+    {
+      "name": "TriggerType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "None"
+          },
+          {
+            "name": "Time"
+          },
+          {
+            "name": "Program"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FeeSource",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "FromFeeAccount"
+          },
+          {
+            "name": "FromFlow"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ErrorCode",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "InvalidJobTargetAccounts"
+          }
+        ]
+      }
     }
   ],
-  "errors": [
-    {
-      "code": 400,
-      "name": "InvalidJobTargetAccounts",
-      "msg": "The accounts specified for the job target program is not valid."
-    }
-  ]
+  "metadata": {
+    "address": "3K4NPJKUJLbgGfxTJumtxv3U3HeJbS3nVjwy8CqFj6F2"
+  }
 }

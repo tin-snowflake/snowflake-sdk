@@ -6,10 +6,18 @@ use anchor_lang::solana_program::instruction::Instruction;
 use cron::Crontab;
 use crate::cron::Tm;
 use anchor_lang::solana_program::program::invoke_signed;
+use anchor_spl::token::{Token, TokenAccount};
 
-const TRIGGER_TYPE_NONE: u8 = 1;
-const TRIGGER_TYPE_TIME: u8 = 2;
-const TRIGGER_TYPE_PROGRAM: u8 = 3;
+pub enum TriggerType {
+    None = 1,
+    Time = 2,
+    Program = 3
+}
+
+pub enum FeeSource {
+    FromFeeAccount = 1,
+    FromFlow = 2
+}
 
 const RECURRING_FOREVER:i16 = -999;
 const DEFAULT_RETRY_WINDOW: u32 = 300;
@@ -20,16 +28,13 @@ const TIMED_FLOW_ERROR: i64 = -1;
 const OPERATOR_TIME_SLOT: i64 = 20;
 const SNF_PROGRAM_SETTINGS_KEY: &str = "4zngo1n4BQQU8MHi2xopBppaT29Fv6jRLZ5NwvtdXpMG";
 
-const PAY_FEE_FROM_FLOW: u8 = 2;
-
 declare_id!("3K4NPJKUJLbgGfxTJumtxv3U3HeJbS3nVjwy8CqFj6F2");
 
 #[program]
 pub mod snowflake {
     use super::*;
-    use spl_token::solana_program::program::invoke_signed;
-    use anchor_lang::solana_program;
     use spl_token::instruction;
+
 
     pub fn create_flow(ctx: Context<CreateFlow>, account_size : u32, client_flow: Flow) -> ProgramResult {
         let flow = &mut ctx.accounts.flow;
@@ -131,8 +136,8 @@ pub mod snowflake {
 
         let ix_result: Result<Instruction, ProgramError>  = instruction::transfer(
             ctx.accounts.token_program.key,
-            ctx.accounts.source_ata.key,
-            ctx.accounts.destination_ata.key,
+            &ctx.accounts.source_ata.key(),
+            &ctx.accounts.destination_ata.key(),
             &pda.key(),
             &[],
             amount,
@@ -198,7 +203,7 @@ pub fn do_execute_flow<'info>(ctx: Context<'_,'_,'_, 'info,ExecuteFlow<'info>>, 
             accounts: metas,
             data: action.instruction.clone(),
         };
-      
+
         invoke_signed(
             &ix,
             ctx.remaining_accounts,
@@ -222,55 +227,79 @@ pub fn validate_execute_flow_pda(ctx: &Context<ExecuteFlow>) -> Result<u8, Progr
 
 #[derive(Accounts)]
 pub struct WithdrawNative<'info> {
+
     pub caller: Signer<'info>,
+
+    /// CHECK : no read or write and pda is derived from the signer
     #[account(seeds = [&caller.key().to_bytes()], bump)]
     pub pda: AccountInfo<'info>,
+
     pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
 pub struct Withdraw<'info> {
+
     pub caller: Signer<'info>,
+
+    /// CHECK : no read or write and pda is derived from the signer
     #[account(seeds = [&caller.key().to_bytes()], bump)]
     pub pda: AccountInfo<'info>,
+
     #[account(mut)]
-    pub destination_ata: UncheckedAccount<'info>,
-    #[account(mut)]
-    pub source_ata: UncheckedAccount<'info>,
-    token_program : UncheckedAccount<'info>
+    destination_ata: Account<'info, TokenAccount>,
+
+    #[account(mut, constraint = &source_ata.owner == &pda.key())]
+    pub source_ata: Account<'info, TokenAccount>,
+
+    token_program: Program<'info, Token>,
 }
 
 #[derive(Accounts)]
 #[instruction(account_size : u32, client_flow: Flow)]
 pub struct CreateFlow<'info> {
+
     #[account(init, payer = owner, space = account_size as usize)]
     flow: Account<'info, Flow>,
+
+    #[account(mut)]
     pub owner: Signer<'info>,
+
     pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
 pub struct UpdateFlow<'info> {
+
     #[account(mut, has_one = owner)]
     flow: Account<'info, Flow>,
+
     pub owner: Signer<'info>,
 }
 
 #[derive(Accounts)]
 pub struct DeleteFlow<'info> {
+
     #[account(mut, has_one = owner, close=owner)]
     flow: Account<'info, Flow>,
+
     pub owner: Signer<'info>,
 }
 
 #[derive(Accounts)]
 pub struct ExecuteFlow<'info> {
+
     #[account(mut)]
     flow: Account<'info, Flow>,
-    #[account(mut, seeds = [&flow.owner.to_bytes()], bump)]
+
+    /// CHECK : no read or write to this account.
+    #[account(seeds = [&flow.owner.to_bytes()], bump)]
     pub pda: AccountInfo<'info>,
+
     pub caller: Signer<'info>,
+
     pub system_program: Program<'info, System>,
+
     #[account(address = SNF_PROGRAM_SETTINGS_KEY.parse::<Pubkey>().unwrap())]
     pub program_settings: Account<'info, ProgramSettings>,
 
@@ -278,17 +307,25 @@ pub struct ExecuteFlow<'info> {
 
 #[derive(Accounts)]
 pub struct InitProgramSettings<'info> {
+
     #[account(init, payer = snf_foundation, space = 1000)]
     program_settings: Account<'info, ProgramSettings>,
+
+    #[account(mut)]
     pub snf_foundation: Signer<'info>,
+
     pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
 pub struct RegisterOperator<'info> {
+
     #[account(mut, has_one = snf_foundation)]
     program_settings: Account<'info, ProgramSettings>,
+
     pub snf_foundation: Signer<'info>,
+
+    /// CHECK : no read or write to this account.
     pub operator: UncheckedAccount<'info>,
 }
 
@@ -339,7 +376,7 @@ impl Flow {
         self.expire_on_complete = false;
         self.extra = String::from("");
 
-        if self.trigger_type == TRIGGER_TYPE_TIME {
+        if self.trigger_type == TriggerType::Time as u8 {
             if self.retry_window < 1 {
                 self.retry_window = DEFAULT_RETRY_WINDOW;
             }
@@ -356,16 +393,15 @@ impl Flow {
     }
 
     fn validate_flow_data(&self)  -> bool {
-        if self.trigger_type != TRIGGER_TYPE_NONE 
-            && self.trigger_type != TRIGGER_TYPE_TIME 
-            && self.trigger_type != TRIGGER_TYPE_PROGRAM {
+        if self.trigger_type != TriggerType::None as u8
+            && self.trigger_type != TriggerType::Time as u8
+            && self.trigger_type != TriggerType::Program as u8 {
             return false;
         }
 
         if self.remaining_runs < 0 && self.remaining_runs != RECURRING_FOREVER {
             return false;
         }
-
         true
     }
     
@@ -376,7 +412,7 @@ impl Flow {
         self.last_scheduled_execution = 0;
         self.remaining_runs = 0;
         self.cron = String::from("");
-        self.trigger_type = TRIGGER_TYPE_NONE;
+        self.trigger_type = TriggerType::None as u8;
     }
 
     fn has_remaining_runs(&self) -> bool {
@@ -384,11 +420,11 @@ impl Flow {
     }
         
     fn is_due_for_execute(&self, now: i64) -> bool {
-        if self.trigger_type == TRIGGER_TYPE_PROGRAM {
+        if self.trigger_type == TriggerType::Program as u8 {
             return self.has_remaining_runs();
         }
 
-        if self.trigger_type == TRIGGER_TYPE_TIME {
+        if self.trigger_type == TriggerType::Time as u8 {
             return self.next_execution_time > 0 
                     && self.next_execution_time < now 
                     && now - self.next_execution_time < self.retry_window as i64;
@@ -398,7 +434,7 @@ impl Flow {
     }
 
     fn is_schedule_expired(&self, now: i64) -> bool {
-        return self.trigger_type == TRIGGER_TYPE_TIME 
+        return self.trigger_type == TriggerType::Time as u8
             && self.next_execution_time > 0
             && now - self.next_execution_time > self.retry_window as i64;
     }
@@ -409,7 +445,7 @@ impl Flow {
             self.remaining_runs = self.remaining_runs - 1;
         }
 
-        if self.trigger_type == TRIGGER_TYPE_TIME {
+        if self.trigger_type == TriggerType::Time as u8 {
             self.next_execution_time = 
                 if self.has_remaining_runs() {calculate_next_execution_time(&self.cron, self.user_utc_offset as i64)}
                 else {TIMED_FLOW_COMPLETE};
@@ -504,7 +540,7 @@ fn charge_fee(ctx: &Context<ExecuteFlow>, pda_bump: u8) -> ProgramResult {
     let caller = &ctx.accounts.caller;
     let flow = &ctx.accounts.flow;
 
-    if flow.pay_fee_from == PAY_FEE_FROM_FLOW {
+    if flow.pay_fee_from == FeeSource::FromFlow as u8 {
         let flow_account = flow.to_account_info();
         **flow_account.try_borrow_mut_lamports()? -= fee;
         **caller.try_borrow_mut_lamports()? += fee;

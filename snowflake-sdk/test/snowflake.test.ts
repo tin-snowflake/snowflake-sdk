@@ -17,8 +17,6 @@ beforeAll(() => {
 });
 
 test("create job", async function () {
-  const beforeFetchByOwnerJobs = await snowflake.fetchByOwner(owner);
-
   const job = new JobBuilder()
     .jobName("hello world")
     .jobInstructions(instructions)
@@ -37,13 +35,6 @@ test("create job", async function () {
   expect(fetchedJob.recurring).toBe(false);
   expect(fetchedJob.pubKey).toBeDefined();
   expect(fetchedJob);
-
-  const afterFetchedByOwnerJobs = await snowflake.fetchByOwner(owner);
-
-  expect(afterFetchedByOwnerJobs.length > 0).toBeTruthy();
-  expect(afterFetchedByOwnerJobs.length).toBe(
-    beforeFetchByOwnerJobs.length + 1
-  );
 });
 
 test("update job", async function () {
@@ -85,7 +76,7 @@ test("delete job", async function () {
   await snowflake.createJob(job);
 
   // Before delete
-  let beforeDeleteFetchJobsByOwner = await snowflake.fetchByOwner(owner);
+  let beforeDeleteFetchJobsByOwner = await snowflake.findByOwner(owner);
   expect(beforeDeleteFetchJobsByOwner.length > 0).toBeTruthy();
 
   // After delete
@@ -97,7 +88,7 @@ test("delete job", async function () {
 
   expect(fetchJob).toBeUndefined();
 
-  let afterDeleteFetchJobsByOwner = await snowflake.fetchByOwner(owner);
+  let afterDeleteFetchJobsByOwner = await snowflake.findByOwner(owner);
   expect(afterDeleteFetchJobsByOwner.length).toBe(
     beforeDeleteFetchJobsByOwner.length - 1
   );
