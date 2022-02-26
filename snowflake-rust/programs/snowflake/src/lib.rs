@@ -1,10 +1,9 @@
 mod error;
-mod cron;
 use anchor_lang::prelude::*;
 use anchor_lang::{Accounts, Key, solana_program};
 use anchor_lang::solana_program::instruction::Instruction;
-use cron::Crontab;
-use crate::cron::Tm;
+use snowutil::scheduler::{SnowSchedule, SnowTime};
+use snowutil::operator::controller::*;
 use anchor_lang::solana_program::program::invoke_signed;
 use anchor_spl::token::{Token, TokenAccount};
 
@@ -25,7 +24,6 @@ const DEFAULT_RETRY_WINDOW: u32 = 300;
 const TIMED_FLOW_COMPLETE: i64 = 0;
 const TIMED_FLOW_ERROR: i64 = -1;
 
-const OPERATOR_TIME_SLOT: i64 = 20;
 const SNF_PROGRAM_SETTINGS_KEY: &str = "4zngo1n4BQQU8MHi2xopBppaT29Fv6jRLZ5NwvtdXpMG";
 
 declare_id!("3K4NPJKUJLbgGfxTJumtxv3U3HeJbS3nVjwy8CqFj6F2");
@@ -513,15 +511,7 @@ impl ProgramSettings {
         if !self.is_operator_registered(operator_key) {
             return false;
         }
-
-        let flow_id = flow_key.to_bytes()[0] as usize;
-        let slot = ((now % 60) / OPERATOR_TIME_SLOT) as usize;
-
-        let n = self.operators.len();
-        let operator_index = ((flow_id % n) + slot) % n;
-        let operator_in_charge = self.operators.get(operator_index).unwrap();
-
-        operator_in_charge == operator_key
+        can_execute(&self.operators,  now, flow_key, operator_key)
     }
 }
 
@@ -529,8 +519,8 @@ impl ProgramSettings {
 
 fn calculate_next_execution_time(_cron: &str, utc_offset: i64) -> i64 {
     let now = Clock::get().unwrap().unix_timestamp - utc_offset;
-    let cron = Crontab::parse(_cron).unwrap();
-    let next_execution = cron.find_event_after(&Tm::from_time_ts(now)).unwrap().to_time_ts(utc_offset);
+    let schedule = SnowSchedule::parse(_cron).unwrap();
+    let next_execution = schedule.find_event_after(&SnowTime::from_time_ts(now)).unwrap().to_time_ts(utc_offset);
     next_execution
 }
 
@@ -557,64 +547,4 @@ fn charge_fee(ctx: &Context<ExecuteFlow>, pda_bump: u8) -> ProgramResult {
         )?;
     }
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use anchor_lang::__private::bytemuck::__core::str::FromStr;
-    use spl_token::solana_program::pubkey;
-
-    #[test]
-    fn test_program_settings() {
-        let mut keys :Vec<Pubkey> = Vec::new();
-
-        let operator0 = pubkey::Pubkey::from_str("EpmRY1vzTajbur4hkipMi3MbvjbJHKzqEAAqXj12ccZQ").unwrap();
-        keys.push(operator0);
-
-        let operator1 = pubkey::Pubkey::from_str("86G3gad5tVjJxdQmmdQ6E3rLQNnDNh4KYcqiiSd7Az63").unwrap();
-        keys.push(operator1);
-
-        let operator2 = pubkey::Pubkey::from_str("AbugGcRTG2rhAqvE6U4t5qH1ftedcKgEa19BjHbFGCMG").unwrap();
-        keys.push(operator2);
-
-        let program_settings = ProgramSettings {
-            snf_foundation: pubkey::Pubkey::from_str("86G3gad5tVjJxdQmmdQ6E3rLQNnDNh4KYcqiiSd7Az63").unwrap(),
-            operators: keys,
-            operator_to_check_index: 0,
-            last_check_time: 0,
-        };
-
-        assert_eq!(program_settings.is_operator_registered(&operator0), true);
-
-        let non_registered_operator = pubkey::Pubkey::from_str("9dt6a11nz8EXg7HBo7tqcSqguwBAUDoHvR7nGZPvuu6X").unwrap();
-        assert_eq!(program_settings.is_operator_registered(&non_registered_operator), false);
-
-        let mut now: i64 = 12121323343;
-
-        let flow1 = pubkey::Pubkey::from_str("9dt6a11nz8EXg7HBo7tqcSqguwBAUDoHvR7nGZPvuu6X").unwrap();
-        let checkop0 = program_settings.can_operator_excecute_flow(now, &flow1, &operator0);
-        let checkop1 = program_settings.can_operator_excecute_flow(now, &flow1, &operator1);
-        let checkop2 = program_settings.can_operator_excecute_flow(now, &flow1, &operator2);
-        println! ("Op 1 - {}, Op 2 - {}, Op 3 - {}", checkop0, checkop1, checkop2);
-
-        now += OPERATOR_TIME_SLOT;
-        let checkop0 = program_settings.can_operator_excecute_flow(now, &flow1, &operator0);
-        let checkop1 = program_settings.can_operator_excecute_flow(now, &flow1, &operator1);
-        let checkop2 = program_settings.can_operator_excecute_flow(now, &flow1, &operator2);
-        println! ("Op 1 - {}, Op 2 - {}, Op 3 - {}", checkop0, checkop1, checkop2);
-
-        now += OPERATOR_TIME_SLOT;
-        let checkop0 = program_settings.can_operator_excecute_flow(now, &flow1, &operator0);
-        let checkop1 = program_settings.can_operator_excecute_flow(now, &flow1, &operator1);
-        let checkop2 = program_settings.can_operator_excecute_flow(now, &flow1, &operator2);
-        println! ("Op 1 - {}, Op 2 - {}, Op 3 - {}", checkop0, checkop1, checkop2);
-
-        now += OPERATOR_TIME_SLOT;
-        let checkop0 = program_settings.can_operator_excecute_flow(now, &flow1, &operator0);
-        let checkop1 = program_settings.can_operator_excecute_flow(now, &flow1, &operator1);
-        let checkop2 = program_settings.can_operator_excecute_flow(now, &flow1, &operator2);
-        println! ("Op 1 - {}, Op 2 - {}, Op 3 - {}", checkop0, checkop1, checkop2);
-    }
-
 }

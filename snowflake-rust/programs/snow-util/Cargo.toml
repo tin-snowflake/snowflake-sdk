@@ -1,0 +1,12 @@
+[package]
+name = "snowutil"
+version = "0.1.0"
+description = "Created with Anchor"
+edition = "2018"
+
+[lib]
+name = "snowutil"
+
+[dependencies]
+anchor-lang = "0.21.0"
+thiserror = "1.0.20"

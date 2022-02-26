@@ -1,7 +1,7 @@
 #[repr(C)]
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Hash)]
 #[cfg_attr(feature = "rustc-serialize", derive(RustcEncodable, RustcDecodable))]
-pub struct Tm {
+pub struct SnowTime {
     /// Seconds after the minute - [0, 60]
     pub tm_sec: i32,
 
@@ -43,9 +43,9 @@ pub struct Tm {
     pub tm_nsec: i32,
 }
 
-impl Tm {
-    pub fn new() -> Tm {
-        Tm {
+impl SnowTime {
+    pub fn new() -> SnowTime {
+        SnowTime {
             tm_sec: 0,
             tm_min: 0,
             tm_hour: 0,
@@ -65,9 +65,9 @@ impl Tm {
                           day: i32,
                           hour: i32,
                           minute: i32,
-                          second: i32) -> Tm {
+                          second: i32) -> SnowTime {
 
-        Tm {
+        SnowTime {
             tm_sec: second,
             tm_min: minute,
             tm_hour: hour,
@@ -82,13 +82,13 @@ impl Tm {
         }
     }
 
-    pub fn from_time_ts(ts: i64) -> Tm {
-        let mut tm = Tm::new();
+    pub fn from_time_ts(ts: i64) -> SnowTime {
+        let mut tm = SnowTime::new();
         let leapyear = |year| -> bool {
             year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)
         };
 
-        static _ytab: [[i64; 12]; 2] = [
+        static _YTAB: [[i64; 12]; 2] = [
             [ 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 ],
             [ 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 ]
         ];
@@ -118,8 +118,8 @@ impl Tm {
         tm.tm_year = (year - 1900) as i32;
         tm.tm_yday = dayno as i32;
         let mut mon = 0;
-        while dayno >= _ytab[if leapyear(year) { 1 } else { 0 }][mon] {
-            dayno -= _ytab[if leapyear(year) { 1 } else { 0 }][mon];
+        while dayno >= _YTAB[if leapyear(year) { 1 } else { 0 }][mon] {
+            dayno -= _YTAB[if leapyear(year) { 1 } else { 0 }][mon];
             mon += 1;
         }
         tm.tm_mon = mon as i32;
