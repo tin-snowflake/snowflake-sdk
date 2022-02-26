@@ -119,7 +119,6 @@ export class Job {
       }
     );
     job.instructions = [];
-    console.log(serJob, serJob.actions);
     for (let action of serJob.actions) {
       const instruction = SerializableAction.toInstruction(action);
       job.instructions.push(instruction);
