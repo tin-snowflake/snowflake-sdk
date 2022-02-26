@@ -50,7 +50,7 @@ export class InstructionBuilder {
     let deleteContext: any = {
       accounts: {
         flow: jobPubKey,
-        caller: this.program.provider.wallet.publicKey,
+        owner: this.program.provider.wallet.publicKey,
       },
       signers: [],
     };
