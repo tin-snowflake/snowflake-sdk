@@ -20,13 +20,13 @@ export default class Finder {
     let ownerFilter = this.getOwnerFilter(owner);
     let serJobs: ProgramAccount<SerializableJob>[] =
       await this.program.account.flow.all([ownerFilter]);
-    return serJobs.map((v) => Job.fromSerializableJob(v.publicKey, v.account));
+    return serJobs.map((v) => Job.fromSerializableJob(v.account, v.publicKey));
   }
 
   async findAll(): Promise<Job[]> {
     let serJobs: ProgramAccount<SerializableJob>[] =
       await this.program.account.flow.all([]);
-    return serJobs.map((v) => Job.fromSerializableJob(v.publicKey, v.account));
+    return serJobs.map((v) => Job.fromSerializableJob(v.account, v.publicKey));
   }
 
   private getOwnerFilter(publicKey: PublicKey): any {
