@@ -1,6 +1,7 @@
-import { Program } from "@project-serum/anchor";
-import { AccountInfo, PublicKey } from "@solana/web3.js";
+import { Program, ProgramAccount } from "@project-serum/anchor";
+import { PublicKey } from "@solana/web3.js";
 import { Job, SerializableJob } from "./model";
+import { JOB_ACCOUNT_LAYOUT } from "./job-layout";
 
 export default class Finder {
   program: Program;
@@ -16,14 +17,24 @@ export default class Finder {
   }
 
   async findByJobOwner(owner: PublicKey): Promise<Job[]> {
-    let serJobs: SerializableJob = await this.program.account.flow.all([
-      {
-        memcmp: {
-          offset: 8, // Discriminator
-          bytes: owner.toBase58(),
-        },
+    let ownerFilter = this.getOwnerFilter(owner);
+    let serJobs: ProgramAccount<SerializableJob>[] =
+      await this.program.account.flow.all([ownerFilter]);
+    return serJobs.map((v) => Job.fromSerializableJob(v.publicKey, v.account));
+  }
+
+  async findAll(): Promise<Job[]> {
+    let serJobs: ProgramAccount<SerializableJob>[] =
+      await this.program.account.flow.all([]);
+    return serJobs.map((v) => Job.fromSerializableJob(v.publicKey, v.account));
+  }
+
+  private getOwnerFilter(publicKey: PublicKey): any {
+    return {
+      memcmp: {
+        offset: JOB_ACCOUNT_LAYOUT.offsetOf("owner"),
+        bytes: publicKey.toBase58(),
       },
-    ]);
-    return serJobs;
+    };
   }
 }

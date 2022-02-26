@@ -20,7 +20,13 @@ export enum TriggerType {
   ProgramCondition = 3,
 }
 
-const NON_BN_FIELDS = ["remainingRuns", "triggerType"];
+const NON_BN_FIELDS = [
+  "remainingRuns",
+  "triggerType",
+  "retryWindow",
+  "clientAppId",
+  "userUtcOffset",
+];
 
 export class Job {
   pubKey: PublicKey;
