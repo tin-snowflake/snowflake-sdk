@@ -20,7 +20,7 @@ impl SnowSchedule {
     })
   }
 
-  pub fn find_event_after(&self, start_time: &SnowTime) -> Option<SnowTime> {
+  pub fn next_event(&self, start_time: &SnowTime) -> Option<SnowTime> {
     calculate_next_event(&self.schedule, start_time)
   }
 
@@ -218,7 +218,7 @@ mod tests {
     // First of the month at 0:00.
 
     let cron = SnowSchedule::parse("0 12 * 12 4").unwrap();
-    let next_execution = cron.find_event_after(&SnowTime::from_time_ts(1638148600)).unwrap();
+    let next_execution = cron.next_event(&SnowTime::from_time_ts(1638148600)).unwrap();
     println!("next execution is {:?}", next_execution);
     // let tm = get_tm(2004, 1, 1, 0, 1, 59);
 /*

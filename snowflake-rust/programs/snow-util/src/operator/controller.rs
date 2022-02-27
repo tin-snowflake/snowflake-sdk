@@ -7,7 +7,7 @@ pub fn can_execute(operators : &Vec<Pubkey>, now: i64, flow_key: &Pubkey, curren
     let slot = ((now % 60) / OPERATOR_TIME_SLOT) as usize;
 
     let n = operators.len();
-    let operator_index = ((flow_id % n) + slot) % n;
+    let operator_index = ((flow_id % n).checked_add( slot).unwrap()) % n;
     let operator_in_charge = operators.get(operator_index).unwrap();
 
     operator_in_charge == current_operator

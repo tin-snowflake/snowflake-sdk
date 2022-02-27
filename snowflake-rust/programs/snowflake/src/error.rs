@@ -1,7 +1,19 @@
-use crate::error;
-#[error(offset = 0)]
+use anchor_lang::prelude::*;
+
+#[error]
 pub enum ErrorCode {
-    // Instructions.
-    #[msg("The accounts specified for the job target program is not valid.")]
-    InvalidJobTargetAccounts = 100
+    #[msg("The job data is invalid.")]
+    InvalidJobData,
+
+    #[msg("The job is not assigned to this operator.")]
+    JobIsNotAssignedToOperator,
+
+    #[msg("The job is not due for execution.")]
+    JobIsNotDueForExecution,
+
+    #[msg("Unable to mark the time triggered job as error because it is still within schedule.")]
+    CannotMarkJobAsErrorIfItsWithinSchedule,
+
+    #[msg("The operator is already registered.")]
+    OperatorIsAlreadyRegistered,
 }

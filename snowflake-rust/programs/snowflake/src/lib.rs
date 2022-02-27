@@ -2,10 +2,11 @@ mod error;
 use anchor_lang::prelude::*;
 use anchor_lang::{Accounts, Key, solana_program};
 use anchor_lang::solana_program::instruction::Instruction;
-use snowutil::scheduler::{SnowSchedule, SnowTime};
-use snowutil::operator::controller::*;
+use snow_util::scheduler::{SnowSchedule, SnowTime};
+use snow_util::operator::controller::*;
 use anchor_lang::solana_program::program::invoke_signed;
 use anchor_spl::token::{Token, TokenAccount};
+use crate::error::ErrorCode;
 
 pub enum TriggerType {
     None = 1,
@@ -39,12 +40,9 @@ pub mod snowflake {
         flow.owner = ctx.accounts.owner.key();
 
         flow.apply_flow_data(client_flow);
-        
-        if flow.validate_flow_data() {
-            Ok(())
-        } else {
-            Err(ProgramError::InvalidAccountData)
-        }
+
+        require!(flow.validate_flow_data(),ErrorCode::InvalidJobData);
+        Ok(())
     }
 
     pub fn update_flow(ctx: Context<UpdateFlow>, client_flow: Flow) -> ProgramResult {
@@ -52,11 +50,8 @@ pub mod snowflake {
 
         flow.apply_flow_data(client_flow);
 
-        if flow.validate_flow_data() {
-            Ok(())
-        } else {
-            Err(ProgramError::InvalidAccountData)
-        }
+        require!(flow.validate_flow_data(),ErrorCode::InvalidJobData);
+        Ok(())
     }
 
     pub fn delete_flow(ctx: Context<DeleteFlow>) -> ProgramResult {
@@ -81,14 +76,10 @@ pub mod snowflake {
         let program_settings = &ctx.accounts.program_settings;
         let flow = &mut ctx.accounts.flow;
         let now = Clock::get()?.unix_timestamp;
-       
-        if !program_settings.can_operator_excecute_flow(now, &flow.key(), operator.key) {
-            return Err(ProgramError::Custom(3));
-        }
 
-        if !flow.is_due_for_execute(now) {
-            return Err(ProgramError::Custom(1));
-        }
+        require!(program_settings.can_operator_excecute_flow(now, &flow.key(), operator.key), ErrorCode::JobIsNotAssignedToOperator);
+
+        require!(flow.is_due_for_execute(now), ErrorCode::JobIsNotDueForExecution);
 
         flow.update_after_schedule_run(now);
 
@@ -96,14 +87,14 @@ pub mod snowflake {
     }
 
     pub fn mark_timed_flow_as_error(ctx: Context<ExecuteFlow>) -> ProgramResult {
+        let pda_bump = *ctx.bumps.get("pda").unwrap();
+        charge_fee(&ctx, pda_bump)?;
+
         let flow = &mut ctx.accounts.flow;
         let now = Clock::get()?.unix_timestamp;
 
-        if !flow.is_schedule_expired(now) {
-            return Err(ProgramError::Custom(2));
-        }
+        require!(flow.is_schedule_expired(now), ErrorCode::CannotMarkJobAsErrorIfItsWithinSchedule);
 
-        // charge_txn_fee();
         flow.next_execution_time = TIMED_FLOW_ERROR;
 
         Ok(())
@@ -122,7 +113,7 @@ pub mod snowflake {
         invoke_signed(
             &ix,
             &[caller.to_account_info(), ctx.accounts.pda.to_account_info()],
-            &[&[&caller.key().to_bytes(), &[pda_bump]]],
+            &[&[&caller.key().as_ref(), &[pda_bump]]],
         )?;
         Ok(())
     }
@@ -150,7 +141,7 @@ pub mod snowflake {
                 caller.to_account_info(),
                 ctx.accounts.pda.to_account_info()
             ],
-            &[&[&caller.key().to_bytes(), &[pda_bump]]],
+            &[&[&caller.key().as_ref(), &[pda_bump]]],
         )?;
 
         Ok(())
@@ -168,10 +159,7 @@ pub mod snowflake {
         let program_settings = &mut ctx.accounts.program_settings;
         let operator = &ctx.accounts.operator;
 
-        //If key is already in the list - don't add
-        if program_settings.is_operator_registered(operator.key) {
-            return Err(ProgramError::Custom(1));
-        }
+        require!(!program_settings.is_operator_registered(operator.key), ErrorCode::OperatorIsAlreadyRegistered);
        
         program_settings.operators.push(*operator.key);
         if program_settings.operator_to_check_index == -1 {
@@ -180,7 +168,6 @@ pub mod snowflake {
 
         Ok(())
     }
-    
 }
 
 pub fn do_execute_flow<'info>(ctx: Context<'_,'_,'_, 'info,ExecuteFlow<'info>>, pda_bump : u8) -> ProgramResult {
@@ -205,20 +192,10 @@ pub fn do_execute_flow<'info>(ctx: Context<'_,'_,'_, 'info,ExecuteFlow<'info>>, 
         invoke_signed(
             &ix,
             ctx.remaining_accounts,
-            &[&[&flow.owner.to_bytes(), &[pda_bump]]],
+            &[&[&flow.owner.as_ref(), &[pda_bump]]],
         )?;
     }
     Ok(())
-}
-
-pub fn validate_execute_flow_pda(ctx: &Context<ExecuteFlow>) -> Result<u8, ProgramError> {
-    let flow = &ctx.accounts.flow;
-    let (pda, bump) = Pubkey::find_program_address(&[&flow.owner.to_bytes()], ctx.program_id);
-    if pda.eq(&ctx.accounts.pda.key()) {
-        Ok(bump)
-    } else {
-        Err(ProgramError::InvalidArgument)
-    }
 }
 
 /* CONTEXTS */
@@ -228,8 +205,8 @@ pub struct WithdrawNative<'info> {
 
     pub caller: Signer<'info>,
 
-    /// CHECK : no read or write and pda is derived from the signer
-    #[account(seeds = [&caller.key().to_bytes()], bump)]
+    /// CHECK : no read and pda is derived from the signer
+    #[account(mut, seeds = [&caller.key().as_ref()], bump)]
     pub pda: AccountInfo<'info>,
 
     pub system_program: Program<'info, System>,
@@ -241,7 +218,7 @@ pub struct Withdraw<'info> {
     pub caller: Signer<'info>,
 
     /// CHECK : no read or write and pda is derived from the signer
-    #[account(seeds = [&caller.key().to_bytes()], bump)]
+    #[account(seeds = [&caller.key().as_ref()], bump)]
     pub pda: AccountInfo<'info>,
 
     #[account(mut)]
@@ -291,7 +268,7 @@ pub struct ExecuteFlow<'info> {
     flow: Account<'info, Flow>,
 
     /// CHECK : no read or write to this account.
-    #[account(seeds = [&flow.owner.to_bytes()], bump)]
+    #[account(seeds = [&flow.owner.as_ref()], bump)]
     pub pda: AccountInfo<'info>,
 
     pub caller: Signer<'info>,
@@ -434,13 +411,14 @@ impl Flow {
     fn is_schedule_expired(&self, now: i64) -> bool {
         return self.trigger_type == TriggerType::Time as u8
             && self.next_execution_time > 0
-            && now - self.next_execution_time > self.retry_window as i64;
+            && now.checked_sub(self.next_execution_time).unwrap() > self.retry_window as i64;
+
     }
 
     fn update_after_schedule_run(&mut self, now: i64) {
         self.last_scheduled_execution = now;
         if self.remaining_runs != RECURRING_FOREVER {
-            self.remaining_runs = self.remaining_runs - 1;
+            self.remaining_runs = self.remaining_runs.checked_sub(1).unwrap();
         }
 
         if self.trigger_type == TriggerType::Time as u8 {
@@ -518,9 +496,9 @@ impl ProgramSettings {
 /* HELPER METHODS */
 
 fn calculate_next_execution_time(_cron: &str, utc_offset: i64) -> i64 {
-    let now = Clock::get().unwrap().unix_timestamp - utc_offset;
+    let now = Clock::get().unwrap().unix_timestamp.checked_sub(utc_offset).unwrap();
     let schedule = SnowSchedule::parse(_cron).unwrap();
-    let next_execution = schedule.find_event_after(&SnowTime::from_time_ts(now)).unwrap().to_time_ts(utc_offset);
+    let next_execution = schedule.next_event(&SnowTime::from_time_ts(now)).unwrap().to_time_ts(utc_offset);
     next_execution
 }
 
@@ -532,8 +510,8 @@ fn charge_fee(ctx: &Context<ExecuteFlow>, pda_bump: u8) -> ProgramResult {
 
     if flow.pay_fee_from == FeeSource::FromFlow as u8 {
         let flow_account = flow.to_account_info();
-        **flow_account.try_borrow_mut_lamports()? -= fee;
-        **caller.try_borrow_mut_lamports()? += fee;
+        **flow_account.try_borrow_mut_lamports()? = flow_account.to_account_info().lamports().checked_sub(fee).unwrap();
+        **caller.try_borrow_mut_lamports()? = caller.to_account_info().lamports().checked_add(fee).unwrap();
     } else {
         let ix = solana_program::system_instruction::transfer(
             &pda.key,
@@ -543,7 +521,7 @@ fn charge_fee(ctx: &Context<ExecuteFlow>, pda_bump: u8) -> ProgramResult {
         invoke_signed(
             &ix,
             &[caller.to_account_info(), pda.to_account_info()],
-            &[&[&flow.owner.to_bytes(), &[pda_bump]]],
+            &[&[&flow.owner.as_ref(), &[pda_bump]]],
         )?;
     }
     Ok(())
