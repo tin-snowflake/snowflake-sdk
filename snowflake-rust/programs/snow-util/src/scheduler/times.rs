@@ -1,14 +1,14 @@
-use super::snowtime::Tm;
+use super::snow_time::SnowTime;
 
 /// Advance the year, but leave all other fields untouched.
 /// This can result in an invalid day-of-month, day-of-year, or day-of-week!
-pub (crate) fn adv_year(time: &mut Tm) {
+pub (crate) fn adv_year(time: &mut SnowTime) {
   time.tm_year += 1;
 }
 
 /// Advance the day, but leave the day (and hour, minute, second) untouched.
 /// This can result in an invalid day-of-month!
-pub (crate) fn adv_month(time: &mut Tm) {
+pub (crate) fn adv_month(time: &mut SnowTime) {
   time.tm_mon += 1;
   if time.tm_mon > 11 {
     time.tm_mon = 0;
@@ -17,7 +17,7 @@ pub (crate) fn adv_month(time: &mut Tm) {
 }
 
 /// Advance the day, but leave the hour, minute, and second untouched.
-pub (crate) fn adv_day(time: &mut Tm) {
+pub (crate) fn adv_day(time: &mut SnowTime) {
   time.tm_wday = (time.tm_wday + 1) % 7; // day of week
   time.tm_mday += 1; // day of month
 
@@ -61,7 +61,7 @@ pub (crate) fn adv_day(time: &mut Tm) {
 }
 
 /// Advance the hour, but leave the minute and second untouched.
-pub (crate) fn adv_hour(time: &mut Tm) {
+pub (crate) fn adv_hour(time: &mut SnowTime) {
   time.tm_hour += 1;
   if time.tm_hour > 23 {
     time.tm_hour = 0;
@@ -70,7 +70,7 @@ pub (crate) fn adv_hour(time: &mut Tm) {
 }
 
 /// Advance the minute, but leave the second untouched.
-pub (crate) fn adv_minute(time: &mut Tm) {
+pub (crate) fn adv_minute(time: &mut SnowTime) {
   time.tm_min += 1;
   if time.tm_min > 59 {
     time.tm_min = 0;

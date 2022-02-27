@@ -15,3 +15,8 @@ anchor deploy
 
 //fresh deploy to devnet
 anchor deploy --provider.cluster devnet
+
+
+
+// soteria
+docker run -v ~/workspace/snow/snowflake-rust/:/workspace -it greencorelab/soteria:0.1.0 /bin/bash

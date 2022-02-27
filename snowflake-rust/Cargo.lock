@@ -946,12 +946,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "snow_util"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "thiserror",
+]
+
+[[package]]
 name = "snowflake"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
  "bs58 0.3.1",
+ "snow_util",
  "spl-token",
  "thiserror",
 ]

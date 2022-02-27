@@ -1,34 +1,34 @@
 use super::error::CrontabError;
 use super::parsing::{ScheduleComponents, parse_cron};
-use super::snowtime::Tm;
+use super::snow_time::SnowTime;
 use super::times::{adv_month, adv_day, adv_hour, adv_minute};
 /// Represents a crontab schedule.
 #[derive(Clone)]
-pub struct Crontab {
+pub struct SnowSchedule {
   /// The components parsed from a crontab schedule.
   pub schedule: ScheduleComponents,
 }
 
-impl Crontab {
+impl SnowSchedule {
 
   /// Parse a crontab schedule into a Crontab instance.
-  pub fn parse(crontab_schedule: &str) -> Result<Crontab, CrontabError> {
+  pub fn parse(crontab_schedule: &str) -> Result<SnowSchedule, CrontabError> {
 
     let schedule = parse_cron(crontab_schedule)?;
-    Ok(Crontab {
+    Ok(SnowSchedule {
       schedule: schedule,
     })
   }
 
-  pub fn find_event_after(&self, start_time: &Tm) -> Option<Tm> {
+  pub fn next_event(&self, start_time: &SnowTime) -> Option<SnowTime> {
     calculate_next_event(&self.schedule, start_time)
   }
 
 }
 
 // TODO: Stop testing this. Test the Crontab method instead.
-pub (crate) fn calculate_next_event(times: &ScheduleComponents, time: &Tm)
-    -> Option<Tm> {
+pub (crate) fn calculate_next_event(times: &ScheduleComponents, time: &SnowTime)
+    -> Option<SnowTime> {
   let mut next_time = time.clone();
 
   // Minute-resolution. We're always going to round up to the next minute.
@@ -65,10 +65,10 @@ pub (crate) fn calculate_next_event(times: &ScheduleComponents, time: &Tm)
 enum DateTimeMatch {
   Missed,
   ContinueMatching,
-  AnswerFound(Tm),
+  AnswerFound(SnowTime),
 }
 
-fn try_month(times: &ScheduleComponents, time: &mut Tm) -> DateTimeMatch {
+fn try_month(times: &ScheduleComponents, time: &mut SnowTime) -> DateTimeMatch {
   // Tm month range is [0, 11]
   // Cron months are [1, 12]
   let test_month = (time.tm_mon + 1) as u32;
@@ -112,7 +112,7 @@ fn try_month(times: &ScheduleComponents, time: &mut Tm) -> DateTimeMatch {
   }
 }
 
-fn try_day(times: &ScheduleComponents, time: &mut Tm) -> DateTimeMatch {
+fn try_day(times: &ScheduleComponents, time: &mut SnowTime) -> DateTimeMatch {
   match times.days.binary_search(&(time.tm_mday as u32)) {
     Ok(_) => {
       // Precise month... must keep matching
@@ -144,7 +144,7 @@ fn try_day(times: &ScheduleComponents, time: &mut Tm) -> DateTimeMatch {
   }
 }
 
-fn try_hour(times: &ScheduleComponents, time: &mut Tm) -> DateTimeMatch {
+fn try_hour(times: &ScheduleComponents, time: &mut SnowTime) -> DateTimeMatch {
   match times.hours.binary_search(&(time.tm_hour as u32)) {
     Ok(_) => {
       // Precise month... must keep matching
@@ -173,7 +173,7 @@ fn try_hour(times: &ScheduleComponents, time: &mut Tm) -> DateTimeMatch {
   }
 }
 
-fn try_minute(times: &ScheduleComponents, time: &mut Tm) -> DateTimeMatch {
+fn try_minute(times: &ScheduleComponents, time: &mut SnowTime) -> DateTimeMatch {
   match times.minutes.binary_search(&(time.tm_min as u32)) {
     Ok(_) => {
       // DONE
@@ -205,10 +205,10 @@ fn try_minute(times: &ScheduleComponents, time: &mut Tm) -> DateTimeMatch {
 #[cfg(test)]
 mod tests {
   use super::*;
-  use Crontab;
+  use SnowSchedule;
 
   fn parse_times(schedule: &str) -> ScheduleComponents {
-    let crontab = Crontab::parse(schedule).ok().unwrap();
+    let crontab = SnowSchedule::parse(schedule).ok().unwrap();
     crontab.schedule
   }
 
@@ -217,8 +217,8 @@ mod tests {
   fn first_of_the_month() {
     // First of the month at 0:00.
 
-    let cron = Crontab::parse("0 12 * 12 4").unwrap();
-    let next_execution = cron.find_event_after(&Tm::from_time_ts(1638148600)).unwrap();
+    let cron = SnowSchedule::parse("0 12 * 12 4").unwrap();
+    let next_execution = cron.next_event(&SnowTime::from_time_ts(1638148600)).unwrap();
     println!("next execution is {:?}", next_execution);
     // let tm = get_tm(2004, 1, 1, 0, 1, 59);
 /*

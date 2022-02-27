@@ -1,10 +1,8 @@
-//! Functions used in the tests.
+/*//! Functions used in the tests. to be used later
 //! This module is only compiled for testing.
 
-use crate::cron::snowtime::Tm;
+use crate::scheduler::snow_time::SnowTime;
 
-
-// TODO: Get rid of this. Not really necessary. Just hardcode dates and times.
 
 /// Get a Tm from a date. Months and days are supplied 1-indexed, but
 /// the Tm struct is inconsistently 0- and 1-indexed.
@@ -13,10 +11,10 @@ pub (crate) fn get_tm(year: i32,
                       day: i32,
                       hour: i32,
                       minute: i32,
-                      second: i32) -> Tm {
+                      second: i32) -> SnowTime {
 
 
-  Tm {
+  SnowTime {
     tm_sec: second,
     tm_min: minute,
     tm_hour: hour,
@@ -32,7 +30,7 @@ pub (crate) fn get_tm(year: i32,
 }
 
 /// Normalize a Tm to drop certain fields entirely.
-pub (crate) fn normal(time: &Tm) -> Tm {
+pub (crate) fn normal(time: &SnowTime) -> SnowTime {
   let mut tm = time.clone();
   tm.tm_wday = 0;
   tm.tm_yday = 0;
@@ -41,3 +39,4 @@ pub (crate) fn normal(time: &Tm) -> Tm {
   tm.tm_nsec= 0;
   tm
 }
+*/
