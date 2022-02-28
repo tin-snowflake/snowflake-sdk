@@ -7,9 +7,9 @@ import {
 } from "@solana/web3.js";
 import { Buffer } from "buffer";
 import _ from "lodash";
-import { SNOWFLAKE_PROGRAM_ID } from "./program-id";
-import { CUSTOM_ACTION_CODE, RETRY_WINDOW } from "./config";
-import { ErrorMessage } from "./error";
+import { CUSTOM_ACTION_CODE, RETRY_WINDOW } from "../config/job-config";
+import { SNOWFLAKE_PROGRAM_ID } from "../config/program-id";
+import { ErrorMessage } from "../config/error";
 
 export type UnixTimeStamp = number;
 export type UTCOffset = number;

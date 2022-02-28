@@ -1,6 +1,6 @@
 import { Buffer } from "buffer";
 import { PublicKey } from "@solana/web3.js";
-import { UnixTimeStamp } from "../src/model";
+import { UnixTimeStamp } from "../src/model/job";
 
 export const instructions = [
   {

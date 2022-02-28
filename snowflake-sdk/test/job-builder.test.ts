@@ -1,6 +1,6 @@
-import { ErrorMessage } from "../src/error";
-import { JobBuilder } from "../src/job-builder";
 import { instructions, rightNow, tomorrow } from "./test-data";
+import { JobBuilder } from "../src/builder/job-builder";
+import { ErrorMessage } from "../src/config/error";
 
 test("build once-off scheduled job", async function () {
   const job = new JobBuilder()

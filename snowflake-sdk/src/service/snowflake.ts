@@ -1,11 +1,11 @@
 import { PublicKey, TransactionSignature } from "@solana/web3.js";
 import { Idl, Program, Provider } from "@project-serum/anchor";
-import programIdl from "./idl/snowflake.json";
-import { Job } from "./model";
-import { InstructionBuilder } from "./instruction-builder";
+import programIdl from "../idl/snowflake.json";
 import { TransactionSender } from "./transaction-sender";
 import Finder from "./finder";
-import { SNOWFLAKE_PROGRAM_ID } from "./program-id";
+import { InstructionBuilder } from "../builder/instruction-builder";
+import { SNOWFLAKE_PROGRAM_ID } from "../config/program-id";
+import { Job } from "../model/job";
 
 export default class Snowflake {
   program: Program;

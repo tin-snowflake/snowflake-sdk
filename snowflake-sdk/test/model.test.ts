@@ -1,7 +1,7 @@
-import { JobBuilder } from "../src/job-builder";
 import { BN } from "@project-serum/anchor";
 import { instructions, tomorrow } from "./test-data";
-import { TriggerType } from "../src/model";
+import { JobBuilder } from "../src/builder/job-builder";
+import { TriggerType } from "../src/model/job";
 
 test("job conversion test", async function () {
   const job = new JobBuilder()
