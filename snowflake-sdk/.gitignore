@@ -12,4 +12,6 @@
 .DS_Store
 *.iml
 
-./.env
+\.env
+
+./\.env
