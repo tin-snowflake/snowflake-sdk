@@ -7,7 +7,6 @@ import {
 } from "@solana/web3.js";
 import { Buffer } from "buffer";
 import _ from "lodash";
-import { SNOWFLAKE_PROGRAM_ID } from "./program-id";
 import { CUSTOM_ACTION_CODE, RETRY_WINDOW } from "./config";
 import { ErrorMessage } from "./error";
 
@@ -24,33 +23,33 @@ const NON_BN_FIELDS = [
   "remainingRuns",
   "triggerType",
   "retryWindow",
-  "clientAppId",
   "userUtcOffset",
+  "clientAppId",
 ];
 
 export class Job {
   pubKey: PublicKey;
-  name: string = "job - " + new Date().toLocaleDateString();
-  userUtcOffset: UTCOffset = new Date().getTimezoneOffset() * 60;
-  instructions: TransactionInstruction[] = [];
+  owner: PublicKey;
+  nextExecutionTime: UnixTimeStamp = 0;
   recurring: boolean = false;
   retryWindow: number = RETRY_WINDOW;
   remainingRuns: number = 0;
-  owner: PublicKey;
-  triggerType: TriggerType = TriggerType.None;
-  cron: string = "";
-  expireOnComplete: boolean = false;
-  clientAppId: PublicKey = new PublicKey(SNOWFLAKE_PROGRAM_ID);
   dedicatedOperator: PublicKey;
-  nextExecutionTime: UnixTimeStamp = 0;
-  lastScheduledExecution: UnixTimeStamp = 0;
-  scheduleEndDate: UnixTimeStamp = 0;
+  clientAppId: number = 0;
   expiryDate: UnixTimeStamp = 0;
+  expireOnComplete: boolean = false;
+  scheduleEndDate: UnixTimeStamp = 0;
+  userUtcOffset: UTCOffset = new Date().getTimezoneOffset() * 60;
+  lastScheduledExecution: UnixTimeStamp = 0;
   createdDate: UnixTimeStamp = 0;
   lastRentCharged: UnixTimeStamp = 0;
   lastUpdatedDate: UnixTimeStamp = 0;
   externalId: String = "";
+  cron: string = "";
+  name: string = "job - " + new Date().toLocaleDateString();
   extra: String = "";
+  triggerType: TriggerType = TriggerType.None;
+  instructions: TransactionInstruction[] = [];
 
   isBNType(property: string): boolean {
     return (

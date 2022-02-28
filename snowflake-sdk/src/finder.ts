@@ -1,5 +1,5 @@
 import { Program, ProgramAccount } from "@project-serum/anchor";
-import { PublicKey } from "@solana/web3.js";
+import { GetProgramAccountsFilter, PublicKey } from "@solana/web3.js";
 import { Job, SerializableJob } from "./model";
 import { JOB_ACCOUNT_LAYOUT } from "./job-layout";
 
@@ -29,7 +29,7 @@ export default class Finder {
     return serJobs.map((v) => Job.fromSerializableJob(v.account, v.publicKey));
   }
 
-  private getOwnerFilter(publicKey: PublicKey): any {
+  private getOwnerFilter(publicKey: PublicKey): GetProgramAccountsFilter {
     return {
       memcmp: {
         offset: JOB_ACCOUNT_LAYOUT.offsetOf("owner"),

@@ -1,6 +1,5 @@
 {
-    "scripts": {
-    },
+    "scripts": {},
     "dependencies": {
         "@project-serum/anchor": "^0.21.0"
     },
