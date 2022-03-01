@@ -47,10 +47,9 @@ export class JobBuilder {
     return this;
   }
 
-  scheduleConditional(numberOfExecutions?: number): JobBuilder {
+  scheduleConditional(numberOfExecutions: number): JobBuilder {
     this.job.triggerType = TriggerType.ProgramCondition;
-    this.job.remainingRuns =
-      numberOfExecutions === undefined ? RECURRING_FOREVER : numberOfExecutions;
+    this.job.remainingRuns = numberOfExecutions;
     return this;
   }
 
