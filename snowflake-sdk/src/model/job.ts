@@ -7,8 +7,9 @@ import {
 } from "@solana/web3.js";
 import { Buffer } from "buffer";
 import _ from "lodash";
-import { CUSTOM_ACTION_CODE, RETRY_WINDOW } from "./config";
-import { ErrorMessage } from "./error";
+import { CUSTOM_ACTION_CODE, RETRY_WINDOW } from "../config/job-config";
+import { SNOWFLAKE_PROGRAM_ID } from "../config/program-id";
+import { ErrorMessage } from "../config/error";
 
 export type UnixTimeStamp = number;
 export type UTCOffset = number;
@@ -23,8 +24,8 @@ const NON_BN_FIELDS = [
   "remainingRuns",
   "triggerType",
   "retryWindow",
-  "userUtcOffset",
   "clientAppId",
+  "userUtcOffset",
 ];
 
 export class Job {
@@ -92,7 +93,8 @@ export class Job {
   validateForUpdate() {
     if (this.isCronWeekday())
       throw new Error(ErrorMessage.UpdateJobWithWeekdayCron);
-    if (!this.pubKey) throw new Error(ErrorMessage.UpdateJobWithExistingPubkey);
+    if (!this.pubKey)
+      throw new Error(ErrorMessage.UpdateJobWithoutExistingPubkey);
   }
 
   static fromJobJson(jobJson: any): Job {

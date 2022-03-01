@@ -1,9 +1,9 @@
-import { JobBuilder } from "../src/job-builder";
-import Snowflake from "../src/snowflake";
 import { Provider } from "@project-serum/anchor";
 import { instructions, tomorrow } from "./test-data";
-import { TriggerType } from "../src/model";
 import { clusterApiUrl, PublicKey } from "@solana/web3.js";
+import { Snowflake } from "../src/service/snowflake";
+import { JobBuilder } from "../src/builder/job-builder";
+import { TriggerType } from "../src/model/job";
 
 let provider: Provider;
 let snowflake: Snowflake;
@@ -14,14 +14,6 @@ beforeAll(() => {
   provider = Provider.local(API_URL);
   snowflake = new Snowflake(provider);
   owner = provider.wallet.publicKey;
-});
-
-test("get all jobs", async () => {
-  const jobs = await snowflake.findGlobal();
-
-  console.log(jobs);
-
-  expect(jobs).toBeDefined();
 });
 
 test("create job", async function () {

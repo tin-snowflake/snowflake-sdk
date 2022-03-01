@@ -1,7 +1,7 @@
 import { Program, ProgramAccount } from "@project-serum/anchor";
 import { GetProgramAccountsFilter, PublicKey } from "@solana/web3.js";
-import { Job, SerializableJob } from "./model";
-import { JOB_ACCOUNT_LAYOUT } from "./job-layout";
+import { Job, SerializableJob } from "../model/job";
+import { JOB_ACCOUNT_LAYOUT } from "../model/job-layout";
 
 export default class Finder {
   program: Program;

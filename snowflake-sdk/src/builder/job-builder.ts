@@ -1,5 +1,5 @@
 import { TransactionInstruction } from "@solana/web3.js";
-import { Job, TriggerType, UnixTimeStamp } from "./model";
+import { Job, TriggerType, UnixTimeStamp } from "../model/job";
 
 export class JobBuilder {
   private job: Job = new Job();

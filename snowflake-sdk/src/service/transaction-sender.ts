@@ -1,6 +1,6 @@
-import { InstructionsAndSigners } from "./model";
 import { Transaction, TransactionSignature } from "@solana/web3.js";
 import { Provider } from "@project-serum/anchor";
+import { InstructionsAndSigners } from "../model/job";
 
 export class TransactionSender {
   provider: Provider;

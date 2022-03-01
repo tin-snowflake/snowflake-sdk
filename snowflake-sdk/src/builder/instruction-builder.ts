@@ -1,7 +1,7 @@
-import { InstructionsAndSigners, Job } from "./model";
 import { Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
 import { Program } from "@project-serum/anchor";
-import { JOB_ACCOUNT_DEFAULT_SIZE } from "./config";
+import { InstructionsAndSigners, Job } from "../model/job";
+import { JOB_ACCOUNT_DEFAULT_SIZE } from "../config/job-config";
 
 export class InstructionBuilder {
   program: Program;

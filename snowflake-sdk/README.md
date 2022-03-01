@@ -91,8 +91,7 @@ await snowflake.fetchByOwner(owner);
 ## Usage
 
 ```typescript
-import { JobBuilder } from "../src/job-builder";
-import Snowflake from "../src/snowflake";
+import {JobBuilder, Snowflake} from "@snowflake-so/snowflake-sdk";
 import { Provider } from "@project-serum/anchor";
 
 /** Initialize a Snowflake service on Devnet **/
