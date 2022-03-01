@@ -1,55 +1,29 @@
-# Snowflake SDK - Quick Start Guide
+# Snowflake TypeScript SDK
 
-## Description
-
-Snowflake SDK provides services and a set of APIs used for interacting with the automation infrastructure of Snowflake on Solana blockchain. Using Snowflake SDK, you can integrate the Snowflake products into your application including create and execute jobs with specific set of program instructions in a defined time.
+Snowflake SDK provides services and a set of APIs used for interacting with the automation infrastructure of Snowflake on Solana blockchain. Learn more about Snowflake <a href="https://docs.snowflake.so/en/">here</a>.
 
 ## Installation
 
 Install with npm
 
-```
-npm install snowflake-sdk
+```bash
+npm install --save snowflake-sdk @types/snowflake-sdk
 ```
 
 Install with yarn
 
-```
-yarn add snowflake-sdk
-```
-
-Using Typescript
-
-```
-npm install --save-dev @types/snowflake-sdk
+```bash
+yarn add -D @types/snowflake-sdk snowflake-sdk
 ```
 
-Or
-
-```
-yarn add -D @types/snowflake-sdk
-```
-
-## Services
-
-| Class               |                                 Description                                 |
-| :------------------ | :-------------------------------------------------------------------------: |
-| Job Builder         |   A "builder pattern" class to build the `Job` from provide class methods   |
-| Snowflake           | A main service to interact with onchain jobs (Create, Read, Update, Delete) |
-| Finder              |                     A service to query onchain job data                     |
-| Job                 |                                  Job model                                  |
-| Serializable Action |           Serializable action with serialize / deserialize method           |
-
-## How to use Snowflake SDK?
+## Quick start guide
 
 ### Initialize Snowflake
 
-To create a new Snowflake service, we would need to initialize with the Provider (imported from `@project-serum/anchor`)
+To create a new Snowflake service, we would need to initialize with the Provider.
 
-@project-serum/anchor - `class Provider`: https://project-serum.github.io/anchor/ts/classes/Provider.html#connection
-
-```
-let provider : Provider = Provider.local(API_URL);
+```typescript
+let provider: Provider = Provider.local(API_URL);
 ```
 
 The `API_URL` is the endpoint to the Solana cluster. Empty API_URL is pointed to the `local testnet`
@@ -58,163 +32,139 @@ The `API_URL` is the endpoint to the Solana cluster. Empty API_URL is pointed to
 - Testnet: `https://api.testnet.solana.com`
 - Devnet: `https://api.devnet.solana.com`
 
-Add the `Provider` to initialize `Snowflake` (imported from `File: snowflake.ts`)
-
-```
-let snowflake : Snowflake = new Snowflake(provider)
+```typescript
+let snowflake: Snowflake = new Snowflake(provider);
 ```
 
-### Create an Instruction
+### Build an once-off scheduled job
 
-@project-serum/anchor - `Transaction Instruction`
+With Snowflake SDK, you can create a job with two line of code.
 
-```
-/**
- * Transaction Instruction class
- */
-export class TransactionInstruction {
-  /**
-   * Public keys to include in this transaction
-   * Boolean represents whether this pubkey needs to sign the transaction
-   */
-  keys: Array<AccountMeta>;
-  /**
-   * Program Id to execute
-   */
-  programId: PublicKey;
-  /**
-   * Program input
-   */
-  data: Buffer;
-  constructor(opts: TransactionInstructionCtorFields);
-}
-```
-
-Example code to create an instruction:
-
-```
-[
-  {
-    programId: PublicKey,
-    data: Buffer,
-    keys: [
-      {
-        pubkey: PublicKey,
-        isSigner: boolean,
-        isWritable: boolean,
-      },
-    ],
-  },
-]
-```
-
-### Create a New Job
-
-To create a job, you can use `Job Builder`. This follows a builder pattern to construct a service. Quick overview of the provided methods:
-
-- `fromExistingJob(job: Job)`: Build a job from an existing job
-- `jobName(name: string)`: Add a job name
-- `jobInstructions(instructions: TransactionInstruction[])`: Add a set of instructions for job. These instructions must follow an instruction structure of `@project-serum/anchor`
-- `scheduleOnce(executionTime: UnixTimestamp)`: Build a once-off scheduled job. Schedule a job with defined execution time.
-- `scheduleCron(cron: string, numberOfExecutions: number, userTimezoneOffset: UnixTimestamp)`: Build a recurring scheduled job. Schedule a job with defined cron expression and user timezone offset.
-
-Code example on how to create a job
-
-Imported from `File: job-builder.ts`
-
-```
-const job : Job = new JobBuilder()
+```typescript
+const job = new JobBuilder()
   .jobName("hello world")
   .jobInstructions(instructions)
-  .scheduleCron("0 * * * *", 2)
+  .scheduleOnce(tomorrow())
   .build();
-```
 
-Then create a new job by calling the `createJob()` method from `class Snowflake`
-
-```
 await snowflake.createJob(job);
 ```
 
-### Update Job
+### Build a recurring scheduled job
 
-Provide `Job` with updated fields as a parameter to update the data of that job
+Build a job that scheduled to execute every minute by providing a cron expression to the `scheduleCron` method.
 
+```typescript
+const job = new JobBuilder()
+  .jobName("hello world")
+  .jobInstructions(instructions)
+  .scheduleCron("* * * * *")
+  .build();
+
+await snowflake.createJob(job);
 ```
+
+### Update a job
+
+```typescript
 await snowflake.updateJob(job);
 ```
 
-### Delete Job
+### Delete a job
 
-To delete a job, put the public key of job `jobPubkey` as a parameter
-
-```
+```typescript
 await snowflake.deleteJob(jobPubkey);
 ```
 
-### Fetch Job
+### Fetch Job by public key
 
-#### Fetch by public key
-
-Provide a job public key to fetch a single job
-
-```
+```typescript
 await snowflake.fetch(jobPubkey);
-
-// Return: Job
 ```
 
-#### Fetch by owner
+### Fetch Job by owner
 
-Provide an owner address to fetch all jobs owned by that address
-
-```
-await snowflake.fetchByOwner(owner)
-
-// Return: Array<Job>
+```typescript
+await snowflake.fetchByOwner(owner);
 ```
 
-### Serialization / Deserialization Job
+## Usage
 
-Snowflake SDK provides you an ability to serialize job data to prettify the return data. The serialized job data `Job` is displayed as
+```typescript
+import {JobBuilder, Snowflake} from "@snowflake-so/snowflake-sdk";
+import { Provider } from "@project-serum/anchor";
 
-Imported from ` model.ts/Job`
+/** Initialize a Snowflake service on Devnet **/
+const API_URL: string = "https://api.devnet.solana.com";
+const provider: Provider = new Provider(API_URL);
+const snowflake: Snowflake = new Snowflake();
 
-```
-class Job {
-  pubKey: PublicKey
-  name: string
-  userUtcOffset: UTCOffset
-  instructions: TransactionInstruction[]
-  recurring: boolean
-  retryWindow: number
-  remainingRuns: number
-  owner: PublicKey
-  triggerType: TriggerType
-  cron: string
-  expireOnComplete: boolean
-  clientAppId: PublicKey
-  dedicatedOperator: PublicKey
-  nextExecutionTime: UnixTimeStamp
-  lastScheduledExecution: UnixTimeStamp
-  scheduleEndDate: UnixTimeStamp
-  expiryDate: UnixTimeStamp
-  createdDate: UnixTimeStamp
-  lastRentCharged: UnixTimeStamp
-  lastUpdatedDate: UnixTimeStamp
-  externalId: String
-  extra: String
+async function main() {
+  /** Create a mock set of instructions **/
+  const instructions = [
+    {
+      programId: new PublicKey("ETwBdF9X2eABzmKmpT3ZFYyUtmve7UWWgzbERAyd4gAC"),
+      data: Buffer.from("74b89fceb3e0b22a", "hex"),
+      keys: [
+        {
+          pubkey: new PublicKey("5jo4Lh2Z9FGQ87sDhUBwZjNZdL15MwdeT5WUXKfwFSZY"),
+          isSigner: false,
+          isWritable: false,
+        },
+      ],
+    },
+  ];
+
+  /** Create a new once-off scheduled job **/
+  const onceOffJob = new JobBuilder()
+    .jobName("once-off job")
+    .jobInstructions(instructions)
+    .scheduleOnce(1646034062)
+    // Timestamp: Monday, 28-Feb-22 07:41:02 UTC
+    .build();
+
+  const onceOffJobTxID = await snowflake.createJob(onceOffJob);
+  console.log("Create a recurring job with txId: " + onceOffJobTxID);
+
+  /** Create a new recurring scheduled job **/
+  const recurringJob = new JobBuilder()
+    .jobName("recurring job")
+    .jobInstruction(instructions)
+    .scheduleCron("* * * * *")
+    // Every minute
+    .build();
+
+  const recurringJobTxID = await snowflake.createJob(recurringJob);
+  console.log("Create a recurring job with txId: " + recurringJobTxID);
+
+  /** Fetch an once-off job **/
+  const fetchedOnceOffJob = await snowflake.fetch(onceOffJob.pubkey);
+
+  // Build from an existing job
+  const updatedJob = new JobBuilder()
+    .fromExistingJob(fetchedOnceOffJob)
+    .jobName("hello world 2")
+    .scheduleCron("0 * * * *", 2)
+    .build();
+
+  /** Update a job **/
+  await snowflake.updateJob(updatedJob);
+
+  /** Delete a job **/
+  await snowflake.deleteJob(job.pubKey);
 }
 ```
 
-To serialize job data from `Job` to `SerializableJob`, you can call a method `toSerializableJob()` of class `Job`
+## Support
 
-```
-job.toSerializableJob() -> SerializableJob
-```
+**Struggle with the SDK integration?**
 
-Otherwise, convert the `SerializableJob` back to `Job` using method `fromSerializableJob`
+If you have any problem with using the SDK in your system, drop a question our Snowflake Discord `#sdk` to receive a support from our engineers.
 
-```
-job.fromSerializableJob(serJob: SerializableJob, jobPubKey: PublicKey) -> Job
-```
+**Find a bug? Find a new idea for Snowflake?**
+
+If you find a bug or have any problem and idea while using the SDK, you can create an issue on Snowflake SDK Github.
+
+## License
+
+MIT

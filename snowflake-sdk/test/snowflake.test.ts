@@ -1,7 +1,7 @@
 import { Provider } from "@project-serum/anchor";
 import { instructions, tomorrow } from "./test-data";
 import { clusterApiUrl, PublicKey } from "@solana/web3.js";
-import Snowflake from "../src/service/snowflake";
+import { Snowflake } from "../src/service/snowflake";
 import { JobBuilder } from "../src/builder/job-builder";
 import { TriggerType } from "../src/model/job";
 

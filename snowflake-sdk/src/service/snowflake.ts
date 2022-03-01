@@ -7,7 +7,7 @@ import { InstructionBuilder } from "../builder/instruction-builder";
 import { SNOWFLAKE_PROGRAM_ID } from "../config/program-id";
 import { Job } from "../model/job";
 
-export default class Snowflake {
+export class Snowflake {
   program: Program;
   instructionBuilder: InstructionBuilder;
   transactionSender: TransactionSender;

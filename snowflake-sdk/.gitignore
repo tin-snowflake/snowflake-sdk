@@ -1,6 +1,3 @@
-# symlink
-/idl/snowflake.json
-
 # dependencies
 /node_modules
 
@@ -11,7 +8,4 @@
 # misc
 .DS_Store
 *.iml
-
-\.env
-
-./\.env
+dist

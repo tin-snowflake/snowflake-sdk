@@ -93,7 +93,8 @@ export class Job {
   validateForUpdate() {
     if (this.isCronWeekday())
       throw new Error(ErrorMessage.UpdateJobWithWeekdayCron);
-    if (!this.pubKey) throw new Error(ErrorMessage.UpdateJobWithExistingPubkey);
+    if (!this.pubKey)
+      throw new Error(ErrorMessage.UpdateJobWithoutExistingPubkey);
   }
 
   static fromJobJson(jobJson: any): Job {
