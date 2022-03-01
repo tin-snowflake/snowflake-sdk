@@ -125,7 +125,7 @@ const provider: Provider = new Provider(API_URL);
 const snowflake: Snowflake = new Snowflake();
 
 async function main() {
-  /** Create a mock set of instructions **/
+  /** Create a sample instruction **/
   const instructions = [
     {
       programId: new PublicKey("ETwBdF9X2eABzmKmpT3ZFYyUtmve7UWWgzbERAyd4gAC"),
