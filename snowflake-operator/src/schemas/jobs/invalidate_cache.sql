@@ -1,1 +1,1 @@
-VACUUM;
+DELETE FROM Jobs;
