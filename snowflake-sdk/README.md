@@ -7,13 +7,13 @@ Snowflake SDK provides services and a set of APIs used for interacting with the 
 Install with npm
 
 ```bash
-npm install --save snowflake-sdk @types/snowflake-sdk
+npm i @snowflake-so/snowflake-sdk
 ```
 
 Install with yarn
 
 ```bash
-yarn add -D @types/snowflake-sdk snowflake-sdk
+yarn add @snowflake-so/snowflake-sdk
 ```
 
 ## Quick start guide
