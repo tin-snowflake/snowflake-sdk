@@ -4,15 +4,22 @@ npm install -g typescript
 npm i -g ts-node
 npm install
 
-2. Configure environment variables:
-export ANCHOR_WALLET="/home/minh/.config/solana/id.json"
-export ANCHOR_PROVIDER_URL="http://localhost:8899"
+2. Under snowflake-operator folder, create .env file with following properties:
+ANCHOR_WALLET="/home/minh/.config/solana/id.json"
+ANCHOR_PROVIDER_URL="http://localhost:8899"
 
-3. Create symlink to idl, from the snowflake-operator directory, use the command below
-ln -sf ~/workspace/snow/snowflake-rust/target/idl/snowflake.json src/idl/snowflake.json
-
-4. Run the operator locally
+3. Run the operator locally
 npm start
+
+# Package Node Operator App
+1. Install node pkg library
+npm install -g pkg
+
+2. Build JS code (into ./dist directory):
+npm run build
+
+3. Package the app (into dist/sfn-node-operator execution file):
+npm run package-app
 
 # Setup Snow Operator on a new AWS EC2 (Ubuntu)
 1. Upload the operator key into /home/ubuntu/.config/solana/id.json
@@ -21,30 +28,16 @@ npm start
 export ANCHOR_WALLET="/home/ubuntu/.config/solana/id.json"
 export ANCHOR_PROVIDER_URL="https://api.devnet.solana.com"
 
-3. Setup Node on EC2
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash
-. ~/.nvm/nvm.sh
-nvm install node
+(genesysgo endpoint)
+export ANCHOR_PROVIDER_URL="https://psytrbhymqlkfrhudd.dev.genesysgo.net:8899"
 
-4. Package the app:
-npm run build
-npm run package-app
+3. Upload the package into EC2:
+sftp into the EC2
+Upload dist/sfn-node-operator.zip into the EC2 and unzip it
 
-5. Prepare the app on EC2:
-Upload snow-operator.zip to EC2
-Unzip it to snow-operator directory
-cd snow-operator
-npm install
-
-6. Start the app
-nohup node snow-operator.js &
+4. Start the app
+nohup ./snf-node-operator &
 echo $! > node-instance.pid
 
-7. Stop the app:
+5. Stop the app:
 kill `cat node-instance.pid`
-rm node-instance.pid
-
-# Update the app
-1. Stop the app
-2. sftp to the EC2, upload any changes
-3. Start the app

@@ -1,11 +1,11 @@
 {
+    "name": "snf-node-operator",
+    "bin": "js/src/snow-operator.js",
     "scripts": {
         "start": "ts-node src/snow-operator.ts",
         "test": "jest",
-        "build": "rm -rf dist/ && tsc && cp package.json.prod dist/package.json && cp log4js.json dist/",
-        "package-lambda": "cd dist/ && zip -r function.zip ../idl ../keys ../node_modules index.js snow-service.js",
-        "deploy-lambda": "aws lambda update-function-code --function-name snowflake-operator --zip-file fileb://dist/function.zip",
-        "package-app": "cd dist/ && zip -r snow-operator.zip package.json log4js.json ../idl snow-operator.js snow-service.js"
+        "build": "rm -rf dist/ && rm -rf js/ && tsc && cp -R src/idl js/src/ && cp -R src/schemas js/src/",
+        "package-app": "pkg . && cd dist/ && zip snf-node-operator.zip snf-node-operator"
     },
     "dependencies": {
         "@project-serum/anchor": "^0.21.0",
@@ -26,5 +26,11 @@
         "@types/node-cron": "^3.0.0",
         "jest": "^27.5.1",
         "ts-jest": "^27.1.3"
+    },
+    "pkg": {
+        "scripts": "js/src/**/*.js",
+        "assets": ["js/src/**/*.json", "js/src/**/*.sql", "node_modules/**/*.node"],
+        "targets": [ "node16-linux-x64" ],
+        "outputPath": "dist"
     }
 }

@@ -13,13 +13,13 @@ test("list all flows", async () => {
 });
 
 test("list flows to be executed", async () => {
-  const flowsToBeExecuted = await snowService.listFlowsToBeExecuted();
+  // const flowsToBeExecuted = await snowService.listFlowsToBeExecuted();
 
-  console.log(flowsToBeExecuted);
+  // console.log(flowsToBeExecuted);
 });
 
 test("list expired flows", async () => {
-  const expiredFlows = await snowService.listExpiredFlows();
+  // const expiredFlows = await snowService.listExpiredFlows();
 
-  console.log(expiredFlows);
+  // console.log(expiredFlows);
 });

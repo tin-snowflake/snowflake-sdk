@@ -2,11 +2,12 @@ import { Database } from "sqlite3";
 import SchemaComposer from "../utils/schema-composer";
 import Bluebird, { Promise } from "bluebird";
 import log4js from "log4js";
+import {LOG4JS_CONFIG} from "../constants/log4js-config"
 import { BN, ProgramAccount } from "@project-serum/anchor";
 import { FlowModel } from "src/models/flow";
 import { PublicKey } from "@solana/web3.js";
 
-log4js.configure("log4js.json");
+log4js.configure(LOG4JS_CONFIG);
 const logger = log4js.getLogger("Memory Cache");
 
 /**

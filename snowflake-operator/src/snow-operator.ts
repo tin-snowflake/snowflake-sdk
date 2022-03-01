@@ -1,5 +1,6 @@
 import SnowService from "./services/snow-service";
 import log4js from "log4js";
+import { LOG4JS_CONFIG } from "./constants/log4js-config";
 import { JobCacheService } from "./services/job-cache-service";
 import { DatabaseService } from "./services/database-service";
 import "dotenv/config";
@@ -7,7 +8,7 @@ import { ProgramAccount } from "@project-serum/anchor";
 import { FlowModel } from "./models/flow";
 import cron from "node-cron";
 
-log4js.configure("log4js.json");
+log4js.configure(LOG4JS_CONFIG);
 
 class SnowflakeOperator {
   ONE_HOUR = 1000 * 60 * 60;

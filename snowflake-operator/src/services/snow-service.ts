@@ -12,6 +12,7 @@ import {
   setProvider,
 } from "@project-serum/anchor";
 import log4js from "log4js";
+import {LOG4JS_CONFIG} from "../constants/log4js-config"
 import path from "path";
 import {
   MEMO_PROGRAM_ID,
@@ -25,7 +26,7 @@ import {
 } from "../constants/config";
 import { FlowModel } from "src/models/flow";
 
-log4js.configure("log4js.json");
+log4js.configure(LOG4JS_CONFIG);
 const logger = log4js.getLogger("Operator");
 
 const SNOW_IDL = "../idl/snowflake.json";

@@ -6,8 +6,10 @@
 
 # production
 /dist
+/js
 /logs
 
 # misc
 .DS_Store
 *.iml
+.env

@@ -1,9 +1,10 @@
 import * as sqlite3 from "sqlite3";
 import log4js from "log4js";
+import {LOG4JS_CONFIG} from "../constants/log4js-config"
 
 type Database = sqlite3.Database;
 
-log4js.configure("log4js.json");
+log4js.configure(LOG4JS_CONFIG);
 const logger = log4js.getLogger("Database Service");
 
 export class DatabaseService {

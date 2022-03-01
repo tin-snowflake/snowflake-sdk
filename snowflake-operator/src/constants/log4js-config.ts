@@ -1,4 +1,4 @@
-{
+export const LOG4JS_CONFIG = {
     "appenders": { 
         "operator": { 
             "type": "file", 
