@@ -30,27 +30,27 @@ const NON_BN_FIELDS = [
 
 export class Job {
   pubKey: PublicKey;
-  name: string = "job - " + new Date().toLocaleDateString();
-  userUtcOffset: UTCOffset = new Date().getTimezoneOffset() * 60;
-  instructions: TransactionInstruction[] = [];
+  owner: PublicKey;
+  nextExecutionTime: UnixTimeStamp = 0;
   recurring: boolean = false;
   retryWindow: number = RETRY_WINDOW;
   remainingRuns: number = 0;
-  owner: PublicKey;
-  triggerType: TriggerType = TriggerType.None;
-  cron: string = "";
-  expireOnComplete: boolean = false;
-  clientAppId: PublicKey = new PublicKey(SNOWFLAKE_PROGRAM_ID);
   dedicatedOperator: PublicKey;
-  nextExecutionTime: UnixTimeStamp = 0;
-  lastScheduledExecution: UnixTimeStamp = 0;
-  scheduleEndDate: UnixTimeStamp = 0;
+  clientAppId: number = 0;
   expiryDate: UnixTimeStamp = 0;
+  expireOnComplete: boolean = false;
+  scheduleEndDate: UnixTimeStamp = 0;
+  userUtcOffset: UTCOffset = new Date().getTimezoneOffset() * 60;
+  lastScheduledExecution: UnixTimeStamp = 0;
   createdDate: UnixTimeStamp = 0;
   lastRentCharged: UnixTimeStamp = 0;
   lastUpdatedDate: UnixTimeStamp = 0;
   externalId: String = "";
+  cron: string = "";
+  name: string = "job - " + new Date().toLocaleDateString();
   extra: String = "";
+  triggerType: TriggerType = TriggerType.None;
+  instructions: TransactionInstruction[] = [];
 
   isBNType(property: string): boolean {
     return (

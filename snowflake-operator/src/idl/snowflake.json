@@ -1,5 +1,5 @@
 {
-  "version": "0.1.0",
+  "version": "0.0.0",
   "name": "snowflake",
   "instructions": [
     {
@@ -12,7 +12,7 @@
         },
         {
           "name": "owner",
-          "isMut": true,
+          "isMut": false,
           "isSigner": true
         },
         {
@@ -83,7 +83,7 @@
         },
         {
           "name": "pda",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -114,7 +114,7 @@
         },
         {
           "name": "pda",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -145,7 +145,7 @@
         },
         {
           "name": "pda",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -238,7 +238,7 @@
         },
         {
           "name": "snfFoundation",
-          "isMut": true,
+          "isMut": false,
           "isSigner": true
         },
         {
@@ -455,48 +455,13 @@
           }
         ]
       }
-    },
+    }
+  ],
+  "errors": [
     {
-      "name": "TriggerType",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "None"
-          },
-          {
-            "name": "Time"
-          },
-          {
-            "name": "Program"
-          }
-        ]
-      }
-    },
-    {
-      "name": "FeeSource",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "FromFeeAccount"
-          },
-          {
-            "name": "FromFlow"
-          }
-        ]
-      }
-    },
-    {
-      "name": "ErrorCode",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "InvalidJobTargetAccounts"
-          }
-        ]
-      }
+      "code": 400,
+      "name": "InvalidJobTargetAccounts",
+      "msg": "The accounts specified for the job target program is not valid."
     }
   ]
 }

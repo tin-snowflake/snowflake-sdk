@@ -29,6 +29,7 @@ export class Snowflake {
     job.validateForCreate();
     const { instructions, signers } =
       this.instructionBuilder.buildCreateJobInstruction(job);
+
     const tx = await this.transactionSender.sendWithWallet({
       instructions,
       signers,
