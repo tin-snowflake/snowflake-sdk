@@ -16,14 +16,6 @@ beforeAll(() => {
   owner = provider.wallet.publicKey;
 });
 
-test("get all jobs", async () => {
-  const jobs = await snowflake.findGlobal();
-
-  console.log(jobs);
-
-  expect(jobs).toBeDefined();
-});
-
 test("create job", async function () {
   const job = new JobBuilder()
     .jobName("hello world")
