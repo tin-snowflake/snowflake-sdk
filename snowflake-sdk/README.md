@@ -52,13 +52,38 @@ await snowflake.createJob(job);
 
 ### Build a recurring scheduled job
 
-Build a job that scheduled to execute every minute by providing a cron expression to the `scheduleCron` method.
+Schedule a job that runs every minute for 10 times.
 
 ```typescript
 const job = new JobBuilder()
   .jobName("hello world")
   .jobInstructions(instructions)
-  .scheduleCron("* * * * *")
+  .scheduleCron("* * * * *", 10)
+  .build();
+
+await snowflake.createJob(job);
+```
+
+Schedule a job that runs at 10:00 AM on the first day of every month .
+
+```typescript
+const job = new JobBuilder()
+  .jobName("hello world")
+  .jobInstructions(instructions)
+  .scheduleCron("0 10 1 * *")
+  .build();
+
+await snowflake.createJob(job);
+```
+### Build a program condition triggered job
+
+Schedule a job that is triggered based on an arbitrary condition defined within the user program.
+
+```typescript
+const job = new JobBuilder()
+  .jobName("hello world")
+  .jobInstructions(instructions)
+  .scheduleConditional(1)
   .build();
 
 await snowflake.createJob(job);

@@ -1,5 +1,6 @@
 import { TransactionInstruction } from "@solana/web3.js";
 import { Job, TriggerType, UnixTimeStamp } from "../model/job";
+import { RECURRING_FOREVER } from "../config";
 
 export class JobBuilder {
   private job: Job = new Job();
@@ -30,23 +31,26 @@ export class JobBuilder {
 
   scheduleCron(
     cron: string,
-    numberOfExecutions: number,
+    numberOfExecutions?: number,
     userTimezoneOffset?: UnixTimeStamp
   ): JobBuilder {
     this.job.triggerType = TriggerType.Time;
     this.job.recurring = true;
     this.job.cron = cron;
-    this.job.remainingRuns = numberOfExecutions;
+    this.job.remainingRuns =
+      numberOfExecutions === undefined ? RECURRING_FOREVER : numberOfExecutions;
+
     this.job.userUtcOffset =
-      userTimezoneOffset == undefined
+      userTimezoneOffset === undefined
         ? new Date().getTimezoneOffset() * 60
         : userTimezoneOffset;
     return this;
   }
 
-  scheduleConditional(numberOfExecutions: number): JobBuilder {
+  scheduleConditional(numberOfExecutions?: number): JobBuilder {
     this.job.triggerType = TriggerType.ProgramCondition;
-    this.job.remainingRuns = numberOfExecutions;
+    this.job.remainingRuns =
+      numberOfExecutions === undefined ? RECURRING_FOREVER : numberOfExecutions;
     return this;
   }
 

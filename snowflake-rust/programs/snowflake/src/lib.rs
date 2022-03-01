@@ -8,6 +8,8 @@ use anchor_lang::solana_program::program::invoke_signed;
 use anchor_spl::token::{Token, TokenAccount};
 use crate::error::ErrorCode;
 
+declare_id!("3K4NPJKUJLbgGfxTJumtxv3U3HeJbS3nVjwy8CqFj6F2");
+
 pub enum TriggerType {
     None = 1,
     Time = 2,
@@ -19,15 +21,13 @@ pub enum FeeSource {
     FromFlow = 2
 }
 
-const RECURRING_FOREVER:i16 = -999;
+const RECURRING_FOREVER: i16 = -999;
 const DEFAULT_RETRY_WINDOW: u32 = 300;
 
 const TIMED_FLOW_COMPLETE: i64 = 0;
 const TIMED_FLOW_ERROR: i64 = -1;
 
 const SNF_PROGRAM_SETTINGS_KEY: &str = "4zngo1n4BQQU8MHi2xopBppaT29Fv6jRLZ5NwvtdXpMG";
-
-declare_id!("3K4NPJKUJLbgGfxTJumtxv3U3HeJbS3nVjwy8CqFj6F2");
 
 #[program]
 pub mod snowflake {
