@@ -52,9 +52,8 @@ const JobsGetGlobalCommand: CommandLayout = {
   },
 };
 
-// tslint:disable-next-line: no-object-literal-type-assertion
 export default {
   command: "jobs",
   description: "Manage jobs",
   commands: [JobsGetGlobalCommand],
-} as CommandLayout;
+};
