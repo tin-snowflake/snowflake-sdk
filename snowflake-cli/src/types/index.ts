@@ -3,8 +3,18 @@ export interface OptionLayout {
   description: string;
 }
 
+export interface ArgumentLayout {
+  argument: string;
+  description: string;
+}
+
 export interface OptionInstructionLayout {
   options: OptionLayout[];
+  action?: (args: any) => any;
+}
+
+export interface ArgumentInstructionLayout {
+  arguments: ArgumentLayout[];
   action?: (args: any) => any;
 }
 
@@ -14,6 +24,7 @@ export interface CommandLayout {
   action?: (args: any) => any;
   commands?: CommandLayout[];
   optionLayout?: OptionInstructionLayout;
+  argumentLayout?: ArgumentInstructionLayout;
 }
 export interface CommandInstructionLayout {
   version: string;

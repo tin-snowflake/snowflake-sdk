@@ -5,10 +5,10 @@ import {
   SNOWFLAKE_CLI_KEYPAIR_PATH,
   SNOWFLAKE_CLI_RPC_URL,
 } from "../constants/db-key";
-import { log } from "../utils";
+import { logSuccess } from "../utils/log";
 
 class ConfigCommandService {
-  static async setConfigUrl(url: string): Promise<void> {
+  static async setConfigUrl(url: string): Promise<string> {
     try {
       const endpoint = (EndpointConstant as any)[url];
       if (endpoint) {
@@ -18,18 +18,18 @@ class ConfigCommandService {
       }
 
       const rpcURL = await db.get(SNOWFLAKE_CLI_RPC_URL);
-      log(`Cluster RPC set to ${rpcURL}`);
+      return rpcURL;
     } catch (error: any) {
       throw new Error(error.message);
     }
   }
 
-  static async setConfigKeypair(keypair: string): Promise<void> {
+  static async setConfigKeypair(keypair: string): Promise<string> {
     try {
       await db.put(SNOWFLAKE_CLI_KEYPAIR_PATH, keypair);
       const keypairPath = await db.get(SNOWFLAKE_CLI_KEYPAIR_PATH);
 
-      log(`Keypair set to ${keypairPath}`);
+      return keypairPath;
     } catch (error: any) {
       throw new Error(error.message);
     }
@@ -42,10 +42,10 @@ class ConfigCommandService {
         db.get(SNOWFLAKE_CLI_KEYPAIR_PATH),
       ]);
 
-      console.table({
+      return {
         "RPC URL": rpcUrl,
         "Keypair Path": keypairPath,
-      });
+      };
     } catch (error: any) {
       throw new Error(error.message);
     }
@@ -74,10 +74,16 @@ const ConfigSetCommand: CommandLayout = {
         description: "Set path to keypair",
       },
     ],
-    action: (args: any) => {
+    action: async (args: any) => {
       const { url, account } = args;
-      if (url) ConfigCommandService.setConfigUrl(url);
-      if (account) ConfigCommandService.setConfigKeypair(account);
+      if (url) {
+        const rpcUrl = await ConfigCommandService.setConfigUrl(url);
+        return logSuccess(rpcUrl, "RPC URL set to");
+      }
+      if (account) {
+        const keypair = await ConfigCommandService.setConfigKeypair(account);
+        return logSuccess(keypair, "Keypair set to");
+      }
     },
   },
 };

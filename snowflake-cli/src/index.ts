@@ -1,6 +1,7 @@
 import { Command } from "commander";
-import { ConfigCommand } from "./commands";
+import { ConfigCommand, JobCommand, JobsCommand } from "./commands";
 import { CommandInstructionLayout, CommandLayout } from "./types";
+import "dotenv/config";
 
 const program = new Command();
 
@@ -8,21 +9,28 @@ const snowflakeCommandInstruction: CommandInstructionLayout = {
   version: "0.0.1",
   name: "snowflake",
   description: "Snowflake CLI to interact with Snowflake SDK",
-  commands: [ConfigCommand],
+  commands: [ConfigCommand, JobCommand, JobsCommand],
 };
 
 class SnowflakeCli {
   static executeCommands(commands: CommandLayout[], mainProgram: Command) {
     commands.forEach((command) => {
       const subProgram = program
-        .command(command.command)
+        .createCommand(command.command)
         .description(command.description);
+      if (command.argumentLayout && command.argumentLayout.arguments) {
+        const argumentLayout = command.argumentLayout;
+        argumentLayout.arguments.forEach((argument) => {
+          subProgram.argument(argument.argument, argument.description);
+        });
+        if (argumentLayout.action) {
+          subProgram.action(argumentLayout.action);
+        }
+      }
       if (command.optionLayout && command.optionLayout.options) {
         const optionLayout = command.optionLayout;
         optionLayout.options.forEach((option) => {
-          subProgram
-            .option(option.option, option.description)
-            .description(option.description);
+          subProgram.option(option.option, option.description);
         });
         if (optionLayout.action) {
           subProgram.action(optionLayout.action);

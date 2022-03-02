@@ -1,5 +1,7 @@
+import { clusterApiUrl } from "@solana/web3.js";
+
 export default {
-  devnet: "https://api.devnet.solana.com",
-  ["mainnet-beta"]: "https://api.mainnet-beta.solana.com",
-  testnet: "https://api.testnet.solana.com",
+  devnet: clusterApiUrl("devnet"),
+  ["mainnet-beta"]: clusterApiUrl("mainnet-beta"),
+  testnet: clusterApiUrl("testnet"),
 };
