@@ -1,5 +1,5 @@
 {
-  "version": "0.0.0",
+  "version": "0.1.0",
   "name": "snowflake",
   "instructions": [
     {
@@ -486,33 +486,29 @@
           }
         ]
       }
-    }
-  ],
-  "errors": [
-    {
-      "code": 300,
-      "name": "InvalidJobData",
-      "msg": "The job data is invalid."
     },
     {
-      "code": 301,
-      "name": "JobIsNotAssignedToOperator",
-      "msg": "The job is not assigned to this operator."
-    },
-    {
-      "code": 302,
-      "name": "JobIsNotDueForExecution",
-      "msg": "The job is not due for execution."
-    },
-    {
-      "code": 303,
-      "name": "CannotMarkJobAsErrorIfItsWithinSchedule",
-      "msg": "Unable to mark the time triggered job as error because it is still within schedule."
-    },
-    {
-      "code": 304,
-      "name": "OperatorIsAlreadyRegistered",
-      "msg": "The operator is already registered."
+      "name": "ErrorCode",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "InvalidJobData"
+          },
+          {
+            "name": "JobIsNotAssignedToOperator"
+          },
+          {
+            "name": "JobIsNotDueForExecution"
+          },
+          {
+            "name": "CannotMarkJobAsErrorIfItsWithinSchedule"
+          },
+          {
+            "name": "OperatorIsAlreadyRegistered"
+          }
+        ]
+      }
     }
   ]
 }

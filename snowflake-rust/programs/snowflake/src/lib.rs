@@ -267,7 +267,7 @@ pub struct ExecuteFlow<'info> {
     #[account(mut)]
     flow: Account<'info, Flow>,
 
-    /// CHECK : no read or write to this account.
+    /// CHECK : account is only used for lamports transfer, no assumption made on its data structure
     #[account(mut, seeds = [&flow.owner.as_ref()], bump)]
     pub pda: AccountInfo<'info>,
 
