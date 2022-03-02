@@ -106,8 +106,8 @@ export default class SnowService {
    * @param flow {ProgramAccount}
    */
   async executeFlow(flow: ProgramAccount<FlowModel>) {
+    const flowAddress = flow.publicKey;
     try {
-      const flowAddress = flow.publicKey;
       const operatorWalletKey = this.program.provider.wallet.publicKey;
       const [pda, _] = await PublicKey.findProgramAddress(
         [flow.account.owner.toBuffer()],
@@ -146,14 +146,9 @@ export default class SnowService {
 
       const tx = await this.sendInstructionWithMemo(ix, "snf_exec_auto");
 
-      logger.info(
-        "Executed flow: ",
-        flowAddress.toBase58(),
-        ". Transaction signature:",
-        tx
-      );
+      logger.info("Finish executing flow: ", flowAddress.toBase58(), " transaction signature: ", tx);
     } catch (error: any) {
-      logger.error("Error executing flow: ", error);
+      logger.error("Error executing flow: ", flowAddress.toBase58(), " Error: ", error);
     }
   }
 
@@ -180,8 +175,9 @@ export default class SnowService {
    * @param flow {ProgramAccount}
    */
   async markTimedFlowAsError(flow: ProgramAccount) {
+    const flowAddress = flow.publicKey;
+
     try {
-      const flowAddress = flow.publicKey;
       const operatorWalletKey = this.program.provider.wallet.publicKey;
       const [pda, _] = await PublicKey.findProgramAddress(
         [flow.account.owner.toBuffer()],
@@ -202,14 +198,9 @@ export default class SnowService {
 
       const tx = await this.sendInstructionWithMemo(ix, "snf_exec_mark_error");
 
-      logger.info(
-        "Marked flow as error",
-        flow.publicKey.toBase58(),
-        ". Transaction signature: ",
-        tx
-      );
+      logger.info("Finish marking flow as error: ", flowAddress.toBase58(), "Transaction signature: ", tx);
     } catch (error) {
-      logger.error("Error marking flow as error: ", error);
+      logger.error("Error marking flow as error: ", flowAddress.toBase58(), " Error: ", error);
     }
   }
 

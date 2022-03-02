@@ -27,7 +27,7 @@ const DEFAULT_RETRY_WINDOW: u32 = 300;
 const TIMED_FLOW_COMPLETE: i64 = 0;
 const TIMED_FLOW_ERROR: i64 = -1;
 
-const SNF_PROGRAM_SETTINGS_KEY: &str = "4zngo1n4BQQU8MHi2xopBppaT29Fv6jRLZ5NwvtdXpMG";
+const SNF_PROGRAM_SETTINGS_KEY: &str = "APiJdtb25pQf1RCBxCoX2Q2trEjGPeXztJ2NztTQ8SYY";
 
 #[program]
 pub mod snowflake {
@@ -268,7 +268,7 @@ pub struct ExecuteFlow<'info> {
     flow: Account<'info, Flow>,
 
     /// CHECK : no read or write to this account.
-    #[account(seeds = [&flow.owner.as_ref()], bump)]
+    #[account(mut, seeds = [&flow.owner.as_ref()], bump)]
     pub pda: AccountInfo<'info>,
 
     pub caller: Signer<'info>,

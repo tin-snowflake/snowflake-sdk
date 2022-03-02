@@ -15,7 +15,7 @@ import {
 const SNOW_PROGRAM_ID = "BiVwqu45yQTxqTTTAD1UrMZNyZ3qsEVqKwTEfG9BvUs6";
 const SNOW_IDL = "idl/snowflake.json";
 const SNF_PROGRAM_SETTINGS = new PublicKey(
-  "4zngo1n4BQQU8MHi2xopBppaT29Fv6jRLZ5NwvtdXpMG"
+  "APiJdtb25pQf1RCBxCoX2Q2trEjGPeXztJ2NztTQ8SYY"
 );
 
 export default class ProgramSettingsService {
