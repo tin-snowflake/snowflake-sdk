@@ -8,7 +8,7 @@ use anchor_lang::solana_program::program::invoke_signed;
 use anchor_spl::token::{Token, TokenAccount};
 use crate::error::ErrorCode;
 
-declare_id!("3K4NPJKUJLbgGfxTJumtxv3U3HeJbS3nVjwy8CqFj6F2");
+declare_id!("BiVwqu45yQTxqTTTAD1UrMZNyZ3qsEVqKwTEfG9BvUs6");
 
 pub enum TriggerType {
     None = 1,
@@ -309,23 +309,23 @@ pub struct RegisterOperator<'info> {
 #[account]
 #[derive(Debug)]
 pub struct Flow {
-    pub owner: Pubkey, 
+    pub owner: Pubkey,
+    pub last_updated_date: i64,
+    pub created_date: i64,
     pub trigger_type: u8,
     pub next_execution_time: i64,
     pub retry_window: u32,
     pub recurring: bool,
     pub remaining_runs: i16,
-    pub dedicated_operator: Pubkey,
+    pub schedule_end_date: i64,
     pub client_app_id: u32,
+    pub last_rent_charged: i64,
+    pub last_scheduled_execution: i64,
     pub expiry_date: i64,
     pub expire_on_complete: bool,
-    pub schedule_end_date: i64,
+    pub dedicated_operator: Pubkey,
     pub pay_fee_from: u8,
     pub user_utc_offset: i32,
-    pub last_scheduled_execution: i64,
-    pub created_date: i64,
-    pub last_rent_charged: i64,
-    pub last_updated_date: i64,
     pub external_id: String,
     pub cron: String,
     pub name: String,

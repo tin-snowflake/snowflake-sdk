@@ -39,14 +39,14 @@ export const programIds = () => {
 export const WRAPPED_SOL_MINT = new PublicKey('So11111111111111111111111111111111111111112');
 export const SOL_MINT = new PublicKey('Ejmc1UB4EsES5oAaRN63SpoxMJidt3ZGBrqrZk49vjTZ');
 export const TOKEN_PROGRAM_ID = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
-export const SNOWFLAKE_PROGRAM_ID = new PublicKey('3K4NPJKUJLbgGfxTJumtxv3U3HeJbS3nVjwy8CqFj6F2');
+export const SNOWFLAKE_PROGRAM_ID = new PublicKey('BiVwqu45yQTxqTTTAD1UrMZNyZ3qsEVqKwTEfG9BvUs6');
 export const SYSTEM_PROGRAM_ID = new PublicKey('11111111111111111111111111111111');
 export const MEMO_PROGRAM_ID = new PublicKey('Memo1UhkJRfHyvLMcVucJwxXeuD728EqVDDwQDxFMNo');
 export const RENT_PROGRAM_ID = new PublicKey('SysvarRent111111111111111111111111111111111');
 export const CLOCK_PROGRAM_ID = new PublicKey('SysvarC1ock11111111111111111111111111111111');
 export const ASSOCIATED_TOKEN_PROGRAM_ID = new PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL');
 export const PRICE_CHECKER_PROGRAM_ID = new PublicKey('8BVA9L8pTTPxcrP7AS9M9957Qy8WUBSLmgh37vUvUdRe');
-export const SNF_PROGRAM_SETTINGS_ID = new PublicKey("4zngo1n4BQQU8MHi2xopBppaT29Fv6jRLZ5NwvtdXpMG");
+export const SNF_PROGRAM_SETTINGS_ID = new PublicKey('4zngo1n4BQQU8MHi2xopBppaT29Fv6jRLZ5NwvtdXpMG');
 export const DEVNET_USDC_TOKEN = new PublicKey('65sjMDWT2fe8sYfwcso9fTHo9AZsh3Q2Ed28jEf5g11V');
 
 export const EXTRA_DEVNET_TOKENS = [
