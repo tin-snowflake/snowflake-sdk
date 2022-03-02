@@ -78,16 +78,19 @@ const ConfigSetCommand: CommandLayout = {
       const { url, account } = args;
       if (url) {
         const rpcUrl = await ConfigCommandService.setConfigUrl(url);
-        return logSuccess(rpcUrl, "RPC URL set to");
+        logSuccess(rpcUrl, "RPC URL set to");
+        return;
       }
       if (account) {
         const keypair = await ConfigCommandService.setConfigKeypair(account);
-        return logSuccess(keypair, "Keypair set to");
+        logSuccess(keypair, "Keypair set to");
+        return;
       }
     },
   },
 };
 
+// tslint:disable-next-line: no-object-literal-type-assertion
 export default {
   command: "config",
   description: "Configure Snowflake CLI",

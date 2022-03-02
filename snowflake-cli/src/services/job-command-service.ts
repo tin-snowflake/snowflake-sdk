@@ -4,6 +4,21 @@ import { initSnowflake } from "../utils/snowflake";
 import { PublicKey } from "@solana/web3.js";
 
 export default class JobCommandService {
+  static async deleteJob(publicKey: string) {
+    try {
+      const rpcUrl = await db.get(SNOWFLAKE_CLI_RPC_URL);
+      if (!rpcUrl) {
+        throw new Error("RPC URL is not set");
+      }
+      const snowflake = initSnowflake(rpcUrl);
+      const pubkey = new PublicKey(publicKey);
+      await snowflake.deleteJob(pubkey);
+
+      return publicKey;
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
   static async getGlobalJob() {
     try {
       const rpcUrl = await db.get(SNOWFLAKE_CLI_RPC_URL);

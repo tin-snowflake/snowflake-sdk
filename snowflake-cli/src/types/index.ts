@@ -10,21 +10,21 @@ export interface ArgumentLayout {
 
 export interface OptionInstructionLayout {
   options: OptionLayout[];
-  action?: (args: any) => any;
+  action?(args: any): any;
 }
 
 export interface ArgumentInstructionLayout {
   arguments: ArgumentLayout[];
-  action?: (args: any) => any;
+  action?(args: any): any;
 }
 
 export interface CommandLayout {
   command: string;
   description: string;
-  action?: (args: any) => any;
   commands?: CommandLayout[];
   optionLayout?: OptionInstructionLayout;
   argumentLayout?: ArgumentInstructionLayout;
+  action?(args: any): any;
 }
 export interface CommandInstructionLayout {
   version: string;
