@@ -1,11 +1,11 @@
 import { PublicKey, TransactionSignature } from "@solana/web3.js";
 import { Idl, Program, Provider } from "@project-serum/anchor";
-import programIdl from "../idl/snowflake.json";
 import { TransactionSender } from "./transaction-sender";
 import Finder from "./finder";
 import { InstructionBuilder } from "../builder/instruction-builder";
 import { SNOWFLAKE_PROGRAM_ID } from "../config/program-id";
 import { Job } from "../model/job";
+import { SNOWFLAKE_IDL } from "../idl";
 
 export class Snowflake {
   program: Program;
@@ -16,7 +16,7 @@ export class Snowflake {
   constructor(provider: Provider) {
     this.provider = provider;
     this.program = new Program(
-      programIdl as Idl,
+      SNOWFLAKE_IDL as Idl,
       SNOWFLAKE_PROGRAM_ID,
       this.provider
     );

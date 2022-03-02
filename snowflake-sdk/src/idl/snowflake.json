@@ -176,7 +176,7 @@
         },
         {
           "name": "pda",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -282,6 +282,14 @@
             "type": "publicKey"
           },
           {
+            "name": "lastUpdatedDate",
+            "type": "i64"
+          },
+          {
+            "name": "createdDate",
+            "type": "i64"
+          },
+          {
             "name": "triggerType",
             "type": "u8"
           },
@@ -302,12 +310,20 @@
             "type": "i16"
           },
           {
-            "name": "dedicatedOperator",
-            "type": "publicKey"
+            "name": "scheduleEndDate",
+            "type": "i64"
           },
           {
             "name": "clientAppId",
             "type": "u32"
+          },
+          {
+            "name": "lastRentCharged",
+            "type": "i64"
+          },
+          {
+            "name": "lastScheduledExecution",
+            "type": "i64"
           },
           {
             "name": "expiryDate",
@@ -318,8 +334,8 @@
             "type": "bool"
           },
           {
-            "name": "scheduleEndDate",
-            "type": "i64"
+            "name": "dedicatedOperator",
+            "type": "publicKey"
           },
           {
             "name": "payFeeFrom",
@@ -328,22 +344,6 @@
           {
             "name": "userUtcOffset",
             "type": "i32"
-          },
-          {
-            "name": "lastScheduledExecution",
-            "type": "i64"
-          },
-          {
-            "name": "createdDate",
-            "type": "i64"
-          },
-          {
-            "name": "lastRentCharged",
-            "type": "i64"
-          },
-          {
-            "name": "lastUpdatedDate",
-            "type": "i64"
           },
           {
             "name": "externalId",
@@ -493,7 +493,19 @@
         "kind": "enum",
         "variants": [
           {
-            "name": "InvalidJobTargetAccounts"
+            "name": "InvalidJobData"
+          },
+          {
+            "name": "JobIsNotAssignedToOperator"
+          },
+          {
+            "name": "JobIsNotDueForExecution"
+          },
+          {
+            "name": "CannotMarkJobAsErrorIfItsWithinSchedule"
+          },
+          {
+            "name": "OperatorIsAlreadyRegistered"
           }
         ]
       }

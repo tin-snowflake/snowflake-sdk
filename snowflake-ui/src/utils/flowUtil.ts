@@ -30,17 +30,13 @@ let dataSizeFilter = {
 export async function fetchFlowsByOwner(program: Program, publicKey: PublicKey) {
   let ownerFilter = flowOwnedAccountsFilter(publicKey);
 
-  // return program.account.flow.all([dataSizeFilter, ownerFilter]);
-
   const customAnchorClient = new CustomAnchorClient(program.account.flow);
-  return customAnchorClient.queryAllIgnoreBadData([dataSizeFilter, ownerFilter]);
+  return customAnchorClient.queryAllIgnoreBadData([ownerFilter]);
 }
 
 export async function fetchGlobalFlows(program: Program) {
-  // return program.account.flow.all([dataSizeFilter]);
-
   const customAnchorClient = new CustomAnchorClient(program.account.flow);
-  return customAnchorClient.queryAllIgnoreBadData([dataSizeFilter]);
+  return customAnchorClient.queryAllIgnoreBadData([]);
 }
 
 export const templateAction = { name: 'basic_action', actionCode: actionUtil.ACTION_TYPES.customAction.code, accounts: [{ isSigner: false, isWritable: false }] };
