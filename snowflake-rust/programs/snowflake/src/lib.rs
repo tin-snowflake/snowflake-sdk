@@ -283,7 +283,7 @@ pub struct ExecuteFlow<'info> {
 #[derive(Accounts)]
 pub struct InitProgramSettings<'info> {
 
-    #[account(init, payer = snf_foundation, space = 1000)]
+    #[account(init, payer = snf_foundation, space = 5000)]
     program_settings: Account<'info, ProgramSettings>,
 
     #[account(mut)]
