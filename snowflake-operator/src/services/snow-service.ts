@@ -12,7 +12,7 @@ import {
   setProvider,
 } from "@project-serum/anchor";
 import log4js from "log4js";
-import {LOG4JS_CONFIG} from "../constants/log4js-config"
+import { LOG4JS_CONFIG } from "../constants/log4js-config";
 import path from "path";
 import {
   MEMO_PROGRAM_ID,
@@ -50,22 +50,7 @@ export default class SnowService {
    */
   async listAllFlows(): Promise<Array<ProgramAccount>> {
     try {
-      const allFlows =
-        await this.program.provider.connection.getProgramAccounts(
-          this.program.programId,
-          {
-            // Consider slicing bytes manually
-            filters: [{ dataSize: 4994 }],
-          }
-        );
-
-      return allFlows.map((flow) => {
-        const decodedFlowData = this.decodeFlowData(flow.account.data);
-        return {
-          account: decodedFlowData,
-          publicKey: flow.pubkey,
-        } as ProgramAccount<FlowModel>;
-      });
+      return this.program.account.flow.all();
     } catch (error) {
       logger.error("Error listing flows: ", error);
       return [];
@@ -146,9 +131,19 @@ export default class SnowService {
 
       const tx = await this.sendInstructionWithMemo(ix, "snf_exec_auto");
 
-      logger.info("Finish executing flow: ", flowAddress.toBase58(), " transaction signature: ", tx);
+      logger.info(
+        "Finish executing flow: ",
+        flowAddress.toBase58(),
+        " transaction signature: ",
+        tx
+      );
     } catch (error: any) {
-      logger.error("Error executing flow: ", flowAddress.toBase58(), " Error: ", error);
+      logger.error(
+        "Error executing flow: ",
+        flowAddress.toBase58(),
+        " Error: ",
+        error
+      );
     }
   }
 
@@ -198,9 +193,19 @@ export default class SnowService {
 
       const tx = await this.sendInstructionWithMemo(ix, "snf_exec_mark_error");
 
-      logger.info("Finish marking flow as error: ", flowAddress.toBase58(), "Transaction signature: ", tx);
+      logger.info(
+        "Finish marking flow as error: ",
+        flowAddress.toBase58(),
+        "Transaction signature: ",
+        tx
+      );
     } catch (error) {
-      logger.error("Error marking flow as error: ", flowAddress.toBase58(), " Error: ", error);
+      logger.error(
+        "Error marking flow as error: ",
+        flowAddress.toBase58(),
+        " Error: ",
+        error
+      );
     }
   }
 
@@ -242,11 +247,6 @@ export default class SnowService {
    */
   onFlowsChanged(callback: (flow: ProgramAccount) => void) {
     const connection = this.program.provider.connection;
-    const filters: GetProgramAccountsFilter[] = [
-      {
-        dataSize: 4994,
-      },
-    ];
     return connection.onProgramAccountChange(
       SNOW_PROGRAM_ID,
       (keyedAccountInfo, _) => {
@@ -254,9 +254,7 @@ export default class SnowService {
           publicKey: keyedAccountInfo.accountId,
           account: this.decodeFlowData(keyedAccountInfo.accountInfo.data),
         });
-      },
-      "recent",
-      filters
+      }
     );
   }
 
