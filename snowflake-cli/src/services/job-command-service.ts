@@ -1,5 +1,5 @@
 import { SNOWFLAKE_CLI_RPC_URL } from "../constants/db-key";
-import db from "../db";
+import db from "../utils/db";
 import { initSnowflake } from "../utils/snowflake";
 import { PublicKey } from "@solana/web3.js";
 

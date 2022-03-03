@@ -3,7 +3,7 @@ import {
   SNOWFLAKE_CLI_KEYPAIR_PATH,
   SNOWFLAKE_CLI_RPC_URL,
 } from "../constants/db-key";
-import db from "../db";
+import db from "../utils/db";
 
 export default class ConfigCommandService {
   static async setConfigUrl(url: string): Promise<string> {
