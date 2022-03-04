@@ -1,3 +1,4 @@
 /target
 /programs/snowflake/target
+/programs/snow-util/target
 *.iml
