@@ -39,6 +39,9 @@ pub mod snowflake {
         let flow = &mut ctx.accounts.flow;
         flow.owner = ctx.accounts.owner.key();
 
+        let date = Clock::get()?.unix_timestamp;
+        flow.created_date = date;
+        flow.last_updated_date = date;
         flow.apply_flow_data(client_flow);
 
         require!(flow.validate_flow_data(),ErrorCode::InvalidJobData);
@@ -48,6 +51,7 @@ pub mod snowflake {
     pub fn update_flow(ctx: Context<UpdateFlow>, client_flow: Flow) -> ProgramResult {
         let flow = &mut ctx.accounts.flow;
 
+        flow.last_updated_date = Clock::get()?.unix_timestamp;
         flow.apply_flow_data(client_flow);
 
         require!(flow.validate_flow_data(),ErrorCode::InvalidJobData);
@@ -92,10 +96,11 @@ pub mod snowflake {
 
         let flow = &mut ctx.accounts.flow;
         let now = Clock::get()?.unix_timestamp;
-
+        
         require!(flow.is_schedule_expired(now), ErrorCode::CannotMarkJobAsErrorIfItsWithinSchedule);
-
+        
         flow.next_execution_time = TIMED_FLOW_ERROR;
+        flow.last_updated_date = now;
 
         Ok(())
     }
@@ -426,6 +431,8 @@ impl Flow {
                 if self.has_remaining_runs() {calculate_next_execution_time(&self.cron, self.user_utc_offset as i64)}
                 else {TIMED_FLOW_COMPLETE};
         }
+
+        self.last_updated_date = now;
     }
 }
 
