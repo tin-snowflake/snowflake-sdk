@@ -24,10 +24,16 @@ export const ENDPOINTS = [
     name: 'testnet' as ENV,
     endpoint: clusterApiUrl('testnet'),
     chainID: ChainID.Testnet,
-  },*/
+  },
   {
     name: 'devnet' as ENV,
     endpoint: clusterApiUrl('devnet'),
+    chainID: ChainID.Devnet,
+  },
+  */
+  {
+    name: 'devnet' as ENV,
+    endpoint: 'https://psytrbhymqlkfrhudd.dev.genesysgo.net:8899',
     chainID: ChainID.Devnet,
   },
   {
