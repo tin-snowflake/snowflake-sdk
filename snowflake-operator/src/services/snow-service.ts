@@ -259,21 +259,6 @@ export default class SnowService {
   }
 
   /**
-   * Handle the main process of flows
-   * @param flows {ProgramAccount[]}
-   */
-  handleProcessFlows(flows: ProgramAccount<FlowModel>[]) {
-    for (let flow of flows) {
-      if (this.shouldExecuteFlow(flow)) {
-        this.executeFlow(flow);
-      }
-      if (this.isTimedFlowExpired(flow)) {
-        this.markTimedFlowAsError(flow);
-      }
-    }
-  }
-
-  /**
    * Decode flow data
    * @param accountData {Buffer}
    * @returns {ProgramAccount}

@@ -1,5 +1,5 @@
 import SnowService from "./services/snow-service";
-import log4js from "log4js";
+import log4js, { Logger } from "log4js";
 import { LOG4JS_CONFIG } from "./constants/log4js-config";
 import { JobCacheService } from "./services/job-cache-service";
 import { DatabaseService } from "./services/database-service";
@@ -7,25 +7,72 @@ import "dotenv/config";
 import { ProgramAccount } from "@project-serum/anchor";
 import { FlowModel } from "./models/flow";
 import cron from "node-cron";
+import {
+  RATE_LIMITED_DELAY_IN_MILLISECONDS,
+  RATE_LIMITED_REQUEST_NUMBER,
+} from "./constants/config";
 
 log4js.configure(LOG4JS_CONFIG);
 
 class SnowflakeOperator {
-  ONE_HOUR = 1000 * 60 * 60;
+  private logger: Logger = log4js.getLogger("Operator");
+  private snowService: SnowService = SnowService.instance();
+  private dbService: DatabaseService = DatabaseService.instance();
+  private jobCacheService: JobCacheService = new JobCacheService(
+    this.dbService.database
+  );
 
-  snowService = SnowService.instance();
-  dbService = DatabaseService.instance();
-  jobCacheService = new JobCacheService(this.dbService.database);
-  logger = log4js.getLogger("Operator");
+  private isBusy: boolean = false;
 
   static instance(): SnowflakeOperator {
     return new SnowflakeOperator();
   }
 
-  async bootstrap() {
+  private async delay() {
+    return new Promise((ok) => setTimeout(ok, RATE_LIMITED_DELAY_IN_MILLISECONDS));
+  }
+
+  private async handleExecutableFlows(flows: ProgramAccount<FlowModel>[]) {
+    const executableFlows = flows.filter((flow) =>
+      this.snowService.shouldExecuteFlow(flow)
+    );
+
+    for (let i = 0; i < executableFlows.length; i++) {
+      if (i !== 0) {
+        if (i % RATE_LIMITED_REQUEST_NUMBER === 0) {
+          await this.delay();
+        }
+      }
+      await this.snowService.executeFlow(executableFlows[i]);
+    }
+  }
+
+  private async handleTimeExpiredFlows(flows: ProgramAccount<FlowModel>[]) {
+    const timeFlowExpiredFlows = flows.filter((flow) =>
+      this.snowService.isTimedFlowExpired(flow)
+    );
+
+    for (let i = 0; i < timeFlowExpiredFlows.length; i++) {
+      if (i !== 0) {
+        if (i % RATE_LIMITED_REQUEST_NUMBER === 0) {
+          await this.delay();
+        }
+      }
+      await this.snowService.markTimedFlowAsError(timeFlowExpiredFlows[i]);
+    }
+  }
+
+  private async bootstrap() {
     try {
       console.log("Running...");
       this.logger.info("Running Node Operator");
+      if (this.isBusy) {
+        this.logger.info("Node Operator is busy, will skip this run");
+        return;
+      }
+
+      this.isBusy = true;
+
       /**
        * Create the jobs table for caching if it doesn't exist
        */
@@ -66,16 +113,15 @@ class SnowflakeOperator {
         tempFlows = flows;
       }
 
-      await this.snowService.handleProcessFlows(tempFlows);
+      await Promise.all([
+        this.handleExecutableFlows(tempFlows),
+        this.handleTimeExpiredFlows(tempFlows),
+      ]);
 
-      /**
-       * Invalidate the cache when the flows are updated
-       */
+      this.isBusy = false;
+
     } catch (err: any) {
-      /**
-       * If there is an error, we need to log it and exit
-       * The node operator can be restarted if the error is recoverable under 5 attempts
-       */
+      this.isBusy = false;
       this.logger.error(err.message);
     }
   }
@@ -86,7 +132,6 @@ class SnowflakeOperator {
        * Subscribe to the changes in the flows and update the cache
        */
       this.snowService.onFlowsChanged(async (flow) => {
-        console.log(flow);
         await this.jobCacheService.writeSingleFlow(
           this.jobCacheService.convertProgramAccountToFlow(flow)
         );
