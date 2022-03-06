@@ -39,10 +39,10 @@ pub mod snowflake {
         let flow = &mut ctx.accounts.flow;
         flow.owner = ctx.accounts.owner.key();
 
-        let date = Clock::get()?.unix_timestamp;
-        flow.created_date = date;
-        flow.last_updated_date = date;
-        flow.apply_flow_data(client_flow);
+        let now = Clock::get()?.unix_timestamp;
+        flow.created_date = now;
+        flow.last_updated_date = now;
+        flow.apply_flow_data(client_flow, now);
 
         require!(flow.validate_flow_data(),ErrorCode::InvalidJobData);
         Ok(())
@@ -51,8 +51,11 @@ pub mod snowflake {
     pub fn update_flow(ctx: Context<UpdateFlow>, client_flow: Flow) -> ProgramResult {
         let flow = &mut ctx.accounts.flow;
 
-        flow.last_updated_date = Clock::get()?.unix_timestamp;
-        flow.apply_flow_data(client_flow);
+        let now = Clock::get()?.unix_timestamp;
+
+        flow.last_updated_date = now;
+
+        flow.apply_flow_data(client_flow, now);
 
         require!(flow.validate_flow_data(),ErrorCode::InvalidJobData);
         Ok(())
@@ -85,7 +88,7 @@ pub mod snowflake {
 
         require!(flow.is_due_for_execute(now), ErrorCode::JobIsNotDueForExecution);
 
-        flow.update_after_schedule_run(now);
+        flow.update_after_schedule_run(now, true);
 
         do_execute_flow(ctx, pda_bump)
     }
@@ -102,9 +105,8 @@ pub mod snowflake {
         require!(program_settings.can_operator_excecute_flow(now, &flow.key(), operator.key), ErrorCode::JobIsNotAssignedToOperator);
         
         require!(flow.is_schedule_expired(now), ErrorCode::CannotMarkJobAsErrorIfItsWithinSchedule);
-        
-        flow.next_execution_time = TIMED_FLOW_ERROR;
-        flow.last_updated_date = now;
+
+        flow.update_after_schedule_run(now, false);
 
         Ok(())
     }
@@ -343,7 +345,7 @@ pub struct Flow {
 }
 
 impl Flow {
-    fn apply_flow_data(&mut self, client_flow: Flow) {
+    fn apply_flow_data(&mut self, client_flow: Flow, now: i64) {
         self.trigger_type = client_flow.trigger_type;
         self.recurring = client_flow.recurring;
         self.remaining_runs = client_flow.remaining_runs;
@@ -367,7 +369,7 @@ impl Flow {
 
             if self.recurring {
                 if self.has_remaining_runs() {
-                    self.next_execution_time = calculate_next_execution_time(&self.cron, self.user_utc_offset as i64);
+                    self.next_execution_time = calculate_next_execution_time(&self.cron, self.user_utc_offset as i64, now);
                 }
             } else {
                 self.next_execution_time = client_flow.next_execution_time;
@@ -424,16 +426,18 @@ impl Flow {
 
     }
 
-    fn update_after_schedule_run(&mut self, now: i64) {
+    fn update_after_schedule_run(&mut self, now: i64, is_successful_run : bool) {
         self.last_scheduled_execution = now;
         if self.remaining_runs != RECURRING_FOREVER {
             self.remaining_runs = self.remaining_runs.checked_sub(1).unwrap();
         }
 
         if self.trigger_type == TriggerType::Time as u8 {
-            self.next_execution_time = 
-                if self.has_remaining_runs() {calculate_next_execution_time(&self.cron, self.user_utc_offset as i64)}
-                else {TIMED_FLOW_COMPLETE};
+           if self.has_remaining_runs() {
+                self.next_execution_time = calculate_next_execution_time(&self.cron, self.user_utc_offset as i64, now);
+            } else {
+                self.next_execution_time = if is_successful_run {TIMED_FLOW_COMPLETE} else {TIMED_FLOW_ERROR};
+            }
         }
 
         self.last_updated_date = now;
@@ -506,10 +510,10 @@ impl ProgramSettings {
 
 /* HELPER METHODS */
 
-fn calculate_next_execution_time(_cron: &str, utc_offset: i64) -> i64 {
-    let now = Clock::get().unwrap().unix_timestamp.checked_sub(utc_offset).unwrap();
+fn calculate_next_execution_time(_cron: &str, utc_offset: i64, now: i64) -> i64 {
+    let local_time = now.checked_sub(utc_offset).unwrap();
     let schedule = SnowSchedule::parse(_cron).unwrap();
-    let next_execution = schedule.next_event(&SnowTime::from_time_ts(now)).unwrap().to_time_ts(utc_offset);
+    let next_execution = schedule.next_event(&SnowTime::from_time_ts(local_time)).unwrap().to_time_ts(utc_offset);
     next_execution
 }
 
@@ -536,4 +540,118 @@ fn charge_fee(ctx: &Context<ExecuteFlow>, pda_bump: u8) -> ProgramResult {
         )?;
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_update_schedule_for_a_recurring_timed_flow_after_a_successful_run() {
+        let mut flow = sample_recurring_timed_flow();
+        let now = 12121323343;
+
+        flow.update_after_schedule_run(now, true);
+
+        assert_eq!(flow.remaining_runs, 2);
+        assert_eq!(flow.next_execution_time, 12122953200);
+    }
+
+    #[test]
+    fn test_update_schedule_for_a_recurring_timed_flow_after_the_last_successful_run() {
+        let mut flow = sample_recurring_timed_flow();
+        let now = 12121323343;
+        flow.remaining_runs = 1;
+
+        flow.update_after_schedule_run(now, true);
+
+        assert_eq!(flow.remaining_runs, 0);
+        assert_eq!(flow.next_execution_time, TIMED_FLOW_COMPLETE);
+    }
+
+    #[test]
+    fn test_update_schedule_for_a_recurring_timed_flow_after_the_last_error_run() {
+        let mut flow = sample_recurring_timed_flow();
+        let now = 12121323343;
+        flow.remaining_runs = 1;
+
+        flow.update_after_schedule_run(now, false);
+
+        assert_eq!(flow.remaining_runs, 0);
+        assert_eq!(flow.next_execution_time, TIMED_FLOW_ERROR);
+    }
+
+    #[test]
+    fn test_update_schedule_for_an_once_off_timed_flow_after_an_error_run() {
+        let mut flow = sample_recurring_timed_flow();
+        let now = 12121323343;
+        flow.remaining_runs = 1;
+        flow.recurring = false;
+
+        flow.update_after_schedule_run(now, false);
+
+        assert_eq!(flow.remaining_runs, 0);
+        assert_eq!(flow.next_execution_time, TIMED_FLOW_ERROR);
+        assert_eq!(flow.last_scheduled_execution, now);
+        assert_eq!(flow.last_updated_date, now);
+
+    }
+
+    #[test]
+    fn test_update_schedule_for_an_once_off_timed_flow_after_a_successful_run() {
+        let mut flow = sample_recurring_timed_flow();
+        let now = 12121323343;
+        flow.remaining_runs = 1;
+        flow.recurring = false;
+
+        flow.update_after_schedule_run(now, true);
+
+        assert_eq!(flow.remaining_runs, 0);
+        assert_eq!(flow.next_execution_time, TIMED_FLOW_COMPLETE);
+        assert_eq!(flow.last_scheduled_execution, now);
+        assert_eq!(flow.last_updated_date, now);
+    }
+
+    #[test]
+    fn test_update_schedule_for_a_conditional_flow() {
+        let mut flow = sample_recurring_timed_flow();
+        let now = 12121323343;
+        flow.remaining_runs = 1;
+        flow.trigger_type = TriggerType::Program as u8;
+
+        flow.update_after_schedule_run(now, true);
+
+        assert_eq!(flow.remaining_runs, 0);
+        assert_eq!(flow.next_execution_time, TIMED_FLOW_COMPLETE);
+        assert_eq!(flow.last_scheduled_execution, now);
+        assert_eq!(flow.last_updated_date, now);
+    }
+
+    fn sample_recurring_timed_flow() -> Flow {
+        Flow {
+            owner: Pubkey::new_unique(),
+            last_updated_date: 0,
+            created_date: 0,
+            trigger_type: TriggerType::Time as u8,
+            next_execution_time: 0,
+            retry_window: 0,
+            recurring: true,
+            remaining_runs: 3,
+            schedule_end_date: 0,
+            client_app_id: 0,
+            last_rent_charged: 0,
+            last_scheduled_execution: 0,
+            expiry_date: 0,
+            expire_on_complete: false,
+            dedicated_operator: Pubkey::new_unique(),
+            pay_fee_from: 0,
+            user_utc_offset: -39600,
+            external_id: "".to_string(),
+            cron: String::from("0 10 1 * *"),
+            name: "".to_string(),
+            extra: "".to_string(),
+            actions: vec![]
+        }
+    }
+
 }
