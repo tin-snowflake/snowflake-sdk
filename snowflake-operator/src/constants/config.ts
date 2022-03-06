@@ -1,3 +1,6 @@
 export const TRIGGER_TYPE_TIME = 2;
 export const TRIGGER_TYPE_PROGRAM = 3;
 export const RECURRING_FOREVER = -999;
+export const ONE_HOUR = 1000 * 60 * 60;
+export const RATE_LIMITED_REQUEST_NUMBER = 10;
+export const RATE_LIMITED_DELAY_IN_MILLISECONDS = 1000;
