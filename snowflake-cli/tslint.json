@@ -45,7 +45,7 @@
     "block-spacing": [true, "always"],
     "class-name": true,
     "comment-format": [
-      true,
+      false,
       "check-uppercase",
       "check-space",
       {

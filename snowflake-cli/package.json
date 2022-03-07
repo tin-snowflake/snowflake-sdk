@@ -1,8 +1,9 @@
 {
-  "name": "snowflake-cli",
+  "name": "snowflake",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Snowflake CLI to interact with Snowflake SDK",
+  "main": "bin/index.js",
+  "bin": "bin/index.js",
   "dependencies": {
     "@project-serum/anchor": "^0.21.0",
     "@snowflake-so/snowflake-sdk": "^1.0.7",
@@ -25,7 +26,9 @@
     "ts-node": "^10.5.0"
   },
   "scripts": {
-    "start": "ts-node src/index.ts",
+    "build": "tsc",
+    "dev": "ts-node src/index.ts",
+    "start": "node bin/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

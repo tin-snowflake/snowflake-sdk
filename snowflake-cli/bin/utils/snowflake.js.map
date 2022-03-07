@@ -1,0 +1,1 @@
+{"version":3,"file":"snowflake.js","sourceRoot":"","sources":["../../src/utils/snowflake.ts"],"names":[],"mappings":";;;AAAA,kDAAiD;AACjD,+DAAwD;AAEjD,MAAM,aAAa,GAAG,CAAC,MAAc,EAAE,EAAE;IAC9C,MAAM,QAAQ,GAAG,iBAAQ,CAAC,KAAK,CAAC,MAAM,CAAC,CAAC;IACxC,MAAM,SAAS,GAAG,IAAI,yBAAS,CAAC,QAAQ,CAAC,CAAC;IAE1C,OAAO,SAAS,CAAC;AACnB,CAAC,CAAC;AALW,QAAA,aAAa,iBAKxB"}

@@ -1,6 +1,6 @@
 import { EndpointConstant } from "../constants";
 import {
-  SNOWFLAKE_CLI_KEYPAIR_PATH,
+  // SNOWFLAKE_CLI_KEYPAIR_PATH,
   SNOWFLAKE_CLI_RPC_URL,
 } from "../constants/db-key";
 import db from "../utils/db";
@@ -22,27 +22,26 @@ export default class ConfigCommandService {
     }
   }
 
-  static async setConfigKeypair(keypair: string): Promise<string> {
-    try {
-      await db.put(SNOWFLAKE_CLI_KEYPAIR_PATH, keypair);
-      const keypairPath = await db.get(SNOWFLAKE_CLI_KEYPAIR_PATH);
-
-      return keypairPath;
-    } catch (error: any) {
-      throw new Error(error.message);
-    }
-  }
+  // static async setConfigKeypair(keypair: string): Promise<string> {
+  //   try {
+  //     await db.put(SNOWFLAKE_CLI_KEYPAIR_PATH, keypair);
+  //     const keypairPath = await db.get(SNOWFLAKE_CLI_KEYPAIR_PATH);
+  //     return keypairPath;
+  //   } catch (error: any) {
+  //     throw new Error(error.message);
+  //   }
+  // }
 
   static async getConfig() {
     try {
-      const [rpcUrl, keypairPath] = await Promise.all([
+      const [rpcUrl] = await Promise.all([
         db.get(SNOWFLAKE_CLI_RPC_URL),
-        db.get(SNOWFLAKE_CLI_KEYPAIR_PATH),
+        // db.get(SNOWFLAKE_CLI_KEYPAIR_PATH),
       ]);
 
       return {
         "RPC URL": rpcUrl,
-        "Keypair Path": keypairPath,
+        // "Keypair Path": keypairPath,
       };
     } catch (error: any) {
       throw new Error(error.message);
