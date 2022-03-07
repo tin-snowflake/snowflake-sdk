@@ -35,6 +35,21 @@ test("write job to database", async () => {
   expect(flows[0].triggerType).toBe(3);
 });
 
+test("clean job from database", async () => {
+  await jobCacheService.writeMultipleFlows(flowAccountsData);
+
+  const beforeFlows = await jobCacheService.getAllFlows();
+  const beforeDeleteLength = beforeFlows.length;
+
+  const deletedPubkey = beforeFlows[0].pubkey;
+  await jobCacheService.cleanFlow(deletedPubkey);
+
+  const afterFlows = await jobCacheService.getAllFlows();
+  const afterDeleteLength = afterFlows.length;
+
+  expect(beforeDeleteLength - afterDeleteLength).toBe(1);
+});
+
 test("invalidate cache", async () => {
   await jobCacheService.writeSingleFlow(flowAccountsData[0]);
 

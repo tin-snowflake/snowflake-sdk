@@ -2,7 +2,7 @@ import { Database } from "sqlite3";
 import SchemaComposer from "../utils/schema-composer";
 import Bluebird, { Promise } from "bluebird";
 import log4js from "log4js";
-import {LOG4JS_CONFIG} from "../constants/log4js-config"
+import { LOG4JS_CONFIG } from "../constants/log4js-config";
 import { BN, ProgramAccount } from "@project-serum/anchor";
 import { FlowModel } from "src/models/flow";
 import { PublicKey } from "@solana/web3.js";
@@ -111,6 +111,24 @@ export class JobCacheService {
           resolve();
         }
       });
+    });
+  }
+
+  cleanFlow(flowAddress: PublicKey): Bluebird<void> {
+    return new Promise((resolve, reject) => {
+      this.database.run(
+        this.jobSchema.deleteJob,
+        [flowAddress.toString()],
+        (err) => {
+          if (err) {
+            logger.error(err.message);
+            reject(err);
+          } else {
+            logger.info(`Deleted flow ${flowAddress.toString()}`);
+            resolve();
+          }
+        }
+      );
     });
   }
 

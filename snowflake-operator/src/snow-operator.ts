@@ -6,11 +6,13 @@ import { DatabaseService } from "./services/database-service";
 import "dotenv/config";
 import { ProgramAccount } from "@project-serum/anchor";
 import { FlowModel } from "./models/flow";
+import { ExecutionErrorType } from "./models/execution-result"
 import cron from "node-cron";
 import {
   RATE_LIMITED_DELAY_IN_MILLISECONDS,
   RATE_LIMITED_REQUEST_NUMBER,
 } from "./constants/config";
+import { PublicKey } from "@solana/web3.js";
 
 log4js.configure(LOG4JS_CONFIG);
 
@@ -29,7 +31,9 @@ class SnowflakeOperator {
   }
 
   private async delay() {
-    return new Promise((ok) => setTimeout(ok, RATE_LIMITED_DELAY_IN_MILLISECONDS));
+    return new Promise((ok) =>
+      setTimeout(ok, RATE_LIMITED_DELAY_IN_MILLISECONDS)
+    );
   }
 
   private async handleExecutableFlows(flows: ProgramAccount<FlowModel>[]) {
@@ -37,14 +41,21 @@ class SnowflakeOperator {
       this.snowService.shouldExecuteFlow(flow)
     );
 
+    let flowsToBeRemoved: PublicKey[] = [];
+
     for (let i = 0; i < executableFlows.length; i++) {
       if (i !== 0) {
         if (i % RATE_LIMITED_REQUEST_NUMBER === 0) {
           await this.delay();
         }
       }
-      await this.snowService.executeFlow(executableFlows[i]);
+      let result = await this.snowService.executeFlow(executableFlows[i]);
+      if (result.getErrorType() === ExecutionErrorType.ACCOUNT_NOT_AVAILABLE) {
+        flowsToBeRemoved.push(result.flowPublicKey);
+      }
     }
+
+    this.removeFlowsFromCache(flowsToBeRemoved);
   }
 
   private async handleTimeExpiredFlows(flows: ProgramAccount<FlowModel>[]) {
@@ -52,32 +63,38 @@ class SnowflakeOperator {
       this.snowService.isTimedFlowExpired(flow)
     );
 
+    let flowsToBeRemoved: PublicKey[] = [];
     for (let i = 0; i < timeFlowExpiredFlows.length; i++) {
       if (i !== 0) {
         if (i % RATE_LIMITED_REQUEST_NUMBER === 0) {
           await this.delay();
         }
       }
-      await this.snowService.markTimedFlowAsError(timeFlowExpiredFlows[i]);
+      let result = await this.snowService.markTimedFlowAsError(timeFlowExpiredFlows[i]);
+      if (result.getErrorType() === ExecutionErrorType.ACCOUNT_NOT_AVAILABLE) {
+        flowsToBeRemoved.push(result.flowPublicKey);
+      }
+    }
+
+    this.removeFlowsFromCache(flowsToBeRemoved);
+  }
+  
+  private async removeFlowsFromCache(flowPubKeys: PublicKey[]) {
+    if (flowPubKeys === undefined || flowPubKeys.length == 0) {
+      return;
+    }
+
+    for (let i = 0; i < flowPubKeys.length; i++) {
+      let flowPubKey = flowPubKeys[i];
+      await this.jobCacheService.cleanFlow(flowPubKey);
     }
   }
 
-  private async bootstrap() {
-    try {
-      console.log("Running...");
-      this.logger.info("Running Node Operator");
-      if (this.isBusy) {
-        this.logger.info("Node Operator is busy, will skip this run");
-        return;
-      }
-
-      this.isBusy = true;
-
-      /**
+  private async getAllFlows(): Promise<ProgramAccount<FlowModel>[]> {
+     /**
        * Create the jobs table for caching if it doesn't exist
        */
       await this.jobCacheService.createJobsTable();
-      let tempFlows: ProgramAccount<FlowModel>[] = [];
 
       /**
        * Check if there are any flows in the cache
@@ -89,7 +106,7 @@ class SnowflakeOperator {
         /**
          * If there are flows in the cache, we need to check if they are still valid
          */
-        tempFlows = memoryFlows.map((flow) => ({
+         return memoryFlows.map((flow) => ({
           account: flow,
           publicKey: flow.pubkey,
         }));
@@ -110,41 +127,58 @@ class SnowflakeOperator {
           await this.jobCacheService.writeMultipleFlows(flowAccounts);
         }
 
-        tempFlows = flows;
+        return flows;
+      }
+  }
+
+  private async bootstrap() {
+    try {
+      if (this.isBusy) {
+        this.logger.info("Node Operator is busy, will skip this run");
+        return;
       }
 
+      this.logger.info("Running Node Operator ...");
+      this.isBusy = true;
+
+      let allFlows = await this.getAllFlows();
+
       await Promise.all([
-        this.handleExecutableFlows(tempFlows),
-        this.handleTimeExpiredFlows(tempFlows),
+        this.handleExecutableFlows(allFlows),
+        this.handleTimeExpiredFlows(allFlows),
       ]);
 
       this.isBusy = false;
-
     } catch (err: any) {
       this.isBusy = false;
-      this.logger.error(err.message);
+      this.logger.error("Error running node operator: ", err);
+    }
+  }
+
+  private async invalidateCache() {
+    this.logger.info("Invalidate cache ...")
+    try {
+      await this.jobCacheService.cleanFlows();
+    } catch (error: any) {
+      this.logger.error("Error invalidating the cache: ", error);
     }
   }
 
   async run() {
-    try {
-      /**
-       * Subscribe to the changes in the flows and update the cache
-       */
-      this.snowService.onFlowsChanged(async (flow) => {
-        await this.jobCacheService.writeSingleFlow(
-          this.jobCacheService.convertProgramAccountToFlow(flow)
-        );
-      });
-      // Invalidate cache every one hour
-      cron.schedule("0 * * * *", () => this.jobCacheService.cleanFlows());
-      // Run the bootstrap every 5 seconds
-      cron.schedule("*/5 * * * * *", async () => await this.bootstrap());
-    } catch (error: any) {
-      this.logger.info("Node Operator is down");
-      this.logger.error(error.message);
-      throw new Error(error.message);
-    }
+    /**
+     * Subscribe to the changes in the flows and update the cache
+     */
+    this.snowService.onFlowsChanged(async (flow) => {
+      await this.jobCacheService.writeSingleFlow(
+        this.jobCacheService.convertProgramAccountToFlow(flow)
+      );
+    });
+
+    // Invalidate cache every one hour
+    cron.schedule("0 * * * *", () => this.invalidateCache());
+    
+    // Run the bootstrap every 5 seconds
+    cron.schedule("*/5 * * * * *", async () => await this.bootstrap());
   }
 }
 
