@@ -24,8 +24,12 @@ const JobsGetGlobalCommand: CommandLayout = {
         option: "--owner <OWNER_ADDRESS>",
         description: "Get jobs by owner",
       },
+      {
+        option: "-p, --pretty",
+        description: "Pretty print",
+      },
     ],
-    action: async ({ latest, limit, owner, offset }: any) => {
+    action: async ({ latest, limit, owner, offset, pretty }: any) => {
       try {
         let jobs: Job[];
         jobs = owner
@@ -42,8 +46,13 @@ const JobsGetGlobalCommand: CommandLayout = {
           log(jobs[0]);
           return;
         }
+
         logSuccess(jobs.length.toString(), "Found", "jobs");
-        log(jobs);
+        if (pretty) {
+          log(jobs);
+          return;
+        }
+        log(JSON.stringify(jobs, null, 2));
         return;
       } catch (error: any) {
         logError(error.message, "Error:");
