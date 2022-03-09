@@ -40,8 +40,9 @@ export default class JobCommandService {
         throw new Error("RPC URL is not set");
       }
       const snowflake = initSnowflake(rpcUrl);
-      const job = await snowflake.(jobPubkey);
-      return job;
+      // const job = await snowflake.(jobPubkey);
+      // TODO implement watchJob() for snowflake SDK
+      return null;
     } catch (error: any) {
       throw new Error(error.message);
     }
