@@ -33,6 +33,20 @@ export default class JobCommandService {
     }
   }
 
+  static async watchJob(jobPubkey: PublicKey){
+    try {
+      const rpcUrl = await db.get(SNOWFLAKE_CLI_RPC_URL);
+      if (!rpcUrl) {
+        throw new Error("RPC URL is not set");
+      }
+      const snowflake = initSnowflake(rpcUrl);
+      const job = await snowflake.(jobPubkey);
+      return job;
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
+
   static async getJobsByOwner(owner: string) {
     try {
       const rpcUrl = await db.get(SNOWFLAKE_CLI_RPC_URL);

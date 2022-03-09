@@ -24,6 +24,28 @@ const JobDeleteCommand: CommandLayout = {
   },
 };
 
+const JobWatchCommand: CommandLayout = {
+  command: "watch",
+  description: "Watch a job",
+  argumentLayout: {
+    arguments: [
+      {
+        argument: "[publicKey]",
+        description: "Public key of the job",
+      },
+    ],
+    action: async ({ publicKey }: any) => {
+      try {
+        const job = await JobCommandService.watchJob(publicKey);
+        logSuccess(job.toString(), "Watching job");
+        return;
+      } catch (error: any) {
+        logError(error.message, "Error:");
+      }
+    }
+  }
+}
+
 const JobGetCommand: CommandLayout = {
   command: "get",
   description: "Get job by public key",
