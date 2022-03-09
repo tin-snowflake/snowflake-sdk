@@ -3,7 +3,6 @@ import {
   SystemProgram,
   TransactionInstruction,
   Transaction,
-  GetProgramAccountsFilter,
 } from "@solana/web3.js";
 import {
   Provider,
@@ -24,7 +23,8 @@ import {
   TRIGGER_TYPE_PROGRAM,
   TRIGGER_TYPE_TIME,
 } from "../constants/config";
-import { FlowModel } from "src/models/flow";
+import { FlowModel } from "../models/flow";
+import { ExecutionResult } from "../models/execution-result"
 
 log4js.configure(LOG4JS_CONFIG);
 const logger = log4js.getLogger("Operator");
@@ -90,8 +90,10 @@ export default class SnowService {
    * Execute a flow
    * @param flow {ProgramAccount}
    */
-  async executeFlow(flow: ProgramAccount<FlowModel>) {
+  async executeFlow(flow: ProgramAccount<FlowModel>): Promise<ExecutionResult> {
+    let executionResult: ExecutionResult;
     const flowAddress = flow.publicKey;
+
     try {
       const operatorWalletKey = this.program.provider.wallet.publicKey;
       const [pda, _] = await PublicKey.findProgramAddress(
@@ -131,20 +133,13 @@ export default class SnowService {
 
       const tx = await this.sendInstructionWithMemo(ix, "snf_exec_auto");
 
-      logger.info(
-        "Finish executing flow: ",
-        flowAddress.toBase58(),
-        " transaction signature: ",
-        tx
-      );
+      executionResult = ExecutionResult.successResult("Execute Flow", flowAddress, tx);
     } catch (error: any) {
-      logger.error(
-        "Error executing flow: ",
-        flowAddress.toBase58(),
-        " Error: ",
-        error
-      );
+      executionResult = ExecutionResult.errorResult("Execute Flow", flowAddress, error.message);
     }
+
+    logger.info(executionResult.getDisplayedMessage());
+    return executionResult;
   }
 
   /**
@@ -169,7 +164,8 @@ export default class SnowService {
    * Mark time flow as error
    * @param flow {ProgramAccount}
    */
-  async markTimedFlowAsError(flow: ProgramAccount) {
+  async markTimedFlowAsError(flow: ProgramAccount): Promise<ExecutionResult> {
+    let executionResult: ExecutionResult;
     const flowAddress = flow.publicKey;
 
     try {
@@ -192,21 +188,13 @@ export default class SnowService {
       });
 
       const tx = await this.sendInstructionWithMemo(ix, "snf_exec_mark_error");
-
-      logger.info(
-        "Finish marking flow as error: ",
-        flowAddress.toBase58(),
-        "Transaction signature: ",
-        tx
-      );
-    } catch (error) {
-      logger.error(
-        "Error marking flow as error: ",
-        flowAddress.toBase58(),
-        " Error: ",
-        error
-      );
+      executionResult = ExecutionResult.successResult("Mark Flow as Error", flowAddress, tx);
+    } catch (error: any) {
+      executionResult = ExecutionResult.errorResult("Mark Flow as Error", flowAddress, error.message);
     }
+
+    logger.info(executionResult.getDisplayedMessage());
+    return executionResult;
   }
 
   /**
@@ -250,20 +238,16 @@ export default class SnowService {
     return connection.onProgramAccountChange(
       SNOW_PROGRAM_ID,
       (keyedAccountInfo, _) => {
-        callback({
-          publicKey: keyedAccountInfo.accountId,
-          account: this.decodeFlowData(keyedAccountInfo.accountInfo.data),
-        });
+        try {
+          let accountData = keyedAccountInfo.accountInfo.data;
+          callback({
+            publicKey: keyedAccountInfo.accountId,
+            account: this.program.coder.accounts.decodeUnchecked("Flow", accountData),
+          });
+        } catch (error: any) {
+          logger.error("Error writing new flow to cache ", error);
+        }
       }
     );
-  }
-
-  /**
-   * Decode flow data
-   * @param accountData {Buffer}
-   * @returns {ProgramAccount}
-   */
-  decodeFlowData(accountData: Buffer): FlowModel {
-    return this.program.coder.accounts.decodeUnchecked("Flow", accountData);
   }
 }
